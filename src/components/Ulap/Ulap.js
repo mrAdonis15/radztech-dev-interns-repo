@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTheme } from '@material-ui/core/styles';
-import ulapImage from '../../images/ulapbiz.png';
+import ulapImage from '../../images/3Dmascot.png';
 
 const Ulap = () => {
   const theme = useTheme();
@@ -28,8 +28,19 @@ const Ulap = () => {
 
       <h1
         style={{
+          marginTop: -50,
+          color: '#000000ff  ',
+          fontSize: '150px',
+          fontWeight: 'bold',
+          textAlign: 'center',
+        }}>
+        Hello Interns! Welcome to
+      </h1>
+
+      <h1
+        style={{
           marginTop: -150,
-          color: theme.palette.primary.main,
+          color: '#FF7504',
           fontSize: '150px',
           fontWeight: 'bold',
           textAlign: 'center',
