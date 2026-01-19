@@ -1,0 +1,62 @@
+{
+  "name": "my-app",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@material-ui/core": "^4.11.0",
+    "@material-ui/data-grid": "^4.0.0-alpha.37",
+    "@material-ui/icons": "^4.9.1",
+    "@material-ui/lab": "^4.0.0-alpha.56",
+    "@material-ui/pickers": "^3.2.10",
+    "@material-ui/styles": "^4.10.0",
+    "axios": "^1.7.2",
+    "d3-org-chart": "^3.1.1",
+    "html-to-image": "^1.11.11",
+    "leaflet": "^1.9.4",
+    "lodash": "^4.17.21",
+    "numeral": "^2.0.6",
+    "re-resizable": "^6.9.17",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
+    "react-icons": "^5.2.1",
+    "react-infinite-scroll-component": "^6.1.0",
+    "react-leaflet": "^4.2.1",
+    "react-loader-spinner": "^6.1.6",
+    "react-markdown": "^6.0.3",
+    "react-router": "^6.4.3",
+    "react-router-dom": "^6.4.3",
+    "react-scripts": "^5.0.1",
+    "react-slick": "^0.30.2",
+    "reactflow": "^11.11.3",
+    "rehype-raw": "^7.0.0",
+    "slick-carousel": "^1.8.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "proxy": "http://6a191f907760.ngrok.app/",
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "sslConfig": {
+    "extends": "react-app"
+  }
+}
