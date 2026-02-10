@@ -1,5 +1,6 @@
 import DefaultLayout from './layouts/DefaultLayout';
 import Ulap from './components/Ulap/Ulap';
+import DisplayPage from './components/Kurt/pages/DisplayPage';
 
 const routes = [
   {
@@ -7,9 +8,13 @@ const routes = [
     element: DefaultLayout,
     children: [
       {
-        path: 'Put here your route',
-        element: 'Put here your element',
+        path: '/Ulap',
+        element: Ulap,
       },
+      {
+        path: '/KurtJSON',
+        element: DisplayPage
+      }
     ],
   },
 ];

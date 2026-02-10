@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Link as RouterLink } from "react-router-dom";
 import UlapBizLogo from "src/images/ulapbiz.png";
 import MenuIcon from '@material-ui/icons/Menu';
 import CloseIcon from '@material-ui/icons/Close';
@@ -18,12 +17,12 @@ import {
 } from "@material-ui/core";
 
 const pages = [
-  "Home",
-  "Plans",
-  "Accounting and Beyond",
-  "Features",
-  "Schedules and Reports",
-  "Contact Us",
+  { name: "Home", path: "" },
+  { name: "Plans", path: "plans" },
+  { name: "Accounting and Beyond", path: "accounting-and-beyond" },
+  { name: "Features", path: "notable-features" },
+  { name: "Schedules and Reports", path: "reports-and-schedule" },
+  { name: "Contact Us", path: "contact-us" },
 ];
 
 const useStyles = makeStyles((theme) => ({
@@ -100,13 +99,12 @@ const Navbar = () => {
             width: "100%",
           }}>
             <Box className={classes.iconContainer}>
-              <RouterLink to="/" >
+              <Link href="https://ulap.biz/" >
                 <Avatar src={UlapBizLogo} />
-              </RouterLink>
+              </Link>
               <Link
-                component={RouterLink}
+                href="https://ulap.biz/"
                 variant="h4"
-                to="/"
                 underline="none"
                 color="textPrimary"
               >
@@ -140,16 +138,15 @@ const Navbar = () => {
                   {!isXs && pages.map((page, index) => (
                     <Link
                       key={index}
-                      component={RouterLink}
+                      href={page.path ? `https://ulap.biz/${page.path}` : "https://ulap.biz/"}
                       variant="h6"
-                      to={`/${page.toLowerCase().replace(" ", "-")}`}
                       underline="none"
                       color="textPrimary"
                       style={{
                         fontSize: ".8rem",
                       }}
                     >
-                      {page}
+                      {page.name}
                     </Link>
                   ))}
                 </Box>
@@ -160,9 +157,8 @@ const Navbar = () => {
                   }}>
                     <Link
                       key="signin"
-                      component={RouterLink}
+                      href="https://ulap.biz/signin"
                       variant="h6"
-                      to='test'
                       underline="none"
                       color="textPrimary"
                       className={classes.signin}
@@ -171,9 +167,8 @@ const Navbar = () => {
                     </Link>
                     <Link
                       key="signup"
-                      component={RouterLink}
+                      href="https://ulap.biz/signup"
                       variant="h6"
-                      to='test'
                       underline="none"
                       color="textPrimary"
                       className={classes.signup}
@@ -200,21 +195,19 @@ const Navbar = () => {
               {pages.map((page, index) => (
                 <Link
                   key={index}
-                  component={RouterLink}
+                  href={page.path ? `https://ulap.biz/${page.path}` : "https://ulap.biz/"}
                   variant="h6"
-                  to={`/${page.toLowerCase().replace(" ", "-")}`}
                   underline="none"
                   color="primary"
                 >
-                  {page}
+                  {page.name}
                 </Link>
 
               ))}
               <Link
                 key="signin"
-                component={RouterLink}
+                href="https://ulap.biz/signin"
                 variant="h6"
-                to='test'
                 underline="none"
                 color="textPrimary"
                 style={{
@@ -225,9 +218,8 @@ const Navbar = () => {
               </Link>
               <Link
                 key="signup"
-                component={RouterLink}
+                href="https://ulap.biz/signup"
                 variant="h6"
-                to='test'
                 underline="none"
                 color="textPrimary"
                 style={{
@@ -242,9 +234,8 @@ const Navbar = () => {
             <>
               <Link
                 key="signin"
-                component={RouterLink}
+                href="https://ulap.biz/signin"
                 variant="h6"
-                to='test'
                 underline="none"
                 color="textPrimary"
               // className={classes.signin}
@@ -253,9 +244,8 @@ const Navbar = () => {
               </Link>
               <Link
                 key="signup"
-                component={RouterLink}
+                href="https://ulap.biz/signup"
                 variant="h6"
-                to='test'
                 underline="none"
                 color="textPrimary"
               // className={classes.signup}
