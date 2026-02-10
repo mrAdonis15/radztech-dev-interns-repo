@@ -1,6 +1,7 @@
 import DefaultLayout from './layouts/DefaultLayout';
 import Ulap from './components/Ulap/Ulap';
 import DisplayPage from './components/Kurt/pages/DisplayPage';
+import Graphs from './components/HistoricalGraph/pages/graphs';
 
 const routes = [
   {
@@ -14,6 +15,10 @@ const routes = [
       {
         path: '/KurtJSON',
         element: DisplayPage
+      },
+      {
+        path: '/HistoricalGraph',
+        element: Graphs
       }
     ],
   },

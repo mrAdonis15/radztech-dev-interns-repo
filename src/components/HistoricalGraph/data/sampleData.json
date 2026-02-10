@@ -1,0 +1,30 @@
+{
+  "cpuload": [
+    { "cpu_loadavg": { "15min": 0, "1min": 0, "5min": 0 } },
+    { "cpu_loadavg": { "15min": 0, "1min": 0, "5min": 0 } },
+    { "cpu_loadavg": { "15min": 0.02, "1min": 0.27, "5min": 0.06 } },
+    { "cpu_loadavg": { "15min": 0.02, "1min": 0.19, "5min": 0.06 } },
+    { "cpu_loadavg": { "15min": 0.02, "1min": 0.08, "5min": 0.06 } }
+  ],
+  "cpupercent": [
+    { "cpu_percent": 0, "mem": { "free_kb": 126136, "total_kb": 4013956, "used_kb": 1869608, "used_percent": 46.58 } },
+    { "cpu_percent": 14.29, "mem": { "free_kb": 125500, "total_kb": 4013956, "used_kb": 1870164, "used_percent": 46.59 } },
+    { "cpu_percent": 0, "mem": { "free_kb": 124948, "total_kb": 4013956, "used_kb": 1870308, "used_percent": 46.6 } },
+    { "cpu_percent": 0, "mem": { "free_kb": 124648, "total_kb": 4013956, "used_kb": 1870548, "used_percent": 46.6 } },
+    { "cpu_percent": 0, "mem": { "free_kb": 124684, "total_kb": 4013956, "used_kb": 1870228, "used_percent": 46.59 } }
+  ],
+  "percpu": [
+    { "per_cpu": { "cpu0": 0, "cpu1": 0 } },
+    { "per_cpu": { "cpu0": 10, "cpu1": 0 } },
+    { "per_cpu": { "cpu0": 0, "cpu1": 0 } },
+    { "per_cpu": { "cpu0": 0, "cpu1": 0 } },
+    { "per_cpu": { "cpu0": 0, "cpu1": 0 } }
+  ],
+  "task": [
+    { "running": 1, "tasks": 7, "threads": 43 },
+    { "running": 1, "tasks": 7, "threads": 43 },
+    { "running": 1, "tasks": 7, "threads": 43 },
+    { "running": 1, "tasks": 7, "threads": 43 },
+    { "running": 1, "tasks": 7, "threads": 43 }
+  ]
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, IconButton } from '@material-ui/core';
+import { Box, TextField, IconButton } from '@material-ui/core';
 import { Save } from '@material-ui/icons';
 import TreeView from '../components/TreeView';
 import jsonData from '../data/JsonData.json';
@@ -100,13 +100,6 @@ const DisplayPage = () => {
 
   return (
     <Box className="display-container">
-      {/* Top Header with Navigation */}
-      <Box className="header-nav">
-        <Typography variant="h6" className="header-title">
-          &lt;&gt; Advance Settings
-        </Typography>
-      </Box>
-
       {/* Main Content Area */}
       <Box className="main-content">
         {/* Left Side - Tree View */}
