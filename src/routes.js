@@ -5,6 +5,7 @@ import Graphs from './components/HistoricalGraph/pages/graphs';
 import Jayson from './components/Adam/components/jsontask';
 import AdvancedSettings from './components/Merlvin/AdvancedSettings';
 import JsonData from './components/Brayan/JsonData';
+import Chatbox from './Chatbox/chatbox';
 
 const routes = [
   {
@@ -34,6 +35,10 @@ const routes = [
       {
         path: '/BrayanJSON',
         element: JsonData
+      },
+      {
+        path: '/Chatbox',
+        element: Chatbox
       }
     ],
   },
