@@ -37,12 +37,12 @@ const routes = [
       },
       {
         path: '/contact-us', element: Contacts
-      },
-      {
-        path: '/advanced-settings', element: AdvancedSettings
-      },
+      }
     ],
   },
+    {
+      path: '/settings/advanced', element: AdvancedSettings,
+    },
 ];
 
 export default routes;

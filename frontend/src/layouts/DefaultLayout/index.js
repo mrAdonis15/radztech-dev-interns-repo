@@ -11,6 +11,7 @@ import Contacts from 'src/components/HeaderItems/Contact';
 import PlanBasic from 'src/components/HeaderItems/PlanBasic';
 import PlanPro from 'src/components/HeaderItems/PlanPro';
 import PlanErp from 'src/components/HeaderItems/PlanErp';
+import AdvancedSettings from 'src/components/Settings/AdvancedSettings';
 
 const DefaultLayout = () => {
   const location = useLocation();

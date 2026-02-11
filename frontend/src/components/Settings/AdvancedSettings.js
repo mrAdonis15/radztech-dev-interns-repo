@@ -1,17 +1,27 @@
-// AdvancedSettings.js
 import React, { Component } from "react";
 
 class AdvancedSettings extends Component {
   state = {
     jsonData: {
       AdvancedSettings: {
+        showStaus: true,
         node1: true,
         parent: "title"
       },
       childNumber1: {
-        key1: "testing key1",
-        key2: "test 2",
-        key3: "test 3"
+        showStatus: false,
+        key1: {
+          showStatus: true,
+          value1: "testing key1"
+        },
+        key2: {
+          showStatus: true,
+          value2: "test 2"
+        },
+        key3: {
+          showStatus: true,
+          value3: "test 3"
+        }
       }
     },
     activeEditorPath: null,
@@ -31,11 +41,11 @@ class AdvancedSettings extends Component {
     this.setState({ jsonText: e.target.value });
   };
 
-  // Save JSON changes to state
+  // Save JSON changes to state and reflect in UI
   saveJson = () => {
     try {
       const parsed = JSON.parse(this.state.jsonText);
-      this.setState({ jsonData: parsed });
+      this.setState({ jsonData: parsed, activeEditorPath: null });
       alert("JSON saved successfully!");
     } catch {
       alert("Invalid JSON! Fix before saving.");
@@ -43,38 +53,53 @@ class AdvancedSettings extends Component {
   };
 
   // Convert JSON into boxes (parent + child)
-  flattenJsonToBoxes = (obj) => {
-    const boxes = [];
+ flattenJsonToBoxes = (obj) => {
+  const boxes = [];
 
-    Object.keys(obj).forEach((key) => {
-      const value = obj[key];
-      const isObject = typeof value === "object" && value !== null;
+  Object.keys(obj).forEach((key) => {
+    const value = obj[key];
+    const isObject = typeof value === "object" && value !== null;
 
-      // Parent box
-      boxes.push({
-        caption: key,
-        path: [key],
-        showBraces: isObject
-      });
+    // 🚫 hide parent box
+    if (isObject && value.showStatus === false) return;
 
-      // Child boxes
-      if (isObject) {
-        Object.keys(value).forEach((childKey) => {
-          boxes.push({
-            caption: childKey,
-            path: [key, childKey],
-            showBraces: typeof value[childKey] === "object" && value[childKey] !== null
-          });
-        });
-      }
+    // ✅ parent box
+    boxes.push({
+      caption: key,
+      path: [key],
+      showBraces: isObject
     });
 
-    return boxes;
-  };
+    // children
+    if (isObject) {
+      Object.keys(value).forEach((childKey) => {
+        if (childKey === "showStatus") return;
+
+        const childValue = value[childKey];
+        const childIsObject =
+          typeof childValue === "object" && childValue !== null;
+
+        // 🚫 hide child box
+        if (childIsObject && childValue.showStatus === false) return;
+
+        boxes.push({
+          caption: childKey,
+          path: [key, childKey],
+          showBraces: childIsObject
+        });
+      });
+    }
+  });
+
+  return boxes;
+};
+
+
 
   // Render individual box
   renderBox = (box, indent = 0) => {
     const isChild = indent > 0;
+
     return (
       <div
         key={box.path.join("-")}
@@ -87,11 +112,17 @@ class AdvancedSettings extends Component {
           overflow: "hidden",
           fontFamily: "Arial, sans-serif",
           boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
-          transition: "transform 0.1s",
+          transition: "transform 0.2s, box-shadow 0.2s",
           cursor: "default"
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
-        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "scale(1.03)";
+          e.currentTarget.style.boxShadow = "0 6px 12px rgba(0,0,0,0.15)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "scale(1)";
+          e.currentTarget.style.boxShadow = "0 2px 5px rgba(0,0,0,0.05)";
+        }}
       >
         {/* Orange top bar for parent or child */}
         <div
@@ -131,7 +162,7 @@ class AdvancedSettings extends Component {
           style={{
             backgroundColor: isChild ? "#fef7f0" : "#f0f0f0",
             padding: "12px 16px",
-            fontSize: isChild ? 13 : 14,
+            fontSize: isChild ? 16 : 20,
             color: "#333",
             fontWeight: isChild ? 400 : 600
           }}
