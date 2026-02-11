@@ -1,0 +1,70 @@
+/* Styles for Chatbox component (moved from JSS)
+   Root is a container showing two chat panels side-by-side */
+.chat-root {
+  width: 780px; /* two panels */
+  height: 560px;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 20px;
+}
+.chat-panel {
+  width: 380px;
+  height: 100%;
+  border-radius: 8px;
+  border: 3px solid #f57c00;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+  position: relative;
+}
+.chat-header {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  background: linear-gradient(90deg,#fff 0%, #fff0 100%);
+  border-bottom: 1px solid #f57c00;
+}
+.chat-titleArea { display:flex; align-items:center; flex:1; }
+.chat-titleText { margin-left:8px; font-weight:600; color:#333; }
+.chat-onlineDot { width:10px; height:10px; background:#34c759; border-radius:50%; margin-right:8px; display:inline-block; }
+.chat-controlIcons { display:flex; align-items:center; }
+.chat-body {
+  position: absolute;
+  top: 48px;
+  bottom: 72px;
+  left: 0; right: 0;
+  padding: 16px;
+  overflow-y: auto;
+  background-image: url('./Assets/ulap-biz-logo.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 60% auto;
+  opacity: 1;
+}
+.chat-avatarFloating { display: none; }
+.chat-bubbleLeft {
+  max-width:72%; background:#ffb88c; color:#3e2723; padding:14px 18px; border-radius:16px; margin-top:12px; box-shadow:0 2px 4px rgba(0,0,0,0.08);
+}
+.chat-bubbleRight {
+  max-width:72%; background:#bdbdbd; color:#212121; padding:14px 18px; border-radius:16px; margin-top:12px; margin-left:auto; box-shadow:0 2px 4px rgba(0,0,0,0.08);
+}
+.chat-timestamp { text-align:center; margin:12px 0; color:#777; font-size:12px; }
+.chat-inputArea { position:absolute; left:8px; right:8px; bottom:8px; height:56px; display:flex; align-items:center; }
+.chat-inputPaper { flex:1; display:flex; align-items:center; background:#f7b26a; border-radius:24px; padding:6px 12px; box-shadow:none; }
+.chat-inputBase { margin-left:8px; flex:1; }
+.chat-sendButton { margin-left:8px; background:#ff8a50; color:white; }
+.chat-sendButton:hover { background:#ff7043; }
+
+.reply-icon { width:34px; height:34px; flex-shrink:0; border-radius:50%; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+.chat-bubbleLeft { display: inline-block; }
+
+/* Maintenance overrides */
+.maintenance .chat-inputPaper { background: #f0e0d6; }
+.maintenance .chat-inputBase { color: #999; }
+.maintenance .chat-sendButton { background: #bdbdbd; }
+.maintenance .chat-sendButton:hover { background: #bdbdbd; }
+.maintenance .chat-statusDot { width:10px; height:10px; background: #f57c00; border-radius:50%; margin-right:8px; display:inline-block; }

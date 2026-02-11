@@ -3,6 +3,7 @@ import Ulap from './components/Ulap/Ulap';
 import DisplayPage from './components/Kurt/pages/DisplayPage';
 import Graphs from './components/HistoricalGraph/pages/graphs';
 import Jayson from './components/Adam/components/jsontask';
+import Chatbox from './Chatbox/chatbox';
 
 const routes = [
   {
@@ -24,6 +25,10 @@ const routes = [
       {
         path: '/AdamJSON',
         element: Jayson
+      },
+      {
+        path: '/Chatbox',
+        element: Chatbox
       }
     ],
   },
