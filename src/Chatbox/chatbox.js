@@ -9,6 +9,7 @@ import SendIcon from "@material-ui/icons/Send";
 import EmojiEmotionsIcon from "@material-ui/icons/EmojiEmotions";
 import CloseIcon from "@material-ui/icons/Close";
 import RemoveIcon from "@material-ui/icons/Remove";
+import EmojiPicker from "emoji-picker-react"; //naglagay lng ng emoji-picker para sa emojis.
 
 import ulapLogo from "./Assets/ulap-biz-logo.png";
 import radzLogo from "./Assets/SHARED] Radztech Interns Logo - 32.png";
@@ -19,35 +20,59 @@ export default function Chatbox() {
       id: 1,
       sender: "bot",
       text: "Hello! Welcome to Ulap Biz support chatbot.",
-      time: new Date().toLocaleTimeString(),
+      time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }),
     },
     {
       id: 2,
       sender: "me",
       text: "Hi Ulap Biz!!!",
-      time: new Date().toLocaleTimeString(),
+      time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }),
     },
   ]);
+
   const [input, setInput] = useState("");
+  const [showEmoji, setShowEmoji] = useState(false);
+
   const endRef = useRef(null);
 
+  // Auto scroll
   useEffect(() => {
     if (endRef.current) {
       endRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [messages]);
 
+  // Close emoji when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (!e.target.closest(".emoji-wrapper")) {
+        setShowEmoji(false);
+      }
+    }
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  // Add emoji to input
+  const handleEmojiClick = (emojiData) => {
+    setInput((prev) => prev + emojiData.emoji);
+  };
+
   function handleSend() {
     const text = input.trim();
     if (!text) return;
+
     const next = {
       id: Date.now(),
       sender: "me",
       text,
-      time: new Date().toLocaleTimeString(),
+      time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }),
     };
+
     setMessages((prev) => [...prev, next]);
     setInput("");
+    setShowEmoji(false);
 
     setTimeout(() => {
       setMessages((prev) => [
@@ -56,7 +81,7 @@ export default function Chatbox() {
           id: Date.now() + 1,
           sender: "bot",
           text: "Thanks — we received your message.",
-          time: new Date().toLocaleTimeString(),
+          time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }),
         },
       ]);
     }, 800);
@@ -71,6 +96,7 @@ export default function Chatbox() {
 
   return (
     <div className="chat-root">
+      {/* ================= ONLINE PANEL ================= */}
       <Paper className="chat-panel online" elevation={0}>
         <div className="chat-header">
           <div className="chat-titleArea">
@@ -154,16 +180,42 @@ export default function Chatbox() {
                 )}
               </div>
             ))}
-
             <div ref={endRef} />
           </div>
         </div>
 
+        {/* ================= INPUT AREA ================= */}
         <div className="chat-inputArea">
           <Paper className="chat-inputPaper" elevation={0}>
-            <IconButton size="small">
-              <EmojiEmotionsIcon />
-            </IconButton>
+            {/* Emoji Section */}
+            <div
+              className="emoji-wrapper"
+              style={{ position: "relative" }}
+            >
+              <IconButton
+                size="small"
+                onClick={() => setShowEmoji((prev) => !prev)}
+              >
+                <EmojiEmotionsIcon
+                  style={{ color: showEmoji ? "#ff6f00" : "#777" }}
+                />
+              </IconButton>
+
+              {showEmoji && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 45,
+                    left: 0,
+                    zIndex: 1000,
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                  }}
+                >
+                  <EmojiPicker onEmojiClick={handleEmojiClick} />
+                </div>
+              )}
+            </div>
+
             <InputBase
               className="chat-inputBase"
               placeholder="Type Message"
@@ -171,6 +223,7 @@ export default function Chatbox() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
             />
+
             <IconButton size="small">
               <img
                 src={ulapLogo}
@@ -179,6 +232,7 @@ export default function Chatbox() {
               />
             </IconButton>
           </Paper>
+
           <IconButton
             className="chat-sendButton"
             style={{ marginLeft: 8 }}
@@ -189,6 +243,7 @@ export default function Chatbox() {
         </div>
       </Paper>
 
+      {/* ================= MAINTENANCE PANEL (UNCHANGED) ================= */}
       <Paper className="chat-panel maintenance" elevation={0}>
         <div className="chat-header">
           <div className="chat-titleArea">
@@ -207,14 +262,6 @@ export default function Chatbox() {
                 </Typography>
               </div>
             </div>
-          </div>
-          <div className="chat-controlIcons">
-            <IconButton size="small">
-              <RemoveIcon fontSize="small" />
-            </IconButton>
-            <IconButton size="small">
-              <CloseIcon fontSize="small" />
-            </IconButton>
           </div>
         </div>
 
@@ -240,39 +287,12 @@ export default function Chatbox() {
                     fontSize: 11,
                   }}
                 >
-                  {new Date().toLocaleTimeString()}
+                  {new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}
                 </Typography>
               </div>
             </div>
             <div ref={endRef} />
           </div>
-        </div>
-
-        <div className="chat-inputArea">
-          <Paper className="chat-inputPaper" elevation={0}>
-            <IconButton size="small">
-              <EmojiEmotionsIcon />
-            </IconButton>
-            <InputBase
-              className="chat-inputBase"
-              placeholder="Service unavailable"
-              disabled
-            />
-            <IconButton size="small">
-              <img
-                src={ulapLogo}
-                alt="logo"
-                style={{ width: 22, height: 22, opacity: 0.6 }}
-              />
-            </IconButton>
-          </Paper>
-          <IconButton
-            className="chat-sendButton"
-            style={{ marginLeft: 8 }}
-            disabled
-          >
-            <SendIcon />
-          </IconButton>
         </div>
       </Paper>
     </div>
