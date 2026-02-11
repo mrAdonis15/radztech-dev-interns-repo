@@ -188,12 +188,16 @@ const JsonData = () => {
       >
         <Typography variant="subtitle2">{title}</Typography>
         <Box>
-          <Button size="small" style={{ color: "white" }} onClick={onEdit}>
-            EDIT
-          </Button>
-          <Button size="small" style={{ color: "white" }} onClick={onDelete}>
-            DELETE
-          </Button>
+          <Tooltip title="Edit">
+            <IconButton style={{ color: "white" }} onClick={onEdit}>
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <IconButton style={{ color: "white" }} onClick={onDelete}>
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
       <Box p={2} style={{ backgroundColor: "#e0e0e0" }}>
