@@ -2,6 +2,7 @@ import DefaultLayout from './layouts/DefaultLayout';
 import Ulap from './components/Ulap/Ulap';
 import DisplayPage from './components/Kurt/pages/DisplayPage';
 import Graphs from './components/HistoricalGraph/pages/graphs';
+import json_data from './components/Brayan/json_data';
 
 const routes = [
   {
@@ -19,7 +20,8 @@ const routes = [
       {
         path: '/HistoricalGraph',
         element: Graphs
-      }
+      },
+      
     ],
   },
 ];
