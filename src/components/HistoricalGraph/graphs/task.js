@@ -84,9 +84,8 @@ function getTaskChart(data, intervalMs = 1000) {
       position: 'bottom',
       labels: {
         fontColor: '#333',
-        usePointStyle: true,
-        padding: 12,
-        boxWidth: 12,
+        padding: 15,
+        boxWidth: 30,
       },
     },
     tooltips: {

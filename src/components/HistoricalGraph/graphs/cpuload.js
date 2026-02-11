@@ -117,9 +117,8 @@ const CpuLoad = ({ height = 320 }) => {
         position: 'bottom',
         labels: {
           fontColor: '#333',
-          usePointStyle: true,
-          padding: 12,
-          boxWidth: 12,
+          padding: 15,
+          boxWidth: 30,
         },
       },
       tooltips: {
@@ -139,10 +138,10 @@ const CpuLoad = ({ height = 320 }) => {
         yAxes: [
           {
             gridLines: { color: 'rgba(0,0,0,0.06)' },
-            ticks: {
+              ticks: {
               beginAtZero: true,
-              max: Math.max(1, maxValue * 1.1),
-              stepSize: 0.25,
+              max: 1.0,
+              stepSize: .25,
               fontSize: 11,
               fontColor: '#666',
               callback: (value) => value.toFixed(2),
@@ -215,3 +214,4 @@ const CpuLoad = ({ height = 320 }) => {
 };
 
 export default CpuLoad;
+

@@ -103,8 +103,12 @@ function getHistoricalChart(data, intervalMs) {
     legend: {
       display: true,
       position: 'bottom',
-      align: 'start',
-      labels: { fontColor: '#333', usePointStyle: true, padding: 12, boxWidth: 12 },
+      labels: {
+        fontColor: '#333',
+        padding: 15,
+        boxWidth: 30,
+        font: { size: 12, weight: '500' },
+      },
     },
     tooltips: {
       mode: 'index',
