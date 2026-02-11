@@ -9,6 +9,7 @@ import SendIcon from "@material-ui/icons/Send";
 import EmojiEmotionsIcon from "@material-ui/icons/EmojiEmotions";
 import CloseIcon from "@material-ui/icons/Close";
 import RemoveIcon from "@material-ui/icons/Remove";
+import SettingsIcon from "@material-ui/icons/Settings";
 import EmojiPicker from "emoji-picker-react"; //naglagay lng ng emoji-picker para sa emojis.
 
 import ulapLogo from "./Assets/ulap-biz-logo.png";
@@ -50,6 +51,7 @@ export default function Chatbox() {
 
   const [theme, setTheme] = useState(defaultTheme);
   const [selectedThemeKey, setSelectedThemeKey] = useState(null);
+  const [maintenanceOpen, setMaintenanceOpen] = useState(true);
 
   function applyTheme(t) {
     const el = rootRef.current;
@@ -302,7 +304,7 @@ export default function Chatbox() {
                 )}
               </div>
             ))}
-            {/* spacer at bottom handled by scrolling the body element */}
+           
           </div>
         </div>
 
@@ -427,65 +429,76 @@ export default function Chatbox() {
       </Paper>
 
       {/* MAINTENANCE PANEL  */}
-      <Paper className="chat-panel maintenance" elevation={0}>
-        <div className="chat-header">
-          <div className="chat-titleArea">
-            <Avatar src={radzLogo} />
-            <div style={{ marginLeft: 8 }}>
-              <Typography variant="body1" className="chat-titleText">
-                Ulap Chat
-              </Typography>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <span className="chat-statusDot" />
-                <Typography
-                  variant="caption"
-                  style={{ color: "#777", marginLeft: 6 }}
-                >
-                  Under Maintenance
+      {maintenanceOpen && (
+        <Paper className="chat-panel maintenance" elevation={0}>
+          <div className="chat-header">
+            <div className="chat-titleArea">
+              <Avatar src={radzLogo} />
+              <div style={{ marginLeft: 8 }}>
+                <Typography variant="body1" className="chat-titleText">
+                  Ulap Chat
                 </Typography>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <span className="chat-statusDot" />
+                  <Typography
+                    variant="caption"
+                    style={{ color: "#777", marginLeft: 6 }}
+                  >
+                    Under Maintenance
+                  </Typography>
+                </div>
               </div>
             </div>
+            <div className="chat-controlIcons">
+              <IconButton
+                size="small"
+                aria-label="close-maintenance"
+                title="Close (disabled)"
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </div>
           </div>
-        </div>
 
-        <div className="chat-body">
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <div
-              style={{
-                display: "flex",
-                width: "100%",
-                justifyContent: "flex-start",
-              }}
-            >
+          <div className="chat-body">
+            <div style={{ display: "flex", flexDirection: "column" }}>
               <div
                 style={{
                   display: "flex",
-                  flexDirection: "column",
-                  marginLeft: 16,
+                  width: "100%",
+                  justifyContent: "flex-start",
                 }}
               >
-                <div className="chat-bubbleLeft">
-                  <Typography variant="body2" className={"bubble-text left"}>
-                    Service is currently under maintenance.
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    marginLeft: 16,
+                  }}
+                >
+                  <div className="chat-bubbleLeft">
+                    <Typography variant="body2" className={"bubble-text left"}>
+                      Service is currently under maintenance.
+                    </Typography>
+                  </div>
+                  <Typography
+                    variant="caption"
+                    className={"bubble-time left"}
+                    style={{ marginTop: 6, marginLeft: 4 }}
+                  >
+                    {new Date().toLocaleTimeString([], {
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
                   </Typography>
                 </div>
-                <Typography
-                  variant="caption"
-                  className={"bubble-time left"}
-                  style={{ marginTop: 6, marginLeft: 4 }}
-                >
-                  {new Date().toLocaleTimeString([], {
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true,
-                  })}
-                </Typography>
               </div>
+              {/* maintenance panel bottom spacer removed */}
             </div>
-            {/* maintenance panel bottom spacer removed */}
           </div>
-        </div>
-      </Paper>
+        </Paper>
+      )}
     </div>
   );
 }
