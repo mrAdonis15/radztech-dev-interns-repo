@@ -53,7 +53,7 @@ const JsonEditModal = ({
           <TextField
             fullWidth
             multiline
-            rows={20}
+            minRows={20}
             variant="outlined"
             value={jsonEditor}
             onChange={(e) => setJsonEditor && setJsonEditor(e.target.value)}

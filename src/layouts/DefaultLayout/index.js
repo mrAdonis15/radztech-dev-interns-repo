@@ -6,14 +6,14 @@ import Interns from 'src/components/Interns/Interns';
 
 const DefaultLayout = () => {
   const location = useLocation();
-  const isHistoricalGraph = location.pathname === '/HistoricalGraph';
+  const isHome = location.pathname === '/';
 
   return (
     <div>
       <Navbar />
       <div>
         <Outlet />
-        {!isHistoricalGraph && (
+        {isHome && (
           <>
             <Ulap />
             <Interns />
