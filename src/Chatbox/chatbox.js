@@ -9,12 +9,12 @@ import SendIcon from "@material-ui/icons/Send";
 import EmojiEmotionsIcon from "@material-ui/icons/EmojiEmotions";
 import CloseIcon from "@material-ui/icons/Close";
 import RemoveIcon from "@material-ui/icons/Remove";
-import SettingsIcon from "@material-ui/icons/Settings";
+
 import EmojiPicker from "emoji-picker-react"; //naglagay lng ng emoji-picker para sa emojis.
 
 import ulapLogo from "./Assets/ulap-biz-logo.png";
 import radzLogo from "./Assets/SHARED] Radztech Interns Logo - 32.png";
-import defaultTheme, { sanitizeColor, PRESET_THEMES } from "./colotheme";
+import defaultTheme, { sanitizeColor, PRESET_THEMES } from "./colotheme.js";
 
 export default function Chatbox() {
   const [messages, setMessages] = useState([
