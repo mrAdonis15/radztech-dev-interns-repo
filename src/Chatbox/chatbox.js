@@ -9,10 +9,12 @@ import SendIcon from "@material-ui/icons/Send";
 import EmojiEmotionsIcon from "@material-ui/icons/EmojiEmotions";
 import CloseIcon from "@material-ui/icons/Close";
 import RemoveIcon from "@material-ui/icons/Remove";
+import SettingsIcon from "@material-ui/icons/Settings";
 import EmojiPicker from "emoji-picker-react"; //naglagay lng ng emoji-picker para sa emojis.
 
 import ulapLogo from "./Assets/ulap-biz-logo.png";
 import radzLogo from "./Assets/SHARED] Radztech Interns Logo - 32.png";
+import defaultTheme, { sanitizeColor, PRESET_THEMES } from "./colotheme";
 
 export default function Chatbox() {
   const [messages, setMessages] = useState([
@@ -20,29 +22,94 @@ export default function Chatbox() {
       id: 1,
       sender: "bot",
       text: "Hello! Welcome to Ulap Biz support chatbot.",
-      time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }),
+      time: new Date().toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }),
     },
     {
       id: 2,
       sender: "me",
       text: "Hi Ulap Biz!!!",
-      time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }),
+      time: new Date().toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }),
     },
   ]);
 
   const [input, setInput] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
 
-  const endRef = useRef(null);
+  const bodyRef = useRef(null);
+  const rootRef = useRef(null);
+  const [showThemePicker, setShowThemePicker] = useState(false);
+  const [linkTheme] = useState(true);
 
-  // Auto scroll
+
+  const [theme, setTheme] = useState(defaultTheme);
+  const [selectedThemeKey, setSelectedThemeKey] = useState(null);
+  const [maintenanceOpen, setMaintenanceOpen] = useState(true);
+
+  function applyTheme(t) {
+    const el = rootRef.current;
+    if (!el) return;
+    el.style.setProperty(
+      "--bubble-left",
+      sanitizeColor(t.bubbleLeft, "rgba(255,117,4,0.5)"),
+    );
+    el.style.setProperty(
+      "--bubble-right",
+      sanitizeColor(t.bubbleRight, "#ffffff"),
+    );
+    el.style.setProperty(
+      "--border-color",
+      sanitizeColor(t.borderColor, "#f57c00"),
+    );
+  }
+
+
   useEffect(() => {
-    if (endRef.current) {
-      endRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    try {
+      const raw = localStorage.getItem("ulapChatTheme");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const t = {
+          bubbleLeft: sanitizeColor(parsed.bubbleLeft, "rgba(255,117,4,0.5)"),
+          bubbleRight: sanitizeColor(parsed.bubbleRight, "#ffffff"),
+          borderColor: sanitizeColor(parsed.borderColor, "#f57c00"),
+        };
+        setTheme(t);
+          // attempt to set selectedThemeKey to a preset if it matches
+          try {
+            const match = PRESET_THEMES.find((p) =>
+              p.theme.bubbleLeft === t.bubbleLeft && p.theme.borderColor === t.borderColor
+            );
+            if (match) setSelectedThemeKey(match.key);
+          } catch (e) {}
+        // apply after setTheme
+        requestAnimationFrame(() => applyTheme(t));
+      } else {
+        applyTheme(theme);
+      }
+    } catch (e) {
+      applyTheme(theme);
+    }
+    
+  }, []);
+
+
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (el) {
+      
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     }
   }, [messages]);
 
-  // Close emoji when clicking outside
+  
   useEffect(() => {
     function handleClickOutside(e) {
       if (!e.target.closest(".emoji-wrapper")) {
@@ -67,7 +134,11 @@ export default function Chatbox() {
       id: Date.now(),
       sender: "me",
       text,
-      time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }),
+      time: new Date().toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }),
     };
 
     setMessages((prev) => [...prev, next]);
@@ -81,10 +152,52 @@ export default function Chatbox() {
           id: Date.now() + 1,
           sender: "bot",
           text: "Thanks — we received your message.",
-          time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }),
+          time: new Date().toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          }),
         },
       ]);
     }, 800);
+  }
+
+  function toggleThemePicker() {
+    setShowThemePicker((s) => !s);
+  }
+    //color theme
+  function handleThemeChange(key, value) {
+    
+    let next;
+    if (linkTheme) {
+      next = { bubbleLeft: value, bubbleRight: value, borderColor: value };
+    } else {
+      next = { ...theme, [key]: value };
+    }
+    setTheme(next);
+    applyTheme(next);
+  }
+
+  function saveTheme() {
+    try {
+      localStorage.setItem("ulapChatTheme", JSON.stringify(theme));
+    } catch (e) {
+      console.warn("Failed to save theme", e);
+    }
+    setShowThemePicker(false);
+  }
+
+  function resetTheme() {
+    const def = {
+      bubbleLeft: "rgba(255,117,4,0.5)",
+      bubbleRight: "#ffffff",
+      borderColor: "#f57c00",
+    };
+    setTheme(def);
+    applyTheme(def);
+    try {
+      localStorage.removeItem("ulapChatTheme");
+    } catch (e) {}
   }
 
   function handleKeyDown(e) {
@@ -95,8 +208,7 @@ export default function Chatbox() {
   }
 
   return (
-    <div className="chat-root">
-      {/* ================= ONLINE PANEL ================= */}
+    <div className="chat-root" ref={rootRef}>
       <Paper className="chat-panel online" elevation={0}>
         <div className="chat-header">
           <div className="chat-titleArea">
@@ -126,7 +238,7 @@ export default function Chatbox() {
           </div>
         </div>
 
-        <div className="chat-body">
+        <div className="chat-body" ref={bodyRef}>
           <div style={{ display: "flex", flexDirection: "column" }}>
             {messages.map((msg) => (
               <div
@@ -139,16 +251,22 @@ export default function Chatbox() {
                 }}
               >
                 {msg.sender === "me" ? (
-                  <div className="chat-bubbleRight" style={{ marginRight: 8 }}>
-                    <Typography variant="body2">{msg.text}</Typography>
+                  <div
+                    className={"message-content right"}
+                    style={{ marginRight: 8 }}
+                  >
+                    <div className="chat-bubbleRight">
+                      <Typography
+                        variant="body2"
+                        className={"bubble-text right"}
+                      >
+                        {msg.text}
+                      </Typography>
+                    </div>
                     <Typography
                       variant="caption"
-                      style={{
-                        display: "block",
-                        marginTop: 6,
-                        color: "#666",
-                        fontSize: 11,
-                      }}
+                      className={"bubble-time right"}
+                      style={{ marginTop: 6 }}
                     >
                       {msg.time}
                     </Typography>
@@ -162,16 +280,22 @@ export default function Chatbox() {
                     }}
                   >
                     <Avatar src={radzLogo} className="reply-icon" />
-                    <div className="chat-bubbleLeft" style={{ marginLeft: 8 }}>
-                      <Typography variant="body2">{msg.text}</Typography>
+                    <div
+                      className={"message-content left"}
+                      style={{ marginLeft: 8 }}
+                    >
+                      <div className="chat-bubbleLeft">
+                        <Typography
+                          variant="body2"
+                          className={"bubble-text left"}
+                        >
+                          {msg.text}
+                        </Typography>
+                      </div>
                       <Typography
                         variant="caption"
-                        style={{
-                          display: "block",
-                          marginTop: 6,
-                          color: "#666",
-                          fontSize: 11,
-                        }}
+                        className={"bubble-time left"}
+                        style={{ marginTop: 6, marginLeft: 4 }}
                       >
                         {msg.time}
                       </Typography>
@@ -180,18 +304,15 @@ export default function Chatbox() {
                 )}
               </div>
             ))}
-            <div ref={endRef} />
+           
           </div>
         </div>
 
-        {/* ================= INPUT AREA ================= */}
+        {/*  INPUT AREA  */}
         <div className="chat-inputArea">
           <Paper className="chat-inputPaper" elevation={0}>
             {/* Emoji Section */}
-            <div
-              className="emoji-wrapper"
-              style={{ position: "relative" }}
-            >
+            <div className="emoji-wrapper" style={{ position: "relative" }}>
               <IconButton
                 size="small"
                 onClick={() => setShowEmoji((prev) => !prev)}
@@ -224,13 +345,77 @@ export default function Chatbox() {
               onKeyDown={handleKeyDown}
             />
 
-            <IconButton size="small">
-              <img
-                src={ulapLogo}
-                alt="logo"
-                style={{ width: 22, height: 22, opacity: 0.9 }}
-              />
-            </IconButton>
+            <div style={{ position: "relative" }}>
+              <IconButton
+                size="small"
+                onClick={toggleThemePicker}
+                aria-label="theme"
+              >
+                <img
+                  src={ulapLogo}
+                  alt="logo"
+                  style={{ width: 22, height: 22, opacity: 0.95 }}
+                />
+              </IconButton>
+
+              {showThemePicker && (
+                <div
+                  className="theme-picker"
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    bottom: 44,
+                    zIndex: 2000,
+                  }}
+                >
+                  <div
+                    style={{
+                      background: "#fff",
+                      padding: 12,
+                      borderRadius: 8,
+                      boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
+                      width: 220,
+                    }}
+                  >
+                    <div
+                      style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}
+                    >
+                      Chat Theme
+                    </div>
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 13, marginBottom: 8 }}>Choose theme</div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {PRESET_THEMES.map((t) => (
+                          <button
+                            key={t.key}
+                            className={"theme-swatch" + (selectedThemeKey === t.key ? " selected" : "")}
+                            onClick={() => {
+                              setTheme(t.theme);
+                              applyTheme(t.theme);
+                              setSelectedThemeKey(t.key);
+                            }}
+                            type="button"
+                          >
+                            <div
+                              className="swatch-box"
+                              style={{
+                                background: t.theme.bubbleLeft,
+                                borderColor: t.theme.borderColor,
+                              }}
+                            />
+                            <div className="swatch-label">{t.name}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                      <button onClick={resetTheme} className="theme-action reset">Reset</button>
+                      <button onClick={saveTheme} className="theme-action save">Save</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </Paper>
 
           <IconButton
@@ -243,58 +428,77 @@ export default function Chatbox() {
         </div>
       </Paper>
 
-      {/* ================= MAINTENANCE PANEL (UNCHANGED) ================= */}
-      <Paper className="chat-panel maintenance" elevation={0}>
-        <div className="chat-header">
-          <div className="chat-titleArea">
-            <Avatar src={radzLogo} />
-            <div style={{ marginLeft: 8 }}>
-              <Typography variant="body1" className="chat-titleText">
-                Ulap Chat
-              </Typography>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <span className="chat-statusDot" />
-                <Typography
-                  variant="caption"
-                  style={{ color: "#777", marginLeft: 6 }}
-                >
-                  Under Maintenance
+      {/* MAINTENANCE PANEL  */}
+      {maintenanceOpen && (
+        <Paper className="chat-panel maintenance" elevation={0}>
+          <div className="chat-header">
+            <div className="chat-titleArea">
+              <Avatar src={radzLogo} />
+              <div style={{ marginLeft: 8 }}>
+                <Typography variant="body1" className="chat-titleText">
+                  Ulap Chat
                 </Typography>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <span className="chat-statusDot" />
+                  <Typography
+                    variant="caption"
+                    style={{ color: "#777", marginLeft: 6 }}
+                  >
+                    Under Maintenance
+                  </Typography>
+                </div>
               </div>
             </div>
+            <div className="chat-controlIcons">
+              <IconButton
+                size="small"
+                aria-label="close-maintenance"
+                title="Close (disabled)"
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </div>
           </div>
-        </div>
 
-        <div className="chat-body">
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <div
-              style={{
-                display: "flex",
-                width: "100%",
-                justifyContent: "flex-start",
-              }}
-            >
-              <div className="chat-bubbleLeft" style={{ marginLeft: 16 }}>
-                <Typography variant="body2">
-                  Service is currently under maintenance.
-                </Typography>
-                <Typography
-                  variant="caption"
+          <div className="chat-body">
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div
+                style={{
+                  display: "flex",
+                  width: "100%",
+                  justifyContent: "flex-start",
+                }}
+              >
+                <div
                   style={{
-                    display: "block",
-                    marginTop: 6,
-                    color: "#666",
-                    fontSize: 11,
+                    display: "flex",
+                    flexDirection: "column",
+                    marginLeft: 16,
                   }}
                 >
-                  {new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}
-                </Typography>
+                  <div className="chat-bubbleLeft">
+                    <Typography variant="body2" className={"bubble-text left"}>
+                      Service is currently under maintenance.
+                    </Typography>
+                  </div>
+                  <Typography
+                    variant="caption"
+                    className={"bubble-time left"}
+                    style={{ marginTop: 6, marginLeft: 4 }}
+                  >
+                    {new Date().toLocaleTimeString([], {
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
+                  </Typography>
+                </div>
               </div>
+              {/* maintenance panel bottom spacer removed */}
             </div>
-            <div ref={endRef} />
           </div>
-        </div>
-      </Paper>
+        </Paper>
+      )}
     </div>
   );
 }
