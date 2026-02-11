@@ -1,7 +1,7 @@
 // Centralized color theme and helpers for Chatbox
 export const defaultTheme = {
   bubbleLeft: "rgba(255,117,4,0.5)",
-  bubbleRight: "#bdbdbd",
+  bubbleRight: "#ffffff",
   borderColor: "#f57c00",
 };
 

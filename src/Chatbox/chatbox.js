@@ -60,7 +60,7 @@ export default function Chatbox() {
     );
     el.style.setProperty(
       "--bubble-right",
-      sanitizeColor(t.bubbleRight, "#bdbdbd"),
+      sanitizeColor(t.bubbleRight, "#ffffff"),
     );
     el.style.setProperty(
       "--border-color",
@@ -76,7 +76,7 @@ export default function Chatbox() {
         const parsed = JSON.parse(raw);
         const t = {
           bubbleLeft: sanitizeColor(parsed.bubbleLeft, "rgba(255,117,4,0.5)"),
-          bubbleRight: sanitizeColor(parsed.bubbleRight, "#bdbdbd"),
+          bubbleRight: sanitizeColor(parsed.bubbleRight, "#ffffff"),
           borderColor: sanitizeColor(parsed.borderColor, "#f57c00"),
         };
         setTheme(t);
@@ -188,7 +188,7 @@ export default function Chatbox() {
   function resetTheme() {
     const def = {
       bubbleLeft: "rgba(255,117,4,0.5)",
-      bubbleRight: "#bdbdbd",
+      bubbleRight: "#ffffff",
       borderColor: "#f57c00",
     };
     setTheme(def);

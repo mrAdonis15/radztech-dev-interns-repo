@@ -77,21 +77,22 @@
 }
 .chat-bubbleRight {
   max-width: 72%;
-  background: var(--bubble-right, #bdbdbd);
+  /* use the theme variable directly so changing theme updates the bubble */
+  background: var(--bubble-right, #fff);
+  border: 1px solid rgba(0,0,0,0.06);
   color: #212121;
   padding: 14px 18px;
   border-radius: 16px;
   margin-top: 12px;
   margin-left: auto;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
-/* Ensure message content wrapper expands so percentage max-widths work correctly */
 .message-content {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-  min-width: 0; /* allow flex children to shrink correctly */
+  min-width: 0; 
 }
 .message-content.left {
   align-items: flex-start;
