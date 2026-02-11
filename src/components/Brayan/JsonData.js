@@ -263,13 +263,13 @@ const JsonData = () => {
       <Paper
         elevation={4}
         style={{
-          height: "90vh",
+          height: "80vh",
           borderRadius: 16,
           width: "100%",
           maxWidth: "1200px",
           border: "1px solid #e0e0e0",
           overflow: "hidden",
-          paddingTop: "50px", // Added padding top to the main card
+          paddingTop: "50px",
         }}
       >
         <Grid container style={{ height: "100%" }}>
