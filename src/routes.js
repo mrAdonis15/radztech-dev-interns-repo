@@ -6,7 +6,12 @@ import Jayson from './components/Adam/components/jsontask';
 import AdvancedSettings from './components/Merlvin/AdvancedSettings';
 import JsonData from './components/Brayan/JsonData';
 import Chatbox from './Chatbox/chatbox';
-import Navbar from './layouts/DefaultLayout/Navbar';
+import EvaluationLayout from './Evaluation/Navbar';
+import Applicant from './Evaluation/Applicant';
+import Category from './Evaluation/Category';
+import Criteria from './Evaluation/Criteria';
+import Evaluation from './Evaluation/Evaluation';
+import ListofApplicants from './Evaluation/ListofApplicants';
 
 const routes = [
   {
@@ -40,12 +45,34 @@ const routes = [
       {
         path: '/Chatbox',
         element: Chatbox
-      },
-      {
-        path: 'Evaluation',
-        element: Navbar
       }
     ],
+  },
+  {
+    path: '/evaluation',
+    element: EvaluationLayout,
+    children: [
+      {
+        path: 'applicant',
+        element: Applicant
+      },
+      {
+        path: 'category',
+        element: Category
+      },
+      {
+        path: 'criteria',
+        element: Criteria
+      },
+      {
+        path: 'evaluation',
+        element: Evaluation
+      },
+      {
+        path: 'list-applicants',
+        element: ListofApplicants
+      }
+    ]
   },
 ];
 
