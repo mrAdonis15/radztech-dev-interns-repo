@@ -46,7 +46,7 @@ export default function Chatbox() {
   const bodyRef = useRef(null);
   const rootRef = useRef(null);
   const [showThemePicker, setShowThemePicker] = useState(false);
-  const [linkTheme] = useState(true);
+  
 
 
   const [theme, setTheme] = useState(defaultTheme);
@@ -67,6 +67,12 @@ export default function Chatbox() {
     el.style.setProperty(
       "--border-color",
       sanitizeColor(t.borderColor, "#f57c00"),
+    );
+    // set a panel accent color derived from the left bubble so the background gradient
+    // matches the currently selected theme while remaining a soft gradient
+    el.style.setProperty(
+      "--panel-accent",
+      sanitizeColor(t.bubbleLeft, "rgba(255,179,128,0.6)"),
     );
   }
 
@@ -165,18 +171,7 @@ export default function Chatbox() {
   function toggleThemePicker() {
     setShowThemePicker((s) => !s);
   }
-    //color theme
-  function handleThemeChange(key, value) {
-    
-    let next;
-    if (linkTheme) {
-      next = { bubbleLeft: value, bubbleRight: value, borderColor: value };
-    } else {
-      next = { ...theme, [key]: value };
-    }
-    setTheme(next);
-    applyTheme(next);
-  }
+   
 
   function saveTheme() {
     try {
@@ -353,8 +348,8 @@ export default function Chatbox() {
               >
                 <img
                   src={ulapLogo}
-                  alt="logo"
-                  style={{ width: 22, height: 22, opacity: 0.95 }}
+                  alt="ulapbiz logo"
+                  className="theme-toggle-logo"
                 />
               </IconButton>
 
