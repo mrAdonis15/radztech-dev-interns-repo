@@ -6,6 +6,7 @@ import Jayson from './components/Adam/components/jsontask';
 import AdvancedSettings from './components/Merlvin/AdvancedSettings';
 import JsonData from './components/Brayan/JsonData';
 import Chatbox from './Chatbox/chatbox';
+import Navbar from './layouts/DefaultLayout/Navbar';
 
 const routes = [
   {
@@ -39,6 +40,10 @@ const routes = [
       {
         path: '/Chatbox',
         element: Chatbox
+      },
+      {
+        path: 'Evaluation',
+        element: Navbar
       }
     ],
   },
