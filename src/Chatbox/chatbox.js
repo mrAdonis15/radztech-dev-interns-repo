@@ -51,7 +51,7 @@ export default function Chatbox() {
 
   const [theme, setTheme] = useState(defaultTheme);
   const [selectedThemeKey, setSelectedThemeKey] = useState(null);
-  const [maintenanceOpen, setMaintenanceOpen] = useState(true);
+  const [maintenanceOpen] = useState(true);
 
   function applyTheme(t) {
     const el = rootRef.current;
