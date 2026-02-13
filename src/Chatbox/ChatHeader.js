@@ -24,14 +24,14 @@ export default function ChatHeader({
         <Avatar src={radzLogo} className="chat-header-avatar" />
         <div style={{ marginLeft: 8, minWidth: 0 }}>
           <Typography variant="body1" className="chat-titleText">
-            Ulap Chat
+            Talk to Ulap 
           </Typography>
           <div className="chat-header-statusRow">
             {maintenanceOpen ? (
               <>
                 <span className="chat-statusDot" />
                 <Typography variant="caption" style={{ color: "#777" }}>
-                  Under Maintenance
+                  Under Maintenance comeback again later
                 </Typography>
               </>
             ) : (
