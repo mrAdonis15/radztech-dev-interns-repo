@@ -23,7 +23,6 @@ export default function Chatbox() {
   const bodyRef = useRef(null);
   const inputRef = useRef(null);
   const panelRef = useRef(null);
-  const dragStartRef = useRef({ x: 0, y: 0, left: 0, top: 0 });
 
   const [messages, setMessages] = useState(getInitialMessages());
   const [input, setInput] = useState("");
@@ -33,7 +32,6 @@ export default function Chatbox() {
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [panelPosition, setPanelPosition] = useState({ x: null, y: null });
-  const [isDragging, setIsDragging] = useState(false);
 
   const theme = useChatboxTheme(rootRef);
 
@@ -70,44 +68,8 @@ export default function Chatbox() {
     }
   }, [isOpen, panelPosition.x, panelPosition.y]);
 
-  // Drag handlers
-  const handleDragStart = (e) => {
-    if (e.button !== 0) return;
-    if (e.target.closest(".chat-controlIcons")) return;
-    if (e.target.closest(".chat-header-toggleWrap") || e.target.closest(".MuiSwitch-root")) return;
-    if (e.target.closest("input") || e.target.closest(".chat-sendButton")) return;
-    if (e.target.closest(".emoji-wrapper") || e.target.closest('[aria-label="theme"]')) return;
-    if (!e.target.closest(".chat-header-draggable") && !e.target.closest(".chat-inputArea")) return;
-    const panel = panelRef.current;
-    if (!panel) return;
-    const rect = panel.getBoundingClientRect();
-    setIsDragging(true);
-    dragStartRef.current = {
-      x: e.clientX,
-      y: e.clientY,
-      left: panelPosition.x !== null ? panelPosition.x : rect.left,
-      top: panelPosition.y !== null ? panelPosition.y : rect.top,
-    };
-  };
-
-  useEffect(() => {
-    if (!isDragging) return;
-    const onMove = (e) => {
-      const dx = e.clientX - dragStartRef.current.x;
-      const dy = e.clientY - dragStartRef.current.y;
-      setPanelPosition({
-        x: dragStartRef.current.left + dx,
-        y: dragStartRef.current.top + dy,
-      });
-    };
-    const onUp = () => setIsDragging(false);
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, [isDragging]);
+  // Drag disabled - chat box stays fixed
+  const handleDragStart = () => {};
 
   const handleSlashSelect = (opt) => {
     setInput("/" + opt.command + " ");

@@ -67,12 +67,12 @@
 }
 
 .chat-header-draggable {
-  cursor: grab;
+  cursor: default;
   user-select: none;
 }
 
 .chat-header-draggable:active {
-  cursor: grabbing;
+  cursor: default;
 }
 .chat-panel {
   width: 340px;
@@ -256,11 +256,11 @@
 }
 
 .chat-inputArea-draggable {
-  cursor: grab;
+  cursor: default;
 }
 
 .chat-inputArea-draggable:active {
-  cursor: grabbing;
+  cursor: default;
 }
 
 .chat-inputArea-draggable input {
