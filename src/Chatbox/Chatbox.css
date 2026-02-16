@@ -1,0 +1,382 @@
+  .chat-root {
+  width: 780px; /* two panels */
+  height: 560px;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 20px;
+}
+
+/* Pop-up mode: wrapper for floating button + panel */
+.chat-root-popup {
+  width: auto;
+  height: auto;
+  left: auto;
+  top: auto;
+  transform: none;
+  display: block;
+  pointer-events: none;
+}
+
+.chat-root-popup > * {
+  pointer-events: auto;
+}
+
+/* Floating chat icon - lower right */
+.chat-toggle-button {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #ff7504 0%, #ff8a50 100%);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255, 117, 4, 0.4);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.chat-toggle-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 24px rgba(255, 117, 4, 0.5);
+}
+
+/* Pop-up chat panel - draggable, fixed position */
+.chat-panel-popup {
+  position: fixed;
+  width: 340px;
+  height: 480px;
+  min-height: 480px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Override .chat-panel height:100% when in popup so body/input stay visible */
+.chat-root-popup .chat-panel-popup.chat-panel {
+  height: 480px;
+  min-height: 480px;
+}
+
+.chat-header-draggable {
+  cursor: default;
+  user-select: none;
+}
+
+.chat-header-draggable:active {
+  cursor: default;
+}
+.chat-panel {
+  width: 340px;
+  height: 100%;
+  border-radius: 8px;
+  border: 3px solid var(--border-color, #f57c00);
+  overflow: hidden;
+  /* Soft white -> theme-accent gradient. --panel-accent is set from theme (defaults to light-orange). */
+  background: linear-gradient(180deg, #ffffff 0%, var(--panel-accent, #fff3e0) 100%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  position: relative;
+}
+.chat-header {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  gap: 8px;
+  background: linear-gradient(90deg, #fff 0%, #fff0 100%);
+  border-bottom: 1px solid var(--border-color, #f57c00);
+  flex-shrink: 0;
+}
+.chat-titleArea {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+.chat-header-avatar {
+  flex-shrink: 0;
+}
+.chat-titleText {
+  margin-left: 8px;
+  font-weight: 600;
+  color: #333;
+  font-size: 15px;
+  line-height: 1.25;
+}
+.chat-header-statusRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+.chat-header-statusRow .MuiTypography-caption {
+  line-height: 1.2;
+  margin: 0;
+}
+.chat-header-toggleWrap {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+  gap: 4px;
+}
+.chat-onlineDot,
+.chat-statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.chat-onlineDot {
+  background: #34c759;
+}
+.chat-statusDot {
+  background: #f57c00;
+}
+.chat-controlIcons {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.chat-body {
+  position: absolute;
+  top: 56px;
+  bottom: 72px;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  overflow-y: auto;
+  /* remove background image; rely on panel gradient */
+  background: transparent;
+  opacity: 1;
+}
+.chat-avatarFloating {
+  display: none;
+}
+.chat-bubbleLeft {
+  max-width: 72%;
+  background: var(--bubble-left, rgba(255,117,4,0.5));
+  color: #3e2723;
+  padding: 14px 18px;
+  border-radius: 16px;
+  margin-top: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+.chat-typing .chat-typing-text {
+  animation: chat-typing-blink 0.9s ease-in-out infinite;
+}
+@keyframes chat-typing-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.chat-bubbleRight {
+  max-width: 72%;
+  /* use the theme variable directly so changing theme updates the bubble */
+  background: var(--bubble-right, #fff);
+  border: 1px solid rgba(0,0,0,0.06);
+  color: #212121;
+  padding: 14px 18px;
+  border-radius: 16px;
+  margin-top: 12px;
+  margin-left: auto;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0; 
+}
+.message-content.left {
+  align-items: flex-start;
+}
+.message-content.right {
+  align-items: flex-end;
+}
+
+/* Prevent bubbles from collapsing: allow wrapping and set sensible min-width */
+.chat-bubbleLeft, .chat-bubbleRight {
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+  min-width: 64px;
+}
+
+
+.bubble-text {
+  font-size: 14px;
+  line-height: 1.35;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.bubble-text.left {
+  color: #050505; 
+}
+.bubble-text.right {
+  color: black; 
+}
+
+.bubble-time {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1;
+}
+.bubble-time.left {
+  color: #666;
+}
+.bubble-time.right {
+  color: #666;
+}
+.chat-timestamp {
+  text-align: center;
+  margin: 12px 0;
+  color: #777;
+  font-size: 12px;
+}
+.chat-inputArea {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+}
+
+.chat-inputArea-draggable {
+  cursor: default;
+}
+
+.chat-inputArea-draggable:active {
+  cursor: default;
+}
+
+.chat-inputArea-draggable input {
+  cursor: text;
+}
+.chat-inputPaper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 24px;
+  padding: 6px 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.chat-inputBase {
+  margin-left: 8px;
+  flex: 1;
+}
+.chat-sendButton {
+  margin-left: 8px;
+  background: #ff8a50;
+  color: white;
+}
+.chat-sendButton:hover {
+  background: #ff7043;
+}
+
+.reply-icon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+.chat-bubbleLeft {
+  display: inline-block;
+}
+
+/* Maintenance overrides */
+.maintenance .chat-inputPaper {
+  background: #f0e0d6;
+}
+.maintenance .chat-inputBase {
+  color: #999;
+}
+.maintenance .chat-sendButton {
+  background: #bdbdbd;
+}
+.maintenance .chat-sendButton:hover {
+  background: #bdbdbd;
+}
+.maintenance .chat-statusDot {
+  width: 10px;
+  height: 10px;
+  background: #f57c00;
+  border-radius: 50%;
+  margin-right: 8px;
+  display: inline-block;
+}
+
+/* Theme picker styles */
+.theme-picker .swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.theme-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 2px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.theme-swatch .swatch-box {
+  width: 48px;
+  height: 28px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+  margin-bottom: 6px;
+}
+.theme-swatch .swatch-label {
+  font-size: 12px;
+  color: #333;
+}
+.theme-swatch.selected .swatch-box {
+  box-shadow: 0 0 0 3px rgba(0, 132, 255, 0.12);
+  transform: translateY(-2px);
+}
+.theme-action {
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+}
+.theme-action.save {
+  background: #0084ff;
+  color: #fff;
+  border-color: #0073e6;
+}
+.theme-action.reset {
+  background: #fff;
+}
+
+/* Theme toggle logo ( Ulap Biz ) styling moved here from inline styles */
+.theme-toggle-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  opacity: 0.95;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+  object-fit: contain;
+  display: block;
+}
