@@ -4,6 +4,7 @@ import DisplayPage from './components/Kurt/pages/DisplayPage';
 import Graphs from './components/HistoricalGraph/pages/graphs';
 import Jayson from './components/Adam/components/jsontask';
 import AdvancedSettings from './components/Merlvin/AdvancedSettings';
+import SettingsAdvanced from './components/Settings/AdvancedSettings';
 import JsonData from './components/Brayan/JsonData';
 import Chatbox from './Chatbox/chatbox';
 import EvaluationLayout from './Evaluation/Navbar';
@@ -12,6 +13,17 @@ import Category from './Evaluation/Category';
 import Criteria from './Evaluation/Criteria';
 import Evaluation from './Evaluation/Evaluation';
 import ListofApplicants from './Evaluation/ListofApplicants';
+import {
+  Home,
+  Plans,
+  AccountingnBeyond,
+  Features,
+  SchedsnReps,
+  Contacts,
+  PlanBasic,
+  PlanPro,
+  PlanErp,
+} from './components/HeaderItems';
 
 const routes = [
   {
@@ -23,30 +35,70 @@ const routes = [
         element: Ulap,
       },
       {
+        path: '/home',
+        element: Home,
+      },
+      {
+        path: '/plans',
+        element: Plans,
+      },
+      {
+        path: '/plans/basic',
+        element: PlanBasic,
+      },
+      {
+        path: '/plans/pro',
+        element: PlanPro,
+      },
+      {
+        path: '/plans/erp',
+        element: PlanErp,
+      },
+      {
+        path: '/accounting-and-beyond',
+        element: AccountingnBeyond,
+      },
+      {
+        path: '/features',
+        element: Features,
+      },
+      {
+        path: '/schedules-and-reports',
+        element: SchedsnReps,
+      },
+      {
+        path: '/contact-us',
+        element: Contacts,
+      },
+      {
         path: '/KurtJSON',
-        element: DisplayPage
+        element: DisplayPage,
       },
       {
         path: '/HistoricalGraph',
-        element: Graphs
+        element: Graphs,
       },
       {
         path: '/AdamJSON',
         element: Jayson,
       },
-      {  
+      {
         path: '/MerlvinJSON',
-        element: AdvancedSettings
+        element: AdvancedSettings,
       },
       {
         path: '/BrayanJSON',
-        element: JsonData
+        element: JsonData,
       },
       {
         path: '/Chatbox',
-        element: Chatbox
-      }
+        element: Chatbox,
+      },
     ],
+  },
+  {
+    path: '/settings/advanced',
+    element: SettingsAdvanced,
   },
   {
     path: '/evaluation',
@@ -54,25 +106,25 @@ const routes = [
     children: [
       {
         path: 'applicant',
-        element: Applicant
+        element: Applicant,
       },
       {
         path: 'category',
-        element: Category
+        element: Category,
       },
       {
         path: 'criteria',
-        element: Criteria
+        element: Criteria,
       },
       {
         path: 'evaluation',
-        element: Evaluation
+        element: Evaluation,
       },
       {
         path: 'list-applicants',
-        element: ListofApplicants
-      }
-    ]
+        element: ListofApplicants,
+      },
+    ],
   },
 ];
 
