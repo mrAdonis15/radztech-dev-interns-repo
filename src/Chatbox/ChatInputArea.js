@@ -24,6 +24,7 @@ export default function ChatInputArea({
   onKeyDown,
   onDragStart,
   themeProps,
+  isExpanded = false,
 }) {
   const {
     showThemePicker,
@@ -37,9 +38,12 @@ export default function ChatInputArea({
 
   return (
     <div
-      className="chat-inputArea chat-inputArea-draggable chat-inputArea-emojiAnchor"
-      onMouseDown={onDragStart}
-      aria-label="Drag to move chat window"
+      className={
+        "chat-inputArea chat-inputArea-emojiAnchor" +
+        (isExpanded ? "" : " chat-inputArea-draggable")
+      }
+      onMouseDown={isExpanded ? undefined : onDragStart}
+      aria-label={isExpanded ? "Message input" : "Drag to move chat window"}
     >
       {/* Emoji panel: positioned above the whole input bar so it never overlaps */}
       {showEmoji && (

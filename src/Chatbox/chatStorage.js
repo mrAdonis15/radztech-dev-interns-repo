@@ -42,8 +42,21 @@ function saveHistory(history) {
 function getTitleFromMessages(messages) {
   const firstUser = messages.find((m) => m.sender === "me");
   if (firstUser && firstUser.text) {
-    const text = firstUser.text.trim();
-    return text.length > 30 ? text.slice(0, 30) + "…" : text;
+    let text = firstUser.text.trim();
+    // Strip slash command prefix to get the actual search/query (e.g. "/ai what is React?" -> "what is React?")
+    if (text.startsWith("/")) {
+      const afterSlash = text.slice(1).trim();
+      if (afterSlash.toLowerCase().startsWith("ai ")) {
+        text = afterSlash.slice(3).trim();
+      } else {
+        text = afterSlash;
+      }
+    }
+    if (!text) return "Chat";
+    // Capitalize first letter for display
+    text = text.charAt(0).toUpperCase() + text.slice(1);
+    const maxLen = 40;
+    return text.length > maxLen ? text.slice(0, maxLen).trim() + "…" : text;
   }
   return "Chat";
 }

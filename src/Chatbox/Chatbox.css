@@ -49,6 +49,12 @@
   box-shadow: 0 6px 24px rgba(255, 117, 4, 0.5);
 }
 
+/* Itago ang floating chat button kapag expanded para hindi matakpan ng send button */
+.chat-root-expanded .chat-toggle-button {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* Pop-up chat panel - draggable, fixed position */
 .chat-panel-popup {
   position: fixed;
@@ -60,10 +66,110 @@
   flex-direction: column;
 }
 
+/* Wrapper para sa expanded: buong page pero sa baba ng navbar */
+.chat-expanded-wrap {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(100vh - 60px);
+  z-index: 9999;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  box-sizing: border-box;
+}
+.chat-expanded-wrap .chat-panel {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Expanded panel - whole page (full viewport) */
+.chat-panel-popup.chat-panel-expanded {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  border-radius: 0;
+  transition: width 0.2s ease, height 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Expanded: header, body, input - aligned padding at maayos na layout */
+.chat-panel-expanded .chat-header {
+  padding: 12px 24px;
+  min-height: 56px;
+  flex-shrink: 0;
+  align-items: center;
+}
+.chat-panel-expanded .chat-body {
+  flex: 1;
+  min-height: 0;
+  padding: 20px 24px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.chat-panel-expanded .chat-body > div {
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+/* Message input: responsive sa popup at expanded */
+.chat-panel-expanded .chat-inputArea {
+  flex-shrink: 0;
+  padding: 12px clamp(12px, 3vw, 24px) 16px;
+  min-height: 56px;
+  align-items: center;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+  width: 100%;
+  min-width: 0;
+}
+.chat-panel-expanded .chat-inputArea .chat-inputPaper {
+  width: auto;
+  max-width: min(520px, 92vw);
+  margin: 0 auto;
+  pointer-events: auto;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+/* Text field: hindi sobrang lapad, theme/send malapit sa "Message" */
+.chat-panel-expanded .chat-inputArea .slash-menu-wrapper {
+  flex: 1 1 auto;
+  min-width: 80px;
+  max-width: min(260px, 100%);
+}
+.chat-panel-expanded .chat-inputArea .chat-inputBase,
+.chat-panel-expanded .chat-inputArea input {
+  pointer-events: auto;
+  cursor: text;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 /* Override .chat-panel height:100% when in popup so body/input stay visible */
 .chat-root-popup .chat-panel-popup.chat-panel {
   height: 480px;
   min-height: 480px;
+}
+
+/* Expanded panel - whole page override */
+.chat-root-popup .chat-panel-popup.chat-panel-expanded {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
 }
 
 .chat-header-draggable {
@@ -211,13 +317,19 @@
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-  min-width: 0; 
+  min-width: 0;
+  align-items: flex-start;
 }
 .message-content.left {
   align-items: flex-start;
 }
 .message-content.right {
   align-items: flex-end;
+}
+/* Expanded: bubbles may konting max-width para readable, tables pwede pa rin lumapad */
+.chat-panel-expanded .chat-bubbleLeft,
+.chat-panel-expanded .chat-bubbleRight {
+  max-width: 85%;
 }
 
 /* Prevent bubbles from collapsing: allow wrapping and set sensible min-width */
@@ -262,11 +374,22 @@
 }
 .chat-inputArea {
   flex-shrink: 0;
-  padding: 8px;
-  height: 56px;
+  padding: 8px 12px;
+  min-height: 56px;
   box-sizing: border-box;
   display: flex;
   align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+}
+.chat-inputArea .chat-inputPaper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  flex: 1;
 }
 
 /* Anchor for emoji picker so it positions above the input bar */
@@ -311,17 +434,35 @@
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 24px;
-  padding: 6px 12px;
+  padding: 6px 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  min-width: 0;
+  gap: 0;
+}
+.chat-inputPaper .MuiIconButton-root {
+  padding: 4px;
+}
+.chat-inputPaper .MuiIconButton-root svg {
+  font-size: 20px;
+}
+/* Slash-menu-wrapper = text field container: limit width para walang malaking gap */
+.chat-inputArea .slash-menu-wrapper {
+  max-width: 260px;
+  min-width: 80px;
 }
 .chat-inputBase {
-  margin-left: 8px;
+  margin-left: 4px;
   flex: 1;
+  min-width: 0;
 }
 .chat-sendButton {
-  margin-left: 8px;
+  margin-left: 6px;
+  padding: 6px;
   background: #ff8a50;
   color: white;
+}
+.chat-sendButton svg {
+  font-size: 20px;
 }
 .chat-sendButton:hover {
   background: #ff7043;
@@ -411,10 +552,10 @@
   background: #fff;
 }
 
-/* Theme toggle logo ( Ulap Biz ) styling moved here from inline styles */
+/* Theme toggle logo ( Ulap Biz ) - mas maliit sa message input */
 .theme-toggle-logo {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border-radius: 4px;
   opacity: 0.95;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);

@@ -43,6 +43,7 @@ export default function Chatbox() {
   const [panelPosition, setPanelPosition] = useState({ x: null, y: null });
   const [showHistoryOpen, setShowHistoryOpen] = useState(false);
   const [history, setHistory] = useState(loadHistory());
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const theme = useChatboxTheme(rootRef);
 
@@ -211,7 +212,12 @@ export default function Chatbox() {
         };
 
   return (
-    <div className="chat-root chat-root-popup" ref={rootRef}>
+    <div
+      className={
+        "chat-root chat-root-popup" + (isExpanded ? " chat-root-expanded" : "")
+      }
+      ref={rootRef}
+    >
       <button
         type="button"
         className="chat-toggle-button"
@@ -223,15 +229,93 @@ export default function Chatbox() {
       </button>
 
       {isOpen && (
-        <Paper
-          ref={panelRef}
-          className={
-            "chat-panel chat-panel-popup " +
-            (maintenanceOpen ? "maintenance" : "online")
-          }
-          elevation={8}
-          style={panelStyle}
-        >
+        isExpanded ? (
+          <div className="chat-expanded-wrap">
+            <Paper
+              ref={panelRef}
+              className={
+                "chat-panel chat-panel-popup chat-panel-expanded " +
+                (maintenanceOpen ? "maintenance" : "online")
+              }
+              elevation={8}
+            >
+              <ChatHeader
+            maintenanceOpen={maintenanceOpen}
+            onMaintenanceChange={setMaintenanceOpen}
+            onMinimize={() => setIsOpen(false)}
+            onClose={() => setIsOpen(false)}
+            onDragStart={handleDragStart}
+            onHistoryClick={
+              maintenanceOpen
+                ? undefined
+                : () => {
+                    setHistory(loadHistory());
+                    setShowHistoryOpen(true);
+                  }
+            }
+            onNewChatClick={maintenanceOpen ? undefined : handleNewChat}
+            isExpanded={isExpanded}
+            onExpandToggle={() => setIsExpanded((e) => !e)}
+          />
+          {maintenanceOpen ? (
+            <div className="chat-body">
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", width: "100%", justifyContent: "flex-start" }}>
+                  <div style={{ display: "flex", flexDirection: "column", marginLeft: 16 }}>
+                    <div className="chat-bubbleLeft">
+                      <Typography variant="body2" className="bubble-text left">
+                        Service is currently under maintenance.
+                      </Typography>
+                    </div>
+                    <Typography variant="caption" className="bubble-time left" style={{ marginTop: 6, marginLeft: 4 }}>
+                      {new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}
+                    </Typography>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="chat-body" ref={bodyRef}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  {messages.map((msg) => (
+                    <ChatMessage key={msg.id} msg={msg} />
+                  ))}
+                </div>
+              </div>
+              <ChatInputArea
+                input={input}
+                setInput={setInput}
+                inputRef={inputRef}
+                showEmoji={showEmoji}
+                setShowEmoji={setShowEmoji}
+                showSlashMenu={showSlashMenu}
+                setShowSlashMenu={setShowSlashMenu}
+                selectedSlashIndex={selectedSlashIndex}
+                setSelectedSlashIndex={setSelectedSlashIndex}
+                filteredSlashOptions={filteredSlashOptions}
+                onSlashSelect={handleSlashSelect}
+                onEmojiClick={handleEmojiClick}
+                onSend={handleSend}
+                onKeyDown={handleKeyDown}
+                onDragStart={handleDragStart}
+                themeProps={theme}
+                isExpanded={true}
+              />
+            </>
+          )}
+            </Paper>
+          </div>
+        ) : (
+          <Paper
+            ref={panelRef}
+            className={
+              "chat-panel chat-panel-popup " +
+              (maintenanceOpen ? "maintenance" : "online")
+            }
+            elevation={8}
+            style={panelStyle}
+          >
           <ChatHeader
             maintenanceOpen={maintenanceOpen}
             onMaintenanceChange={setMaintenanceOpen}
@@ -247,6 +331,8 @@ export default function Chatbox() {
                   }
             }
             onNewChatClick={maintenanceOpen ? undefined : handleNewChat}
+            isExpanded={isExpanded}
+            onExpandToggle={() => setIsExpanded((e) => !e)}
           />
 
           {maintenanceOpen ? (
@@ -312,10 +398,12 @@ export default function Chatbox() {
                 onKeyDown={handleKeyDown}
                 onDragStart={handleDragStart}
                 themeProps={theme}
+                isExpanded={false}
               />
             </>
           )}
-        </Paper>
+          </Paper>
+        )
       )}
       <ChatHistory
         open={showHistoryOpen}
