@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Paper from "@material-ui/core/Paper";
 import IconButton from "@material-ui/core/IconButton";
 import InputBase from "@material-ui/core/InputBase";
@@ -35,6 +35,9 @@ export default function ChatInputArea({
     resetTheme,
     PRESET_THEMES,
   } = themeProps;
+
+  // Added state for hover tracking on the theme toggle
+  const [isHoveringTheme, setIsHoveringTheme] = useState(false);
 
   return (
     <div
@@ -146,17 +149,43 @@ export default function ChatInputArea({
 
         {/* Theme Toggle */}
         <div style={{ position: "relative" }}>
-          <IconButton
-            size="small"
-            onClick={toggleThemePicker}
-            aria-label="theme"
+          <div
+            style={{ position: "relative", display: "inline-block" }}
+            onMouseEnter={() => setIsHoveringTheme(true)}
+            onMouseLeave={() => setIsHoveringTheme(false)}
           >
-            <img
-              src={ulapLogo}
-              alt="ulapbiz logo"
-              className="theme-toggle-logo"
-            />
-          </IconButton>
+            <IconButton
+              size="small"
+              onClick={toggleThemePicker}
+              aria-label="theme"
+            >
+              <img
+                src={ulapLogo}
+                alt="ulapbiz logo"
+                className="theme-toggle-logo"
+              />
+            </IconButton>
+            {isHoveringTheme && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "0%",  
+                  left: "50%",  // Centers horizontally over the image
+                  transform: "translate(-50%, -50%)",  
+                  background: "rgba(0, 0, 0, 0.8)",  
+                  color: "white",
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  fontSize: "12px",
+                  whiteSpace: "nowrap",
+                  zIndex: 10,
+                  pointerEvents: "none",  // Prevents blocking clicks
+                }}
+              >
+                choose theme
+              </div>
+            )}
+          </div>
           {showThemePicker && (
             <div
               className="theme-picker"
