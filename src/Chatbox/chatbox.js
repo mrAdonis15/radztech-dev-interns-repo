@@ -9,14 +9,23 @@ import {
   getInitialMessages,
   getDefaultPanelPosition,
   SLASH_OPTIONS,
+  STATIC_REPLY,
   PANEL_PADDING,
   DEFAULT_BOTTOM,
 } from "./chatboxConstants.js";
 import { createMessage } from "./chatboxUtils.js";
 import { useChatboxTheme } from "./useChatboxTheme.js";
+import {
+  loadMessages,
+  saveMessages,
+  loadHistory,
+  addToHistory,
+  deleteHistoryItem,
+} from "./chatStorage.js";
 import ChatHeader from "./ChatHeader.js";
 import ChatMessage from "./ChatMessage.js";
 import ChatInputArea from "./ChatInputArea.js";
+import ChatHistory from "./ChatHistory.js";
 
 export default function Chatbox() {
   const rootRef = useRef(null);
@@ -24,7 +33,7 @@ export default function Chatbox() {
   const inputRef = useRef(null);
   const panelRef = useRef(null);
 
-  const [messages, setMessages] = useState(getInitialMessages());
+  const [messages, setMessages] = useState(() => loadMessages() || getInitialMessages());
   const [input, setInput] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [showSlashMenu, setShowSlashMenu] = useState(false);
@@ -32,6 +41,8 @@ export default function Chatbox() {
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [panelPosition, setPanelPosition] = useState({ x: null, y: null });
+  const [showHistoryOpen, setShowHistoryOpen] = useState(false);
+  const [history, setHistory] = useState(loadHistory());
 
   const theme = useChatboxTheme(rootRef);
 
@@ -51,14 +62,23 @@ export default function Chatbox() {
     }
   }, [messages]);
 
+  // Persist messages to localStorage when they change
+  useEffect(() => {
+    saveMessages(messages);
+  }, [messages]);
+
   // Click outside to close emoji/slash menu
   useEffect(() => {
     function handleClickOutside(e) {
-      if (!e.target.closest(".emoji-wrapper")) setShowEmoji(false);
+      if (
+        !e.target.closest(".emoji-wrapper") &&
+        !e.target.closest(".emoji-picker-dropdown")
+      )
+        setShowEmoji(false);
       if (!e.target.closest(".slash-menu-wrapper")) setShowSlashMenu(false);
     }
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Set initial panel position when opening
@@ -91,32 +111,62 @@ export default function Chatbox() {
     setInput("");
     setShowEmoji(false);
 
-    let messageForAi = text.startsWith("/") ? text.slice(1).trim() : text;
-    if (messageForAi.toLowerCase().startsWith("ai "))
-      messageForAi = messageForAi.slice(3).trim();
-    messageForAi = messageForAi || "Hello";
-
+    const isSlashCommand = text.startsWith("/");
     const placeholderId = Date.now() + 1;
     const typingMsg = createMessage(placeholderId, "bot", "...");
     setMessages((prev) => [...prev, typingMsg]);
 
-    sendToGemini(messageForAi, messages)
-      .then((reply) => {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === placeholderId ? { ...msg, text: reply } : msg
-          )
-        );
-      })
-      .catch(() => {
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === placeholderId
-              ? { ...msg, text: "Sorry, something went wrong. Please try again." }
-              : msg
-          )
-        );
-      });
+    if (isSlashCommand) {
+      // AI mode: only when / command is used
+      let messageForAi = text.slice(1).trim();
+      if (messageForAi.toLowerCase().startsWith("ai "))
+        messageForAi = messageForAi.slice(3).trim();
+      messageForAi = messageForAi || "Hello";
+
+      sendToGemini(messageForAi, messages)
+        .then((reply) => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === placeholderId ? { ...msg, text: reply } : msg
+            )
+          );
+        })
+        .catch(() => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === placeholderId
+                ? { ...msg, text: "Sorry, something went wrong. Please try again." }
+                : msg
+            )
+          );
+        });
+    } else {
+      // Static reply when no slash command is used
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === placeholderId ? { ...msg, text: STATIC_REPLY } : msg
+        )
+      );
+    }
+  };
+
+  const handleNewChat = () => {
+    const hasUserMessage = messages.some((m) => m.sender === "me");
+    if (hasUserMessage && messages.length > 0) {
+      addToHistory(messages);
+      setHistory(loadHistory());
+    }
+    setMessages(getInitialMessages());
+    setShowHistoryOpen(false);
+  };
+
+  const handleSelectHistoryChat = (item) => {
+    setMessages(item.messages || []);
+    setShowHistoryOpen(false);
+  };
+
+  const handleDeleteHistoryChat = (id) => {
+    setHistory(deleteHistoryItem(id));
   };
 
   const handleKeyDown = (e) => {
@@ -188,6 +238,15 @@ export default function Chatbox() {
             onMinimize={() => setIsOpen(false)}
             onClose={() => setIsOpen(false)}
             onDragStart={handleDragStart}
+            onHistoryClick={
+              maintenanceOpen
+                ? undefined
+                : () => {
+                    setHistory(loadHistory());
+                    setShowHistoryOpen(true);
+                  }
+            }
+            onNewChatClick={maintenanceOpen ? undefined : handleNewChat}
           />
 
           {maintenanceOpen ? (
@@ -258,6 +317,13 @@ export default function Chatbox() {
           )}
         </Paper>
       )}
+      <ChatHistory
+        open={showHistoryOpen}
+        onClose={() => setShowHistoryOpen(false)}
+        history={history}
+        onSelectChat={handleSelectHistoryChat}
+        onDeleteChat={handleDeleteHistoryChat}
+      />
     </div>
   );
 }
