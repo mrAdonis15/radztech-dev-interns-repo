@@ -175,11 +175,12 @@ export default function ChatInputArea({
                   background: "rgba(0, 0, 0, 0.8)",  
                   color: "white",
                   padding: "4px 8px",
-                  borderRadius: "4px",
+                  borderRadius: 9,
                   fontSize: "12px",
                   whiteSpace: "nowrap",
                   zIndex: 10,
                   pointerEvents: "none",  // Prevents blocking clicks
+                  fontFamily: "Poppins",
                 }}
               >
                 choose theme
