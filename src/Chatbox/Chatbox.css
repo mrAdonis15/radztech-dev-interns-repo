@@ -80,20 +80,25 @@
   border-radius: 8px;
   border: 3px solid var(--border-color, #f57c00);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   /* Soft white -> theme-accent gradient. --panel-accent is set from theme (defaults to light-orange). */
   background: linear-gradient(180deg, #ffffff 0%, var(--panel-accent, #fff3e0) 100%);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
   position: relative;
 }
 .chat-header {
+  font-family: 'Poppins', sans-serif;
   min-height: 56px;
   display: flex;
   align-items: center;
   padding: 10px 12px;
   gap: 8px;
-  background: linear-gradient(90deg, #fff 0%, #fff0 100%);
+  background: #fff;
   border-bottom: 1px solid var(--border-color, #f57c00);
   flex-shrink: 0;
+  z-index: 2;
+  position: relative;
 }
 .chat-titleArea {
   display: flex;
@@ -114,14 +119,26 @@
 .chat-header-statusRow {
   display: flex;
   align-items: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 6px;
   margin-top: 2px;
   line-height: 1.2;
 }
+.chat-header-statusLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.chat-header-statusLabel .chat-statusDot,
+.chat-header-statusLabel .chat-onlineDot {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
 .chat-header-statusRow .MuiTypography-caption {
   line-height: 1.2;
   margin: 0;
+  word-break: break-word;
+  max-width: 100%;
 }
 .chat-header-toggleWrap {
   display: flex;
@@ -149,16 +166,14 @@
   flex-shrink: 0;
 }
 .chat-body {
-  position: absolute;
-  top: 56px;
-  bottom: 72px;
-  left: 0;
-  right: 0;
-  padding: 16px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  /* remove background image; rely on panel gradient */
+  padding: 16px;
+  padding-bottom: 20px;
   background: transparent;
-  opacity: 1;
+  display: flex;
+  flex-direction: column;
 }
 .chat-avatarFloating {
   display: none;
@@ -246,13 +261,36 @@
   font-size: 12px;
 }
 .chat-inputArea {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
+  flex-shrink: 0;
+  padding: 8px;
   height: 56px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
+}
+
+/* Anchor for emoji picker so it positions above the input bar */
+.chat-inputArea-emojiAnchor {
+  position: relative;
+}
+
+/* Emoji picker floats above the input area and never overlaps the chat input */
+.emoji-picker-dropdown {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  margin-bottom: 4px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: min(320px, 60vh);
+  max-width: 280px;
+  width: 280px;
+}
+
+.emoji-picker-dropdown .epr-main {
+  max-height: inherit;
 }
 
 .chat-inputArea-draggable {
@@ -323,6 +361,9 @@
 }
 
 /* Theme picker styles */
+.theme-picker {
+  font-family: 'Poppins', sans-serif;
+}
 .theme-picker .swatch-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -379,4 +420,43 @@
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
   object-fit: contain;
   display: block;
+}
+
+/* Chat history drawer */
+.chat-history-drawer-paper {
+  width: 280px;
+  max-width: 85vw;
+  z-index: 10000 !important;
+}
+.chat-history-drawer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.chat-history-header {
+  padding: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+.chat-history-title {
+  font-weight: 600;
+  color: #333;
+}
+.chat-history-list {
+  flex: 1;
+  overflow-y: auto;
+}
+.chat-history-item {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.chat-history-item:hover .chat-history-delete {
+  opacity: 1;
+}
+.chat-history-delete {
+  opacity: 0.5;
+  color: #666;
+}
+.chat-history-delete:hover {
+  color: #f57c00;
 }

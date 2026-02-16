@@ -5,6 +5,8 @@ import Typography from "@material-ui/core/Typography";
 import Switch from "@material-ui/core/Switch";
 import RemoveIcon from "@material-ui/icons/Remove";
 import CloseIcon from "@material-ui/icons/Close";
+import HistoryIcon from "@material-ui/icons/History";
+import AddCommentIcon from "@material-ui/icons/AddComment";
 import radzLogo from "./Assets/SHARED] Radztech Interns Logo - 32.png";
 
 export default function ChatHeader({
@@ -13,6 +15,8 @@ export default function ChatHeader({
   onMinimize,
   onClose,
   onDragStart,
+  onHistoryClick,
+  onNewChatClick,
 }) {
   return (
     <div
@@ -24,23 +28,23 @@ export default function ChatHeader({
         <Avatar src={radzLogo} className="chat-header-avatar" />
         <div style={{ marginLeft: 8, minWidth: 0 }}>
           <Typography variant="body1" className="chat-titleText">
-            Talk to Ulap 
+            Ulap Chat
           </Typography>
           <div className="chat-header-statusRow">
             {maintenanceOpen ? (
-              <>
-                <span className="chat-statusDot" />
-                <Typography variant="caption" style={{ color: "#777" }}>
-                  Under Maintenance comeback again later
+              <span className="chat-header-statusLabel">
+                <span className="chat-statusDot" aria-hidden />
+                <Typography variant="caption" component="span" style={{ color: "#777" }}>
+                  Under maintenance
                 </Typography>
-              </>
+              </span>
             ) : (
-              <>
-                <span className="chat-onlineDot" />
-                <Typography variant="caption" style={{ color: "#777" }}>
+              <span className="chat-header-statusLabel">
+                <span className="chat-onlineDot" aria-hidden />
+                <Typography variant="caption" component="span" style={{ color: "#777" }}>
                   Online
                 </Typography>
-              </>
+              </span>
             )}
           </div>
         </div>
@@ -64,6 +68,16 @@ export default function ChatHeader({
         </div>
       </div>
       <div className="chat-controlIcons">
+        {onHistoryClick && (
+          <IconButton size="small" onClick={onHistoryClick} aria-label="Chat history">
+            <HistoryIcon fontSize="small" />
+          </IconButton>
+        )}
+        {onNewChatClick && (
+          <IconButton size="small" onClick={onNewChatClick} aria-label="New chat">
+            <AddCommentIcon fontSize="small" />
+          </IconButton>
+        )}
         <IconButton size="small" onClick={onMinimize} aria-label="Minimize">
           <RemoveIcon fontSize="small" />
         </IconButton>

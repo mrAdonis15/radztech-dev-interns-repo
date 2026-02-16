@@ -1,3 +1,6 @@
+// Static reply when user does not use a slash command (e.g. /ai)
+export const STATIC_REPLY =
+  "Hello! Welcome to Ulap Biz support chatbot.";
 // Slash command options
 export const SLASH_OPTIONS = [
   {
@@ -7,30 +10,16 @@ export const SLASH_OPTIONS = [
   },
 ];
 
-// Initial chat messages
-export function getInitialMessages() {
-  const formatTime = () =>
-    new Date().toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
 
-  return [
-    {
-      id: 1,
-      sender: "bot",
-      text: "Hello! Welcome to Ulap Biz support chatbot.",
-      time: formatTime(),
-    },
-    {
-      id: 2,
-      sender: "me",
-      text: "Hi Ulap Biz!!!",
-      time: formatTime(),
-    },
-  ];
+
+// Initial chat messages (empty - no default conversation)
+export function getInitialMessages() {
+  return [];
 }
+
+// Storage keys for chat persistence
+export const CHAT_STORAGE_KEY = "ulap-chat-messages";
+export const CHAT_HISTORY_STORAGE_KEY = "ulap-chat-history";
 
 // Panel dimensions
 export const PANEL_WIDTH = 340;

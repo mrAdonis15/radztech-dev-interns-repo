@@ -19,9 +19,9 @@ const DefaultLayout = () => {
   const isHome = location.pathname === '/' || location.pathname === '/home';
 
   return (
-    <div>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Navbar />
-      <div style={{ marginTop: 80 }}>
+      <main className="layout-content" style={{ flex: 1 }}>
         <Outlet />
         {isPlanPage ? (
           <div>
@@ -30,8 +30,8 @@ const DefaultLayout = () => {
             {location.pathname === '/plans/erp' && <PlanErp />}
           </div>
         ) : null}
-        {isHome ? (
-          <div>
+        {isHome && (
+          <>
             <div id="ulap"><Ulap /></div>
             <div id="home"><Home /></div>
             <div id="plans"><Plans /></div>
@@ -40,9 +40,9 @@ const DefaultLayout = () => {
             <div id="schedules-and-reports"><SchedsnReps /></div>
             <div id="contact-us"><Contacts /></div>
             <Interns />
-          </div>
-        ) : null}
-      </div>
+          </>
+        )}
+      </main>
     </div>
   );
 };

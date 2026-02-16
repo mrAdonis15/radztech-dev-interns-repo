@@ -37,10 +37,16 @@ export default function ChatInputArea({
 
   return (
     <div
-      className="chat-inputArea chat-inputArea-draggable"
+      className="chat-inputArea chat-inputArea-draggable chat-inputArea-emojiAnchor"
       onMouseDown={onDragStart}
       aria-label="Drag to move chat window"
     >
+      {/* Emoji panel: positioned above the whole input bar so it never overlaps */}
+      {showEmoji && (
+        <div className="emoji-picker-dropdown">
+          <EmojiPicker onEmojiClick={onEmojiClick} />
+        </div>
+      )}
       <Paper className="chat-inputPaper" elevation={0}>
         {/* Emoji Section */}
         <div className="emoji-wrapper" style={{ position: "relative" }}>
@@ -52,19 +58,6 @@ export default function ChatInputArea({
               style={{ color: showEmoji ? "#ff6f00" : "#777" }}
             />
           </IconButton>
-          {showEmoji && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: 45,
-                left: 0,
-                zIndex: 1000,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              }}
-            >
-              <EmojiPicker onEmojiClick={onEmojiClick} />
-            </div>
-          )}
         </div>
 
         {/* Slash Menu */}
