@@ -1,12 +1,4 @@
-import DefaultLayout from "./layouts/DefaultLayout";
-import Ulap from "./components/Ulap/Ulap";
-import DisplayPage from "./components/Kurt/pages/DisplayPage";
-import Graphs from "./components/HistoricalGraph/pages/graphs";
-import Jayson from "./components/Adam/components/jsontask";
-import AdvancedSettings from "./components/Merlvin/AdvancedSettings";
-import JsonData from "./components/Brayan/JsonData";
-import Chatbox from "./Chatbox/chatbox";
-import Settings from "./components/Marth/advanceSettings";
+
 
 const routes = [
   {
@@ -46,6 +38,32 @@ const routes = [
         element: Settings,
       },
     ],
+  },
+  {
+    path: '/evaluation',
+    element: EvaluationLayout,
+    children: [
+      {
+        path: 'applicant',
+        element: Applicant
+      },
+      {
+        path: 'category',
+        element: Category
+      },
+      {
+        path: 'criteria',
+        element: Criteria
+      },
+      {
+        path: 'evaluation',
+        element: Evaluation
+      },
+      {
+        path: 'list-applicants',
+        element: ListofApplicants
+      }
+    ]
   },
 ];
 
