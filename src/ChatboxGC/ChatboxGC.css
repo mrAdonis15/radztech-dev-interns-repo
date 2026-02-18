@@ -1,6 +1,6 @@
 @import url("../Chatbox/Chatbox.css");
 
-/* Emoji design: match Chatbox (anchor, dropdown position and look) */
+
 .chat-root .chat-inputArea-emojiAnchor {
   position: relative;
 }
