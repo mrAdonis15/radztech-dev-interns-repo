@@ -6,7 +6,6 @@ import Graphs from "./components/HistoricalGraph/pages/graphs";
 import Jayson from "./components/Adam/components/jsontask";
 import AdvancedSettings from "./components/Merlvin/AdvancedSettings";
 import JsonData from "./components/Brayan/JsonData";
-import Chatbox from "./Chatbox/chatbox";
 import ChatboxGC from "./ChatboxGC/ChatbboxGC";
 import EvaluationLayout from "./Evaluation/Navbar";
 import Applicant from "./Evaluation/Applicant";
@@ -15,6 +14,7 @@ import Criteria from "./Evaluation/Criteria";
 import Evaluation from "./Evaluation/Evaluation";
 import ListofApplicants from "./Evaluation/ListofApplicants";
 import UlapChatBot from "./components/Marth/UlapChatbot";
+import Chatbox from "./Chatbox/chatbox";
 
 
 const routes = [
@@ -46,9 +46,9 @@ const routes = [
         path: "/BrayanJSON",
         element: JsonData,
       },
-      {
+      { 
         path: "/Chatbox",
-        element: Chatbox,
+        element: Chatbox, 
       },
       {
         path: "/ChatboxGC",

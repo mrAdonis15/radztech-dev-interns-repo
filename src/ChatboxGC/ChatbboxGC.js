@@ -8,15 +8,12 @@ import ChatIcon from "@material-ui/icons/Chat";
 import {
   getInitialMessages,
   getDefaultPanelPosition,
-  STATIC_REPLY,
   PANEL_PADDING,
   DEFAULT_BOTTOM,
 } from "../Chatbox/chatboxConstants.js";
-import { createMessage } from "../Chatbox/chatboxUtils.js";
+import { useGroupChatGC } from "./useGroupChatGC.js";
 import { useChatboxTheme } from "../Chatbox/useChatboxTheme.js";
 import {
-  loadMessages,
-  saveMessages,
   loadHistory,
   addToHistory,
   deleteHistoryItem,
@@ -32,7 +29,11 @@ export default function ChatboxGC() {
   const inputRef = useRef(null);
   const panelRef = useRef(null);
 
-  const [messages, setMessages] = useState(() => loadMessages() || getInitialMessages());
+  const {
+    messages,
+    setMessages,
+    handleSend: handleSendMessage,
+  } = useGroupChatGC({ roomId: "ulap-gc-default", userId: undefined, username: "User" });
   const [input, setInput] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
@@ -48,10 +49,6 @@ export default function ChatboxGC() {
     if (bodyRef.current) {
       bodyRef.current.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
     }
-  }, [messages]);
-
-  useEffect(() => {
-    saveMessages(messages);
   }, [messages]);
 
   useEffect(() => {
@@ -81,24 +78,9 @@ export default function ChatboxGC() {
   const handleSend = () => {
     const text = input.trim();
     if (!text) return;
-
-    const userMsg = createMessage(Date.now(), "me", text);
-    setMessages((prev) => [...prev, userMsg]);
+    handleSendMessage(text);
     setInput("");
     setShowEmoji(false);
-
-    const placeholderId = Date.now() + 1;
-    const typingMsg = createMessage(placeholderId, "bot", "...");
-    setMessages((prev) => [...prev, typingMsg]);
-
-    // No AI: always reply with static message after a short delay
-    setTimeout(() => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === placeholderId ? { ...msg, text: STATIC_REPLY } : msg
-        )
-      );
-    }, 600);
   };
 
   const handleNewChat = () => {
