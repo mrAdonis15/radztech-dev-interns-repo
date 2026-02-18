@@ -1,3 +1,4 @@
+
 import DefaultLayout from "./layouts/DefaultLayout";
 import Ulap from "./components/Ulap/Ulap";
 import DisplayPage from "./components/Kurt/pages/DisplayPage";
@@ -6,6 +7,7 @@ import Jayson from "./components/Adam/components/jsontask";
 import AdvancedSettings from "./components/Merlvin/AdvancedSettings";
 import JsonData from "./components/Brayan/JsonData";
 import Chatbox from "./Chatbox/chatbox";
+import ChatboxGC from "./ChatboxGC/ChatbboxGC";
 import EvaluationLayout from "./Evaluation/Navbar";
 import Applicant from "./Evaluation/Applicant";
 import Category from "./Evaluation/Category";
@@ -13,6 +15,7 @@ import Criteria from "./Evaluation/Criteria";
 import Evaluation from "./Evaluation/Evaluation";
 import ListofApplicants from "./Evaluation/ListofApplicants";
 import UlapChatBot from "./components/Marth/UlapChatbot";
+
 
 const routes = [
   {
@@ -46,6 +49,10 @@ const routes = [
       {
         path: "/Chatbox",
         element: Chatbox,
+      },
+      {
+        path: "/ChatboxGC",
+        element: ChatboxGC,
       },
       {
         path: "/chatbot",
