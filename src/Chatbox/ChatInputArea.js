@@ -51,7 +51,13 @@ export default function ChatInputArea({
       {/* Emoji panel: positioned above the whole input bar so it never overlaps */}
       {showEmoji && (
         <div className="emoji-picker-dropdown">
-          <EmojiPicker onEmojiClick={onEmojiClick} />
+          <EmojiPicker
+            theme="light"
+            onEmojiClick={onEmojiClick}
+            width="100%"
+            height={320}
+            searchPlaceholder="Search"
+          />
         </div>
       )}
       <Paper className="chat-inputPaper" elevation={0}>
