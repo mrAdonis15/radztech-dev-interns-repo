@@ -32,6 +32,7 @@ export default function Chatbox() {
   const bodyRef = useRef(null);
   const inputRef = useRef(null);
   const panelRef = useRef(null);
+  const isSendingRef = useRef(false);
 
   const [messages, setMessages] = useState(() => loadMessages() || getInitialMessages());
   const [input, setInput] = useState("");
@@ -104,50 +105,50 @@ export default function Chatbox() {
 
   const handleSend = () => {
     const text = input.trim();
-    if (!text) return;
+    if (!text || isSendingRef.current) return;
 
-    const userMsg = createMessage(Date.now(), "me", text);
-    setMessages((prev) => [...prev, userMsg]);
+    isSendingRef.current = true;
+    const userMsgId = crypto.randomUUID();
+    const userMsg = createMessage(userMsgId, "me", text);
+    
     setInput("");
     setShowEmoji(false);
 
-    const isSlashCommand = text.startsWith("/");
-    const placeholderId = Date.now() + 1;
+    const placeholderId = crypto.randomUUID();
     const typingMsg = createMessage(placeholderId, "bot", "...");
-    setMessages((prev) => [...prev, typingMsg]);
+    
+    setMessages((prev) => [...prev, userMsg, typingMsg]);
 
-    if (isSlashCommand) {
-      // AI mode: only when / command is used
-      let messageForAi = text.slice(1).trim();
-      if (messageForAi.toLowerCase().startsWith("ai "))
+    // Strip /ai prefix if present, but send all messages to AI
+    let messageForAi = text;
+    if (text.startsWith("/")) {
+      messageForAi = text.slice(1).trim();
+      if (messageForAi.toLowerCase().startsWith("ai ")) {
         messageForAi = messageForAi.slice(3).trim();
-      messageForAi = messageForAi || "Hello";
-
-      sendToGemini(messageForAi, messages)
-        .then((reply) => {
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === placeholderId ? { ...msg, text: reply } : msg
-            )
-          );
-        })
-        .catch(() => {
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === placeholderId
-                ? { ...msg, text: "Sorry, something went wrong. Please try again." }
-                : msg
-            )
-          );
-        });
-    } else {
-      // Static reply when no slash command is used
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === placeholderId ? { ...msg, text: STATIC_REPLY } : msg
-        )
-      );
+      }
     }
+    messageForAi = messageForAi || "Hello";
+
+    sendToGemini(messageForAi, messages)
+      .then((reply) => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === placeholderId ? { ...msg, text: reply } : msg
+          )
+        );
+      })
+      .catch(() => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === placeholderId
+              ? { ...msg, text: "Sorry, something went wrong. Please try again." }
+              : msg
+          )
+        );
+      })
+      .finally(() => {
+        isSendingRef.current = false;
+      });
   };
 
   const handleNewChat = () => {

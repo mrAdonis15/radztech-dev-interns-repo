@@ -1,18 +1,19 @@
-import DefaultLayout from './layouts/DefaultLayout';
-import Ulap from './components/Ulap/Ulap';
-import DisplayPage from './components/Kurt/pages/DisplayPage';
-import Graphs from './components/HistoricalGraph/pages/graphs';
-import Jayson from './components/Adam/components/jsontask';
-import AdvancedSettings from './components/Merlvin/AdvancedSettings';
-import SettingsAdvanced from './components/Settings/AdvancedSettings';
-import JsonData from './components/Brayan/JsonData';
-import Chatbox from './Chatbox/chatbox';
-import EvaluationLayout from './Evaluation/Navbar';
-import Applicant from './Evaluation/Applicant';
-import Category from './Evaluation/Category';
-import Criteria from './Evaluation/Criteria';
-import Evaluation from './Evaluation/Evaluation';
-import ListofApplicants from './Evaluation/ListofApplicants';
+import DefaultLayout from "./layouts/DefaultLayout";
+import Ulap from "./components/Ulap/Ulap";
+import DisplayPage from "./components/Kurt/pages/DisplayPage";
+import Graphs from "./components/HistoricalGraph/pages/graphs";
+import Jayson from "./components/Adam/components/jsontask";
+import AdvancedSettings from "./components/Merlvin/AdvancedSettings";
+import SettingsAdvanced from "./components/Settings/AdvancedSettings";
+import JsonData from "./components/Brayan/JsonData";
+import Chatbox from "./Chatbox/chatbox";
+import MenuDisplay from "./components/Merlvin/MenuDisplay";
+import EvaluationLayout from "./Evaluation/Navbar";
+import Applicant from "./Evaluation/Applicant";
+import Category from "./Evaluation/Category";
+import Criteria from "./Evaluation/Criteria";
+import Evaluation from "./Evaluation/Evaluation";
+import ListofApplicants from "./Evaluation/ListofApplicants";
 import {
   Home,
   Plans,
@@ -23,105 +24,113 @@ import {
   PlanBasic,
   PlanPro,
   PlanErp,
-} from './components/HeaderItems';
+} from "./components/HeaderItems";
 
 const routes = [
   {
-    path: '/',
+    path: "/",
     element: DefaultLayout,
     children: [
       {
-        path: '/Ulap',
+        index: true,
+        element: MenuDisplay,
+      },
+      {
+        path: "/menu",
+        element: MenuDisplay,
+      },
+      {
+        path: "/Ulap",
         element: Ulap,
       },
       {
-        path: '/home',
+        path: "/home",
         element: Home,
       },
       {
-        path: '/plans',
+        path: "/plans",
         element: Plans,
       },
       {
-        path: '/plans/basic',
+        path: "/plans/basic",
         element: PlanBasic,
       },
       {
-        path: '/plans/pro',
+        path: "/plans/pro",
         element: PlanPro,
       },
       {
-        path: '/plans/erp',
+        path: "/plans/erp",
         element: PlanErp,
       },
       {
-        path: '/accounting-and-beyond',
+        path: "/accounting-and-beyond",
         element: AccountingnBeyond,
       },
       {
-        path: '/features',
+        path: "/features",
         element: Features,
       },
       {
-        path: '/schedules-and-reports',
+        path: "/schedules-and-reports",
         element: SchedsnReps,
       },
       {
-        path: '/contact-us',
+        path: "/contact-us",
         element: Contacts,
       },
       {
-        path: '/KurtJSON',
+        path: "/KurtJSON",
         element: DisplayPage,
       },
       {
-        path: '/HistoricalGraph',
+        path: "/HistoricalGraph",
         element: Graphs,
       },
       {
-        path: '/AdamJSON',
+        path: "/AdamJSON",
         element: Jayson,
       },
       {
-        path: '/MerlvinJSON',
+        path: "/MerlvinJSON",
         element: AdvancedSettings,
       },
       {
-        path: '/BrayanJSON',
+        path: "/BrayanJSON",
         element: JsonData,
       },
       {
-        path: '/Chatbox',
+        path: "/Chatbox",
         element: Chatbox,
       },
     ],
   },
   {
-    path: '/settings/advanced',
+    path: "/settings/advanced",
     element: SettingsAdvanced,
   },
   {
-    path: '/evaluation',
+    path: "/evaluation",
     element: EvaluationLayout,
     children: [
       {
-        path: 'applicant',
+        path: "applicant",
         element: Applicant,
       },
       {
-        path: 'category',
+        path: "category",
         element: Category,
       },
       {
-        path: 'criteria',
+        path: "criteria",
         element: Criteria,
       },
       {
-        path: 'evaluation',
+        path: "evaluation",
         element: Evaluation,
       },
       {
-        path: 'list-applicants',
+        path: "list-applicants",
         element: ListofApplicants,
       },
     ],
