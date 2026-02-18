@@ -412,6 +412,20 @@
   width: 280px;
 }
 
+/* Fit content inside container: smaller emojis and tighter spacing */
+.emoji-picker-dropdown .EmojiPickerReact,
+.emoji-picker-dropdown aside.EmojiPickerReact {
+  --epr-emoji-size: 22px;
+  --epr-emoji-padding: 3px;
+  --epr-search-input-height: 32px;
+  --epr-category-navigation-button-size: 24px;
+  --epr-category-label-height: 28px;
+  --epr-preview-height: 48px;
+  --epr-preview-text-size: 12px;
+  --epr-horizontal-padding: 6px;
+  --epr-skin-tone-size: 16px;
+}
+
 .emoji-picker-dropdown .epr-main {
   max-height: inherit;
 }

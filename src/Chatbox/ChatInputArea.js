@@ -48,15 +48,18 @@ export default function ChatInputArea({
       onMouseDown={isExpanded ? undefined : onDragStart}
       aria-label={isExpanded ? "Message input" : "Drag to move chat window"}
     >
-      {/* Emoji panel: positioned above the whole input bar so it never overlaps */}
-      {showEmoji && (
-        <div className="emoji-picker-dropdown">
-          <EmojiPicker onEmojiClick={onEmojiClick} />
-        </div>
-      )}
       <Paper className="chat-inputPaper" elevation={0}>
-        {/* Emoji Section */}
+        {/* Emoji Section: dropdown anchored to icon so it pops up on top of it */}
         <div className="emoji-wrapper" style={{ position: "relative" }}>
+          {showEmoji && (
+            <div className="emoji-picker-dropdown">
+              <EmojiPicker
+                width={280}
+                height={320}
+                onEmojiClick={onEmojiClick}
+              />
+            </div>
+          )}
           <IconButton
             size="small"
             onClick={() => setShowEmoji((prev) => !prev)}
