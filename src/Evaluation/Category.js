@@ -14,4 +14,4 @@ function Category() {
         </Box>
     );
 }
-export default Category;
+export default Category;    
