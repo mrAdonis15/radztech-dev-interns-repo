@@ -1,5 +1,6 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getProductsContext, getProductStats } from "./productService.js";
 
 const apiKey = process.env.REACT_APP_GEMINI_API_KEY || "";
 const modelNames = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite"];
@@ -15,8 +16,15 @@ export async function sendToGemini(userMessage, messageHistory) {
     return "Gemini is not configured. Please set REACT_APP_GEMINI_API_KEY in your .env file.";
   }
 
+  // Always include product data for AI context
+  const stats = getProductStats();
+  const productContext = `\n\n=== PRODUCT DATABASE ===\n${getProductsContext()}\n\nSTATISTICS:\n- Total Products: ${stats.totalProducts}\n- Categories: ${stats.categories.map(c => `${c.name} (${c.count})`).join(', ')}\n- Total Inventory Value: $${stats.totalInventoryValue.toLocaleString()}\n- Total Stock Units: ${stats.totalStockUnits}\n======================\n\n`;
+
   const systemContext =
-    "You are a helpful support assistant for Ulap Biz chat. There is no Ulap Biz–specific data yet, so answer all questions in a friendly, helpful way based on general knowledge. Be concise and clear.";
+    "You are a helpful support assistant for Ulap Biz. " +
+    "Use the PRODUCT DATABASE information when users ask about products, inventory, vehicles, or catalog. " +
+    "Be concise, friendly, and accurate. Format product information clearly." +
+    productContext;
 
   function buildPrompt(history, current, context) {
     let text = context + "\n\n";

@@ -1,0 +1,9 @@
+export { default as Home } from './Home';
+export { default as Plans } from './Plans';
+export { default as AccountingnBeyond } from './ActnBynd';
+export { default as Features } from './Features';
+export { default as SchedsnReps } from './SchdnRprts';
+export { default as Contacts } from './Contact';
+export { default as PlanBasic } from './PlanBasic';
+export { default as PlanPro } from './PlanPro';
+export { default as PlanErp } from './PlanErp';

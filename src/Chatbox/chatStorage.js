@@ -5,7 +5,19 @@ export function loadMessages() {
     const raw = localStorage.getItem(CHAT_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+    if (!Array.isArray(parsed) || parsed.length === 0) return null;
+    
+    // Remove duplicate messages by ID
+    const uniqueMessages = [];
+    const seenIds = new Set();
+    for (const msg of parsed) {
+      if (!seenIds.has(msg.id)) {
+        seenIds.add(msg.id);
+        uniqueMessages.push(msg);
+      }
+    }
+    
+    return uniqueMessages.length > 0 ? uniqueMessages : null;
   } catch {
     return null;
   }
