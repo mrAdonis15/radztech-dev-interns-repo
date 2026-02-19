@@ -139,7 +139,20 @@ export default function Chatbox() {
         .then((reply) => {
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === placeholderId ? { ...msg, text: reply } : msg,
+              msg.id === placeholderId
+                ? reply.type === "chart"
+                  ? {
+                      ...msg,
+                      type: "chart",
+                      data: structuredClone(reply.data),
+                      text: reply.text || "",
+                    }
+                  : {
+                      ...msg,
+                      type: "text",
+                      text: reply.text,
+                    }
+                : msg,
             ),
           );
         })
