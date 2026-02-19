@@ -5,7 +5,7 @@ import ledger from "./ledger.json";
 import stockCardGraph from "./stockCardGraph.json";
 import { getStockCardData } from "./chartUtils.js";
 
-const apiKey = "AIzaSyC_xWOQqLs07jn236n89w9Uww3D_ePBA4E";
+const apiKey = "";
 
 const modelNames = [
   "gemini-2.5-flash",

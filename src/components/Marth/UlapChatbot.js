@@ -204,8 +204,14 @@ export default function Chatbox() {
               <ChatHeader
                 maintenanceOpen={maintenanceOpen}
                 onMaintenanceChange={setMaintenanceOpen}
-                onMinimize={() => setIsOpen(false)}
-                onClose={() => setIsOpen(false)}
+                onMinimize={() => {
+                  setIsOpen(false);
+                  setIsExpanded(false);
+                }}
+                onClose={() => {
+                  setIsOpen(false);
+                  setIsExpanded(false);
+                }}
                 onDragStart={handleDragStart}
                 onHistoryClick={
                   maintenanceOpen
@@ -298,8 +304,14 @@ export default function Chatbox() {
             <ChatHeader
               maintenanceOpen={maintenanceOpen}
               onMaintenanceChange={setMaintenanceOpen}
-              onMinimize={() => setIsOpen(false)}
-              onClose={() => setIsOpen(false)}
+              onMinimize={() => {
+                setIsOpen(false);
+                setIsExpanded(false);
+              }}
+              onClose={() => {
+                setIsOpen(false);
+                setIsExpanded(false);
+              }}
               onDragStart={handleDragStart}
               onHistoryClick={
                 maintenanceOpen
