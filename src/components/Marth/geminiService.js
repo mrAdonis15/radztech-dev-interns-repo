@@ -5,7 +5,7 @@ import ledger from "./ledger.json";
 import stockCardGraph from "./stockCardGraph.json";
 import { getStockCardData } from "./chartUtils.js";
 
-const apiKey = "AIzaSyDh6UAnwBZQfH_hgos6TQDOcTJZ124cbyQ";
+const apiKey = process.env.REACT_APP_GEMINI_API_KEY || "";
 
 const modelNames = [
   "gemini-2.5-flash",
@@ -57,7 +57,8 @@ const tools = [
     functionDeclarations: [
       {
         name: "getProductBalance",
-        description: "Get the current balance for a product, Use this when user ask a balance for specific product.",
+        description:
+          "Get the current balance for certain products. Use this when user specify products name/description and ask for its balance.",
         parameters: {
           type: "OBJECT",
           properties: {
@@ -139,6 +140,12 @@ CHART & STRUCTURED OUTPUT RULES:
 - Do not mention field names, JSON keys, or system properties in the explanation.
 - Keep insights clear, actionable, and business-oriented.
 
+When selecting an endpoint from the catalog:
+- Choose the single most relevant endpoint based strictly on the description.
+- If none clearly match, ask a clarification question.
+- Do not invent endpoints.
+- Do not modify endpoint names.
+
 RESPONSE STYLE:
 - Be concise, clear, and professional.
 - Provide insight, not just numbers.
@@ -163,8 +170,6 @@ Your goal is to convert structured business data into meaningful insights suitab
 
   const prompt = buildPrompt(messageHistory, userMessage, systemContext);
   const genAI = new GoogleGenerativeAI(apiKey);
-
-  let lastError = null;
 
   for (const modelName of modelNames) {
     try {
@@ -201,10 +206,9 @@ Your goal is to convert structured business data into meaningful insights suitab
       let result = await chat.sendMessage(prompt);
       let response = result.response;
 
-      // console.log("Initial response:", response);
+      console.log("Initial response:", response);
 
       if (!response) {
-        lastError = new Error("No response from model");
         continue;
       }
 
@@ -245,23 +249,30 @@ Your goal is to convert structured business data into meaningful insights suitab
           type: "text",
           text: followUp.response.text(),
         };
-      }
+      } else {
+        const textResponse = response.candidates?.[0]?.content?.parts?.find(
+          (p) => p.text,
+        );
 
-      if (response.text) {
-        const reply =
-          typeof response.text === "function" ? response.text() : response.text;
-        if (reply != null && String(reply).trim()) return String(reply).trim();
+        return {
+          type: "text",
+          text: textResponse?.text || response.text(),
+        };
       }
-
-      lastError = new Error("Empty reply from model");
     } catch (err) {
-      lastError = err;
-      console.log("error:", err);
       console.warn("Gemini model " + modelName + " failed:", err);
+
+      if (err.status === 429) {
+        return {
+          type: "text",
+          text: "Oops! You've hit the rate limit. Please try again tomorrow.",
+        };
+      }
     }
   }
 
-  console.error("Gemini API error (all models failed):", lastError);
-  // const msg = lastError?.message || String(lastError);
-  return "Something went wrong. Please try again.";
+  return {
+    type: "text",
+    text: "Sorry, I'm having trouble processing your request. Please try again.",
+  };
 }
