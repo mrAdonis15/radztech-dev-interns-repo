@@ -15,6 +15,7 @@ import Evaluation from "./Evaluation/Evaluation";
 import ListofApplicants from "./Evaluation/ListofApplicants";
 import UlapChatBot from "./components/Marth/UlapChatbot";
 import Chatbox from "./Chatbox/chatbox";
+import MenuDisplay from "./components/Merlvin/MenuDisplay";
 
 
 const routes = [
@@ -57,6 +58,10 @@ const routes = [
       {
         path: "/chatbot",
         element: UlapChatBot,
+      },
+      {
+        path: "/MenuDisplay",
+        element: MenuDisplay,
       },
     ],
   },

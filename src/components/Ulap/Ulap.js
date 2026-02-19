@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Box, Typography, Button, Container, makeStyles } from '@material-ui/core';
 import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
-import ulapImage from '../../images/3Dmascot.png';
 
 const useStyles = makeStyles((theme) => ({
   heroContainer: {
@@ -86,7 +85,7 @@ const useStyles = makeStyles((theme) => ({
     color: '#FFFFFF',
     fontWeight: 400,
     textAlign: 'center',
-    marginBottom: theme.spacing(4),
+    marginBottom: theme.spacing(6),
     fontFamily: 'Poppins, sans-serif',
     textShadow: '0 2px 15px rgba(0, 0, 0, 0.5)',
     padding: theme.spacing(0, 2),
@@ -97,43 +96,6 @@ const useStyles = makeStyles((theme) => ({
     [theme.breakpoints.up('md')]: {
       fontSize: '2rem',
       letterSpacing: '2px',
-    },
-  },
-  mascotWrap: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: theme.spacing(1.5),
-    marginBottom: theme.spacing(5),
-  },
-  mascotImage: {
-    width: 'min(60vw, 420px)',
-    maxWidth: '100%',
-    height: 'auto',
-    filter: 'drop-shadow(0 18px 30px rgba(0, 0, 0, 0.45))',
-  },
-  welcomeText: {
-    color: '#FFFFFF',
-    fontWeight: 700,
-    textAlign: 'center',
-    fontFamily: 'Poppins, sans-serif',
-    [theme.breakpoints.down('sm')]: {
-      fontSize: '1.5rem',
-    },
-    [theme.breakpoints.up('md')]: {
-      fontSize: '2.5rem',
-    },
-  },
-  welcomeBrand: {
-    color: '#FF7504',
-    fontWeight: 800,
-    textAlign: 'center',
-    fontFamily: 'Poppins, sans-serif',
-    [theme.breakpoints.down('sm')]: {
-      fontSize: '2rem',
-    },
-    [theme.breakpoints.up('md')]: {
-      fontSize: '3rem',
     },
   },
   applyButton: {
@@ -201,6 +163,7 @@ const Ulap = ({ videoSrc }) => {
 
   return (
     <Box className={classes.heroContainer}>
+      {/* Video Background */}
       {videoSrc && (
         <video
           ref={videoRef}
@@ -213,29 +176,29 @@ const Ulap = ({ videoSrc }) => {
         </video>
       )}
 
+      {/* Animated Gradient Overlay */}
       <Box className={classes.overlay} />
+
+      {/* Subtle Animated Particles */}
       <Box className={classes.particles} />
 
+      {/* Content Container */}
       <Container maxWidth="lg" className={classes.contentContainer}>
+        {/* Main Headline */}
         <Typography
           variant="h1"
           className={`${classes.headline} ${isVisible ? classes.fadeInVisible : classes.fadeIn}`}>
           CRAFTING SKILLS, CREATING POSSIBILITIES
         </Typography>
 
+        {/* Sub-headline */}
         <Typography
           variant="h2"
           className={`${classes.subheadline} ${isVisible ? classes.fadeInVisible : classes.fadeIn} ${classes.fadeInDelayed}`}>
           OUR INTERNSHIP JOURNEY
         </Typography>
 
-        <Box
-          className={`${classes.mascotWrap} ${isVisible ? classes.fadeInVisible : classes.fadeIn} ${classes.fadeInDelayed}`}>
-          <img src={ulapImage} alt="Ulap mascot" className={classes.mascotImage} />
-          <Typography className={classes.welcomeText}>Hello Interns! Welcome to</Typography>
-          <Typography className={classes.welcomeBrand}>UlapBiz</Typography>
-        </Box>
-
+        {/* Apply Now Button */}
         <Button
           component="a"
           href="https://ulap.biz/jobs"
@@ -248,6 +211,7 @@ const Ulap = ({ videoSrc }) => {
         </Button>
       </Container>
 
+      {/* Cloud Bottom Edge */}
       <svg
         className={classes.cloudSvg}
         preserveAspectRatio="none"
