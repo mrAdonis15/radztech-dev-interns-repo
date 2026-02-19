@@ -5,7 +5,19 @@ export function loadMessages() {
     const raw = localStorage.getItem(CHAT_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+    if (!Array.isArray(parsed) || parsed.length === 0) return null;
+    
+    // Remove duplicate messages by ID
+    const uniqueMessages = [];
+    const seenIds = new Set();
+    for (const msg of parsed) {
+      if (!seenIds.has(msg.id)) {
+        seenIds.add(msg.id);
+        uniqueMessages.push(msg);
+      }
+    }
+    
+    return uniqueMessages.length > 0 ? uniqueMessages : null;
   } catch {
     return null;
   }
@@ -43,15 +55,6 @@ function getTitleFromMessages(messages) {
   const firstUser = messages.find((m) => m.sender === "me");
   if (firstUser && firstUser.text) {
     let text = firstUser.text.trim();
-    // Strip slash command prefix to get the actual search/query (e.g. "/ai what is React?" -> "what is React?")
-    if (text.startsWith("/")) {
-      const afterSlash = text.slice(1).trim();
-      if (afterSlash.toLowerCase().startsWith("ai ")) {
-        text = afterSlash.slice(3).trim();
-      } else {
-        text = afterSlash;
-      }
-    }
     if (!text) return "Chat";
     // Capitalize first letter for display
     text = text.charAt(0).toUpperCase() + text.slice(1);

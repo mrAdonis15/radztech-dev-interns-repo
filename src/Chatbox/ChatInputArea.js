@@ -13,12 +13,6 @@ export default function ChatInputArea({
   inputRef,
   showEmoji,
   setShowEmoji,
-  showSlashMenu,
-  setShowSlashMenu,
-  selectedSlashIndex,
-  setSelectedSlashIndex,
-  filteredSlashOptions,
-  onSlashSelect,
   onEmojiClick,
   onSend,
   onKeyDown,
@@ -48,15 +42,18 @@ export default function ChatInputArea({
       onMouseDown={isExpanded ? undefined : onDragStart}
       aria-label={isExpanded ? "Message input" : "Drag to move chat window"}
     >
-      {/* Emoji panel: positioned above the whole input bar so it never overlaps */}
-      {showEmoji && (
-        <div className="emoji-picker-dropdown">
-          <EmojiPicker onEmojiClick={onEmojiClick} />
-        </div>
-      )}
       <Paper className="chat-inputPaper" elevation={0}>
-        {/* Emoji Section */}
+        {/* Emoji Section: dropdown anchored to icon so it pops up on top of it */}
         <div className="emoji-wrapper" style={{ position: "relative" }}>
+          {showEmoji && (
+            <div className="emoji-picker-dropdown">
+              <EmojiPicker
+                width={280}
+                height={320}
+                onEmojiClick={onEmojiClick}
+              />
+            </div>
+          )}
           <IconButton
             size="small"
             onClick={() => setShowEmoji((prev) => !prev)}
@@ -67,82 +64,13 @@ export default function ChatInputArea({
           </IconButton>
         </div>
 
-        {/* Slash Menu */}
-        <div
-          className="slash-menu-wrapper"
-          style={{ position: "relative", flex: 1 }}
-        >
-          {showSlashMenu && filteredSlashOptions.length > 0 && (
-            <div
-              className="slash-menu"
-              style={{
-                position: "absolute",
-                bottom: "100%",
-                left: 0,
-                marginBottom: 4,
-                minWidth: 260,
-                maxWidth: 320,
-                background: "#fff",
-                borderRadius: 8,
-                boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                overflow: "hidden",
-                zIndex: 1500,
-              }}
-            >
-              <div
-                style={{
-                  padding: "6px 0",
-                  fontSize: 12,
-                  color: "#666",
-                  paddingLeft: 12,
-                  paddingRight: 12,
-                  paddingTop: 8,
-                }}
-              >
-                AI commands
-              </div>
-              {filteredSlashOptions.map((opt, idx) => (
-                <div
-                  key={opt.command}
-                  onClick={() => onSlashSelect(opt)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") onSlashSelect(opt);
-                  }}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "10px 12px",
-                    cursor: "pointer",
-                    background:
-                      idx === selectedSlashIndex
-                        ? "rgba(255, 111, 0, 0.12)"
-                        : "transparent",
-                  }}
-                >
-                  <span style={{ fontWeight: 600, color: "#333" }}>
-                    / {opt.command}
-                  </span>
-                  <span style={{ color: "#888", fontSize: 12 }}>
-                    {opt.description}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+        <div className="chat-input-wrapper" style={{ position: "relative", flex: 1 }}>
           <InputBase
             inputRef={inputRef}
             className="chat-inputBase"
             placeholder="Message"
             value={input}
-            onChange={(e) => {
-              const v = e.target.value;
-              setInput(v);
-              setShowSlashMenu(v.startsWith("/"));
-              if (v.startsWith("/")) setSelectedSlashIndex(0);
-            }}
+            onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
           />
         </div>

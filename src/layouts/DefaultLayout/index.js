@@ -4,7 +4,6 @@ import Navbar from './Navbar';
 import Ulap from 'src/components/Ulap/Ulap';
 import Interns from 'src/components/Interns/Interns';
 
-
 const DefaultLayout = () => {
   const location = useLocation();
   const isHome = location.pathname === '/';

@@ -8,8 +8,6 @@ import { sendToGemini } from "./geminiService.js";
 import {
   getInitialMessages,
   getDefaultPanelPosition,
-  SLASH_OPTIONS,
-  STATIC_REPLY,
   PANEL_PADDING,
   DEFAULT_BOTTOM,
 } from "./chatboxConstants.js";
@@ -32,12 +30,11 @@ export default function Chatbox() {
   const bodyRef = useRef(null);
   const inputRef = useRef(null);
   const panelRef = useRef(null);
+  const isSendingRef = useRef(false);
 
   const [messages, setMessages] = useState(() => loadMessages() || getInitialMessages());
   const [input, setInput] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
-  const [showSlashMenu, setShowSlashMenu] = useState(false);
-  const [selectedSlashIndex, setSelectedSlashIndex] = useState(0);
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [panelPosition, setPanelPosition] = useState({ x: null, y: null });
@@ -47,28 +44,23 @@ export default function Chatbox() {
 
   const theme = useChatboxTheme(rootRef);
 
-  const filteredSlashOptions = SLASH_OPTIONS.filter((opt) => {
-    const afterSlash = input.slice(1).toLowerCase();
-    return (
-      afterSlash === "" ||
-      opt.command.toLowerCase().startsWith(afterSlash) ||
-      opt.label.toLowerCase().includes(afterSlash)
-    );
-  });
-
-  // Scroll to bottom when messages change
+  // Scroll to bottom when messages change or when panel opens (after refresh, bodyRef isn't mounted until isOpen)
   useEffect(() => {
-    if (bodyRef.current) {
-      bodyRef.current.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
-    }
-  }, [messages]);
+    if (!isOpen || !bodyRef.current) return;
+    const raf = requestAnimationFrame(() => {
+      if (bodyRef.current) {
+        bodyRef.current.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
+      }
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [messages, isOpen]);
 
   // Persist messages to localStorage when they change
   useEffect(() => {
     saveMessages(messages);
   }, [messages]);
 
-  // Click outside to close emoji/slash menu
+  // Click/touch outside to close emoji picker
   useEffect(() => {
     function handleClickOutside(e) {
       if (
@@ -76,10 +68,13 @@ export default function Chatbox() {
         !e.target.closest(".emoji-picker-dropdown")
       )
         setShowEmoji(false);
-      if (!e.target.closest(".slash-menu-wrapper")) setShowSlashMenu(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   // Set initial panel position when opening
@@ -89,66 +84,49 @@ export default function Chatbox() {
     }
   }, [isOpen, panelPosition.x, panelPosition.y]);
 
-  // Drag disabled - chat box stays fixed
   const handleDragStart = () => {};
 
-  const handleSlashSelect = (opt) => {
-    setInput("/" + opt.command + " ");
-    setShowSlashMenu(false);
-    setSelectedSlashIndex(0);
-    if (inputRef.current) inputRef.current.focus();
-  };
-
   const handleEmojiClick = (emojiData) => {
-    setInput((prev) => prev + emojiData.emoji);
+    const emoji = emojiData?.emoji ?? emojiData?.character ?? (typeof emojiData === "string" ? emojiData : "");
+    if (emoji) setInput((prev) => prev + emoji);
   };
 
   const handleSend = () => {
     const text = input.trim();
-    if (!text) return;
+    if (!text || isSendingRef.current) return;
 
-    const userMsg = createMessage(Date.now(), "me", text);
-    setMessages((prev) => [...prev, userMsg]);
+    isSendingRef.current = true;
+    const userMsgId = crypto.randomUUID();
+    const userMsg = createMessage(userMsgId, "me", text);
     setInput("");
     setShowEmoji(false);
 
-    const isSlashCommand = text.startsWith("/");
-    const placeholderId = Date.now() + 1;
+    const placeholderId = crypto.randomUUID();
     const typingMsg = createMessage(placeholderId, "bot", "...");
-    setMessages((prev) => [...prev, typingMsg]);
+    setMessages((prev) => [...prev, userMsg, typingMsg]);
 
-    if (isSlashCommand) {
-      // AI mode: only when / command is used
-      let messageForAi = text.slice(1).trim();
-      if (messageForAi.toLowerCase().startsWith("ai "))
-        messageForAi = messageForAi.slice(3).trim();
-      messageForAi = messageForAi || "Hello";
+    const messageForAi = text || "Hello";
 
-      sendToGemini(messageForAi, messages)
-        .then((reply) => {
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === placeholderId ? { ...msg, text: reply } : msg
-            )
-          );
-        })
-        .catch(() => {
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === placeholderId
-                ? { ...msg, text: "Sorry, something went wrong. Please try again." }
-                : msg
-            )
-          );
-        });
-    } else {
-      // Static reply when no slash command is used
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === placeholderId ? { ...msg, text: STATIC_REPLY } : msg
-        )
-      );
-    }
+    sendToGemini(messageForAi, messages)
+      .then((reply) => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === placeholderId ? { ...msg, text: reply } : msg
+          )
+        );
+      })
+      .catch(() => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === placeholderId
+              ? { ...msg, text: "Sorry, something went wrong. Please try again." }
+              : msg
+          )
+        );
+      })
+      .finally(() => {
+        isSendingRef.current = false;
+      });
   };
 
   const handleNewChat = () => {
@@ -171,30 +149,6 @@ export default function Chatbox() {
   };
 
   const handleKeyDown = (e) => {
-    if (showSlashMenu && filteredSlashOptions.length > 0) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setSelectedSlashIndex((i) => (i + 1) % filteredSlashOptions.length);
-        return;
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setSelectedSlashIndex(
-          (i) => (i - 1 + filteredSlashOptions.length) % filteredSlashOptions.length
-        );
-        return;
-      }
-      if (e.key === "Enter") {
-        e.preventDefault();
-        handleSlashSelect(filteredSlashOptions[selectedSlashIndex]);
-        return;
-      }
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setShowSlashMenu(false);
-        return;
-      }
-    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -211,207 +165,198 @@ export default function Chatbox() {
           top: "auto",
         };
 
-  return (
+  const chatContent = (
     <div
-      className={
-        "chat-root chat-root-popup" + (isExpanded ? " chat-root-expanded" : "")
-      }
-      ref={rootRef}
-    >
-      <button
-        type="button"
-        className="chat-toggle-button"
-        onClick={() => setIsOpen((o) => !o)}
-        aria-label={isOpen ? "Close chat" : "Open chat"}
-        title={isOpen ? "Close chat" : "Open chat"}
-      >
-        <ChatIcon fontSize="large" />
-      </button>
-
-      {isOpen && (
-        isExpanded ? (
-          <div className="chat-expanded-wrap">
-            <Paper
-              ref={panelRef}
-              className={
-                "chat-panel chat-panel-popup chat-panel-expanded " +
-                (maintenanceOpen ? "maintenance" : "online")
-              }
-              elevation={8}
-            >
-              <ChatHeader
-            maintenanceOpen={maintenanceOpen}
-            onMaintenanceChange={setMaintenanceOpen}
-            onMinimize={() => setIsOpen(false)}
-            onClose={() => setIsOpen(false)}
-            onDragStart={handleDragStart}
-            onHistoryClick={
-              maintenanceOpen
-                ? undefined
-                : () => {
-                    setHistory(loadHistory());
-                    setShowHistoryOpen(true);
-                  }
-            }
-            onNewChatClick={maintenanceOpen ? undefined : handleNewChat}
-            isExpanded={isExpanded}
-            onExpandToggle={() => setIsExpanded((e) => !e)}
-          />
-          {maintenanceOpen ? (
-            <div className="chat-body">
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <div style={{ display: "flex", width: "100%", justifyContent: "flex-start" }}>
-                  <div style={{ display: "flex", flexDirection: "column", marginLeft: 16 }}>
-                    <div className="chat-bubbleLeft">
-                      <Typography variant="body2" className="bubble-text left">
-                        Service is currently under maintenance.
-                      </Typography>
-                    </div>
-                    <Typography variant="caption" className="bubble-time left" style={{ marginTop: 6, marginLeft: 4 }}>
-                      {new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}
-                    </Typography>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="chat-body" ref={bodyRef}>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  {messages.map((msg) => (
-                    <ChatMessage key={msg.id} msg={msg} />
-                  ))}
-                </div>
-              </div>
-              <ChatInputArea
-                input={input}
-                setInput={setInput}
-                inputRef={inputRef}
-                showEmoji={showEmoji}
-                setShowEmoji={setShowEmoji}
-                showSlashMenu={showSlashMenu}
-                setShowSlashMenu={setShowSlashMenu}
-                selectedSlashIndex={selectedSlashIndex}
-                setSelectedSlashIndex={setSelectedSlashIndex}
-                filteredSlashOptions={filteredSlashOptions}
-                onSlashSelect={handleSlashSelect}
-                onEmojiClick={handleEmojiClick}
-                onSend={handleSend}
-                onKeyDown={handleKeyDown}
-                onDragStart={handleDragStart}
-                themeProps={theme}
-                isExpanded={true}
-              />
-            </>
-          )}
-            </Paper>
-          </div>
-        ) : (
-          <Paper
-            ref={panelRef}
             className={
-              "chat-panel chat-panel-popup " +
-              (maintenanceOpen ? "maintenance" : "online")
+              "chat-root chat-root-popup" + (isExpanded ? " chat-root-expanded" : "")
             }
-            elevation={8}
-            style={panelStyle}
+            ref={rootRef}
           >
-          <ChatHeader
-            maintenanceOpen={maintenanceOpen}
-            onMaintenanceChange={setMaintenanceOpen}
-            onMinimize={() => setIsOpen(false)}
-            onClose={() => setIsOpen(false)}
-            onDragStart={handleDragStart}
-            onHistoryClick={
-              maintenanceOpen
-                ? undefined
-                : () => {
-                    setHistory(loadHistory());
-                    setShowHistoryOpen(true);
-                  }
-            }
-            onNewChatClick={maintenanceOpen ? undefined : handleNewChat}
-            isExpanded={isExpanded}
-            onExpandToggle={() => setIsExpanded((e) => !e)}
-          />
+            <button
+              type="button"
+              className="chat-toggle-button"
+              onClick={() => setIsOpen((o) => !o)}
+              aria-label={isOpen ? "Close chat" : "Open chat"}
+              title={isOpen ? "Close chat" : "Open chat"}
+            >
+              <ChatIcon fontSize="large" />
+            </button>
 
-          {maintenanceOpen ? (
-            <div className="chat-body">
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    width: "100%",
-                    justifyContent: "flex-start",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      marginLeft: 16,
-                    }}
+            {isOpen && (
+              isExpanded ? (
+                <div className="chat-expanded-wrap">
+                  <Paper
+                    ref={panelRef}
+                    className={
+                      "chat-panel chat-panel-popup chat-panel-expanded " +
+                      (maintenanceOpen ? "maintenance" : "online")
+                    }
+                    elevation={8}
                   >
-                    <div className="chat-bubbleLeft">
-                      <Typography variant="body2" className="bubble-text left">
-                        Service is currently under maintenance.
-                      </Typography>
+                    <ChatHeader
+                  maintenanceOpen={maintenanceOpen}
+                  onMaintenanceChange={setMaintenanceOpen}
+                  onMinimize={() => { setIsOpen(false); setIsExpanded(false); }}
+                  onClose={() => { setIsOpen(false); setIsExpanded(false); }}
+                  onDragStart={handleDragStart}
+                  onHistoryClick={
+                    maintenanceOpen
+                      ? undefined
+                      : () => {
+                          setHistory(loadHistory());
+                          setShowHistoryOpen(true);
+                        }
+                  }
+                  onNewChatClick={maintenanceOpen ? undefined : handleNewChat}
+                  isExpanded={isExpanded}
+                  onExpandToggle={() => setIsExpanded((e) => !e)}
+                />
+                {maintenanceOpen ? (
+                  <div className="chat-body">
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      <div style={{ display: "flex", width: "100%", justifyContent: "flex-start" }}>
+                        <div style={{ display: "flex", flexDirection: "column", marginLeft: 16 }}>
+                          <div className="chat-bubbleLeft">
+                            <Typography variant="body2" className="bubble-text left">
+                              Service is currently under maintenance.
+                            </Typography>
+                          </div>
+                          <Typography variant="caption" className="bubble-time left" style={{ marginTop: 6, marginLeft: 4 }}>
+                            {new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}
+                          </Typography>
+                        </div>
+                      </div>
                     </div>
-                    <Typography
-                      variant="caption"
-                      className="bubble-time left"
-                      style={{ marginTop: 6, marginLeft: 4 }}
-                    >
-                      {new Date().toLocaleTimeString([], {
-                        hour: "numeric",
-                        minute: "2-digit",
-                        hour12: true,
-                      })}
-                    </Typography>
                   </div>
+                ) : (
+                  <>
+                    <div className="chat-body" ref={bodyRef}>
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        {messages.map((msg) => (
+                          <ChatMessage key={msg.id} msg={msg} />
+                        ))}
+                      </div>
+                    </div>
+                    <ChatInputArea
+                      input={input}
+                      setInput={setInput}
+                      inputRef={inputRef}
+                      showEmoji={showEmoji}
+                      setShowEmoji={setShowEmoji}
+                      onEmojiClick={handleEmojiClick}
+                      onSend={handleSend}
+                      onKeyDown={handleKeyDown}
+                      onDragStart={handleDragStart}
+                      themeProps={theme}
+                      isExpanded={true}
+                    />
+                  </>
+                )}
+                  </Paper>
                 </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="chat-body" ref={bodyRef}>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  {messages.map((msg) => (
-                    <ChatMessage key={msg.id} msg={msg} />
-                  ))}
-                </div>
-              </div>
-              <ChatInputArea
-                input={input}
-                setInput={setInput}
-                inputRef={inputRef}
-                showEmoji={showEmoji}
-                setShowEmoji={setShowEmoji}
-                showSlashMenu={showSlashMenu}
-                setShowSlashMenu={setShowSlashMenu}
-                selectedSlashIndex={selectedSlashIndex}
-                setSelectedSlashIndex={setSelectedSlashIndex}
-                filteredSlashOptions={filteredSlashOptions}
-                onSlashSelect={handleSlashSelect}
-                onEmojiClick={handleEmojiClick}
-                onSend={handleSend}
-                onKeyDown={handleKeyDown}
-                onDragStart={handleDragStart}
-                themeProps={theme}
-                isExpanded={false}
-              />
-            </>
-          )}
-          </Paper>
-        )
-      )}
-      <ChatHistory
-        open={showHistoryOpen}
-        onClose={() => setShowHistoryOpen(false)}
-        history={history}
-        onSelectChat={handleSelectHistoryChat}
-        onDeleteChat={handleDeleteHistoryChat}
-      />
-    </div>
-  );
-}
+              ) : (
+                <Paper
+                  ref={panelRef}
+                  className={
+                    "chat-panel chat-panel-popup " +
+                    (maintenanceOpen ? "maintenance" : "online")
+                  }
+                  elevation={8}
+                  style={panelStyle}
+                >
+                <ChatHeader
+                  maintenanceOpen={maintenanceOpen}
+                  onMaintenanceChange={setMaintenanceOpen}
+                  onMinimize={() => { setIsOpen(false); setIsExpanded(false); }}
+                  onClose={() => { setIsOpen(false); setIsExpanded(false); }}
+                  onDragStart={handleDragStart}
+                  onHistoryClick={
+                    maintenanceOpen
+                      ? undefined
+                      : () => {
+                          setHistory(loadHistory());
+                          setShowHistoryOpen(true);
+                        }
+                  }
+                  onNewChatClick={maintenanceOpen ? undefined : handleNewChat}
+                  isExpanded={isExpanded}
+                  onExpandToggle={() => setIsExpanded((e) => !e)}
+                />
+
+                {maintenanceOpen ? (
+                  <div className="chat-body">
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          width: "100%",
+                          justifyContent: "flex-start",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            marginLeft: 16,
+                          }}
+                        >
+                          <div className="chat-bubbleLeft">
+                            <Typography variant="body2" className="bubble-text left">
+                              Service is currently under maintenance.
+                            </Typography>
+                          </div>
+                          <Typography
+                            variant="caption"
+                            className="bubble-time left"
+                            style={{ marginTop: 6, marginLeft: 4 }}
+                          >
+                            {new Date().toLocaleTimeString([], {
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true,
+                            })}
+                          </Typography>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="chat-body" ref={bodyRef}>
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        {messages.map((msg) => (
+                          <ChatMessage key={msg.id} msg={msg} />
+                        ))}
+                      </div>
+                    </div>
+                    <ChatInputArea
+                      input={input}
+                      setInput={setInput}
+                      inputRef={inputRef}
+                      showEmoji={showEmoji}
+                      setShowEmoji={setShowEmoji}
+                      onEmojiClick={handleEmojiClick}
+                      onSend={handleSend}
+                      onKeyDown={handleKeyDown}
+                      onDragStart={handleDragStart}
+                      themeProps={theme}
+                      isExpanded={false}
+                    />
+                  </>
+                )}
+                </Paper>
+              )
+            )}
+            <ChatHistory
+              open={showHistoryOpen}
+              onClose={() => setShowHistoryOpen(false)}
+              history={history}
+              onSelectChat={handleSelectHistoryChat}
+              onDeleteChat={handleDeleteHistoryChat}
+            />
+          </div>
+        );
+
+    // Render inline so click state and panel stay in sync (portal was preventing panel from showing for some users)
+    return chatContent;
+  }
