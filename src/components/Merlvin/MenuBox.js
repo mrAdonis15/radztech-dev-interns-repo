@@ -12,20 +12,29 @@ import FullscreenIcon from "@material-ui/icons/Fullscreen";
 import CloseIcon from "@material-ui/icons/Close";
 import AddIcon from "@material-ui/icons/Add";
 import RemoveIcon from "@material-ui/icons/Remove";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import { useCart } from "../../contexts/CartContext";
 
 const useStyles = makeStyles((theme) => ({
   card: {
     position: "relative",
     width: 280,
+    transition: "all 0.3s ease",
+    "&:hover": {
+      transform: "translateY(-8px)",
+      boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
+    },
   },
   expandButton: {
     position: "absolute",
     top: 8,
     right: 8,
     backgroundColor: "rgba(255, 255, 255, 0.8)",
+    transition: "all 0.3s ease",
     "&:hover": {
-      backgroundColor: "rgba(255, 255, 255, 0.9)",
+      backgroundColor: "rgba(255, 255, 255, 1)",
+      transform: "scale(1.1)",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
     },
     zIndex: 1,
   },
@@ -79,6 +88,12 @@ const useStyles = makeStyles((theme) => ({
     width: 36,
     height: 36,
     padding: 0,
+    transition: "all 0.2s ease",
+    "&:hover": {
+      backgroundColor: "#1976d2",
+      color: "#fff",
+      transform: "scale(1.15)",
+    },
   },
   quantity: {
     fontSize: "1.25rem",
@@ -94,7 +109,7 @@ const useStyles = makeStyles((theme) => ({
   modalCard: {
     position: "relative",
     width: 900,
-    maxHeight: "90vh",
+    maxHeight: "75vh",
     overflow: "auto",
     outline: "none",
   },
@@ -103,17 +118,64 @@ const useStyles = makeStyles((theme) => ({
     top: 8,
     right: 8,
     backgroundColor: "rgba(255, 255, 255, 0.8)",
+    transition: "all 0.3s ease",
     "&:hover": {
-      backgroundColor: "rgba(255, 255, 255, 0.9)",
+      backgroundColor: "rgba(255, 0, 0, 0.8)",
+      color: "#fff",
+      transform: "rotate(90deg)",
     },
     zIndex: 1,
   },
   modalMedia: {
-    height: 500,
+    height: 350,
     backgroundColor: "#d0d0d0",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+  },
+  accordionHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: theme.spacing(2),
+    background: "linear-gradient(90deg, #ff9500 0%, #faa500 100%)",
+    borderRadius: 4,
+    marginTop: theme.spacing(2),
+    cursor: "pointer",
+    color: "#fff",
+    transition: "all 0.3s ease",
+    "&:hover": {
+      background: "linear-gradient(90deg, #ff8c00 0%, #ff9500 100%)",
+      transform: "translateX(4px)",
+      boxShadow: "0 2px 8px rgba(255, 149, 0, 0.4)",
+    },
+  },
+  accordionContent: {
+    padding: theme.spacing(2),
+    backgroundColor: "#fafafa",
+    borderLeft: "3px solid #1976d2",
+    marginTop: theme.spacing(1),
+    whiteSpace: "pre-wrap",
+    lineHeight: 1.6,
+  },
+  expandIcon: {
+    transition: "transform 0.3s ease",
+  },
+  stepBox: {
+    padding: theme.spacing(2),
+    marginBottom: theme.spacing(1.5),
+    backgroundColor: "#fff",
+    border: "1px solid #ddd",
+    borderRadius: 6,
+    borderLeft: "4px solid #1976d2",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+  },
+  stepNumber: {
+    fontWeight: 700,
+    color: "#1976d2",
+    marginRight: theme.spacing(1),
+    display: "inline-block",
+    minWidth: 24,
   },
 }));
 
@@ -122,15 +184,26 @@ export default function MenuBox({
   foodName = "Food Name/Desc",
   price = 0.0,
   unit = "",
+  description = "",
+  ingredients = "",
+  cooking_instructions = "",
   imageUrl = null,
 }) {
   const classes = useStyles();
   const [open, setOpen] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({});
   const { cartItems, addToCart, updateQuantity } = useCart();
   
   const cartItem = cartItems.find((item) => item.id === id);
   const quantity = cartItem ? cartItem.quantity : 0;
   const totalPrice = price * quantity;
+
+  const toggleSection = (section) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
 
   const handleOpen = () => {
     setOpen(true);
@@ -248,7 +321,7 @@ export default function MenuBox({
               )}
             </CardMedia>
 
-            <CardContent className={classes.content}>
+            <CardContent className={classes.content} style={{ maxHeight: "400px", overflowY: "auto" }}>
               <Typography variant="h5" className={classes.foodName}>
                 {foodName}
               </Typography>
@@ -257,6 +330,74 @@ export default function MenuBox({
                 Unit: ₱{price.toFixed(2)}
                 {unit ? ` ${unit}` : ""}
               </Typography>
+
+              {description && (
+                <Typography variant="body2" style={{ marginTop: "16px", marginBottom: "16px" }}>
+                  {description}
+                </Typography>
+              )}
+
+              {ingredients && (
+                <div style={{ marginBottom: "12px" }}>
+                  <div
+                    className={classes.accordionHeader}
+                    onClick={() => toggleSection("ingredients")}
+                  >
+                    <Typography variant="subtitle2" style={{ fontWeight: 600 }}>
+                      Ingredients
+                    </Typography>
+                    <ExpandMoreIcon
+                      className={classes.expandIcon}
+                      style={{
+                        transform: expandedSections.ingredients
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
+                        transition: "transform 0.3s ease",
+                      }}
+                    />
+                  </div>
+                  {expandedSections.ingredients && (
+                    <div className={classes.accordionContent}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                        {ingredients.split(",").map((item, index) => (
+                          <Typography key={index} variant="body2">
+                            • {item.trim()}
+                          </Typography>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {cooking_instructions && (
+                <div style={{ marginBottom: "16px" }}>
+                  <div
+                    className={classes.accordionHeader}
+                    onClick={() => toggleSection("cooking_instructions")}
+                  >
+                    <Typography variant="subtitle2" style={{ fontWeight: 600 }}>
+                      How It's Cooked
+                    </Typography>
+                    <ExpandMoreIcon
+                      className={classes.expandIcon}
+                      style={{
+                        transform: expandedSections.cooking_instructions
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
+                        transition: "transform 0.3s ease",
+                      }}
+                    />
+                  </div>
+                  {expandedSections.cooking_instructions && (
+                    <div className={classes.accordionContent}>
+                      <Typography variant="body2">
+                        {cooking_instructions}
+                      </Typography>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className={classes.priceSection}>
                 <div className={classes.totalSection}>
