@@ -37,14 +37,32 @@ const useStyles = makeStyles((theme) => ({
       boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
     },
   },
+  pageWrapper: {
+    width: "100%",
+    maxWidth: 1400,
+    margin: "0 auto",
+    paddingLeft: 16,
+    paddingRight: 16,
+    [theme.breakpoints.up("sm")]: {
+      paddingLeft: 24,
+      paddingRight: 24,
+    },
+    [theme.breakpoints.up("md")]: {
+      paddingLeft: 48,
+      paddingRight: 48,
+    },
+    [theme.breakpoints.up("lg")]: {
+      paddingLeft: 80,
+      paddingRight: 80,
+    },
+  },
   filterContainer: {
     display: "flex",
     justifyContent: "flex-end",
     alignItems: "center",
     gap: "16px",
-    padding: "20px",
-    paddingRight: "120px",
-    paddingTop: "85px",
+    padding: "20px 0",
+    paddingTop: 85,
   },
   filterButton: {
     textTransform: "none",
@@ -70,6 +88,17 @@ const useStyles = makeStyles((theme) => ({
   menuPaper: {
     maxHeight: 320,
     overflowY: "auto",
+  },
+  menuGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+    gap: 16,
+    justifyContent: "start",
+    paddingTop: 20,
+    paddingBottom: 24,
+    [theme.breakpoints.down(360)]: {
+      gridTemplateColumns: "1fr",
+    },
   },
 }));
 
@@ -143,6 +172,7 @@ function MenuDisplayContent() {
 
   return (
     <>
+      <div className={classes.pageWrapper}>
       <div className={classes.filterContainer}>
         <Button
           className={classes.filterButton}
@@ -181,17 +211,7 @@ function MenuDisplayContent() {
         </Menu>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "8px",
-          padding: "10px 120px",
-          paddingTop: "20px",
-          justifyContent: "flex-start",
-          alignItems: "flex-start",
-        }}
-      >
+      <div className={classes.menuGrid}>
         {filteredItems.map((item) => (
           <MenuBox
             key={item.ixProd}
@@ -209,6 +229,7 @@ function MenuDisplayContent() {
             }
           />
         ))}
+      </div>
       </div>
 
       {getCartCount() > 0 && (

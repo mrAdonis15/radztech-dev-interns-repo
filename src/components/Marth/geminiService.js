@@ -5,7 +5,7 @@ import ledger from "./ledger.json";
 import stockCardGraph from "./stockCardGraph.json";
 import { getStockCardData } from "./chartUtils.js";
 
-const apiKey = "AIzaSyAZWsMwJ16J41jz69FL2QlbIa8fSYpkDdQ";
+const apiKey = "AIzaSyC_xWOQqLs07jn236n89w9Uww3D_ePBA4E";
 
 const modelNames = [
   "gemini-2.5-flash",
@@ -55,20 +55,20 @@ const functions = {
 const tools = [
   {
     functionDeclarations: [
-      // {
-      //   name: "getProductBalance",
-      //   description: "Get the current balance for a product",
-      //   parameters: {
-      //     type: "OBJECT",
-      //     properties: {
-      //       description: {
-      //         type: "STRING",
-      //         description: "The product description, e.g., 'Aerox'",
-      //       },
-      //     },
-      //     required: ["description"],
-      //   },
-      // },
+      {
+        name: "getProductBalance",
+        description: "Get the current balance for a product, Use this when user ask a balance for specific product.",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            description: {
+              type: "STRING",
+              description: "The product description, e.g., 'Aerox'",
+            },
+          },
+          required: ["description"],
+        },
+      },
 
       {
         name: "getStockData",
