@@ -149,7 +149,7 @@
     flex: 0 0 auto;
   }
   /* Text field: hindi sobrang lapad, theme/send malapit sa "Message" */
-  .chat-panel-expanded .chat-inputArea .slash-menu-wrapper {
+  .chat-panel-expanded .chat-inputArea .chat-input-wrapper {
     flex: 1 1 auto;
     min-width: 80px;
     max-width: min(260px, 100%);
@@ -464,8 +464,7 @@
   .chat-inputPaper .MuiIconButton-root svg {
     font-size: 20px;
   }
-  /* Slash-menu-wrapper = text field container: limit width para walang malaking gap */
-  .chat-inputArea .slash-menu-wrapper {
+  .chat-inputArea .chat-input-wrapper {
     max-width: 260px;
     min-width: 80px;
   }
