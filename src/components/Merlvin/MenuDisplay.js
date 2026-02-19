@@ -183,12 +183,13 @@ function MenuDisplayContent() {
 
       <div
         style={{
-          display: "grid",
-          gap: "12px",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "8px",
           padding: "10px 120px",
           paddingTop: "20px",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          justifyItems: "center",
+          justifyContent: "flex-start",
+          alignItems: "flex-start",
         }}
       >
         {filteredItems.map((item) => (
