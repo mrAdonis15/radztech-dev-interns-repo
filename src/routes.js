@@ -1,30 +1,21 @@
+
 import DefaultLayout from "./layouts/DefaultLayout";
 import Ulap from "./components/Ulap/Ulap";
 import DisplayPage from "./components/Kurt/pages/DisplayPage";
 import Graphs from "./components/HistoricalGraph/pages/graphs";
 import Jayson from "./components/Adam/components/jsontask";
 import AdvancedSettings from "./components/Merlvin/AdvancedSettings";
-import SettingsAdvanced from "./components/Settings/AdvancedSettings";
 import JsonData from "./components/Brayan/JsonData";
-import Chatbox from "./Chatbox/chatbox";
-import MenuDisplay from "./components/Merlvin/MenuDisplay";
+import ChatboxGC from "./ChatboxGC/ChatbboxGC";
 import EvaluationLayout from "./Evaluation/Navbar";
 import Applicant from "./Evaluation/Applicant";
 import Category from "./Evaluation/Category";
 import Criteria from "./Evaluation/Criteria";
 import Evaluation from "./Evaluation/Evaluation";
 import ListofApplicants from "./Evaluation/ListofApplicants";
-import {
-  Home,
-  Plans,
-  AccountingnBeyond,
-  Features,
-  SchedsnReps,
-  Contacts,
-  PlanBasic,
-  PlanPro,
-  PlanErp,
-} from "./components/HeaderItems";
+import UlapChatBot from "./components/Marth/UlapChatbot";
+import Chatbox from "./Chatbox/chatbox";
+
 
 const routes = [
   {
@@ -32,52 +23,8 @@ const routes = [
     element: DefaultLayout,
     children: [
       {
-        index: true,
-        element: MenuDisplay,
-      },
-      {
-        path: "/menu",
-        element: MenuDisplay,
-      },
-      {
         path: "/Ulap",
         element: Ulap,
-      },
-      {
-        path: "/home",
-        element: Home,
-      },
-      {
-        path: "/plans",
-        element: Plans,
-      },
-      {
-        path: "/plans/basic",
-        element: PlanBasic,
-      },
-      {
-        path: "/plans/pro",
-        element: PlanPro,
-      },
-      {
-        path: "/plans/erp",
-        element: PlanErp,
-      },
-      {
-        path: "/accounting-and-beyond",
-        element: AccountingnBeyond,
-      },
-      {
-        path: "/features",
-        element: Features,
-      },
-      {
-        path: "/schedules-and-reports",
-        element: SchedsnReps,
-      },
-      {
-        path: "/contact-us",
-        element: Contacts,
       },
       {
         path: "/KurtJSON",
@@ -99,15 +46,19 @@ const routes = [
         path: "/BrayanJSON",
         element: JsonData,
       },
-      {
+      { 
         path: "/Chatbox",
-        element: Chatbox,
+        element: Chatbox, 
+      },
+      {
+        path: "/ChatboxGC",
+        element: ChatboxGC,
+      },
+      {
+        path: "/chatbot",
+        element: UlapChatBot,
       },
     ],
-  },
-  {
-    path: "/settings/advanced",
-    element: SettingsAdvanced,
   },
   {
     path: "/evaluation",

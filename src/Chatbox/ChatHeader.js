@@ -3,20 +3,24 @@ import Avatar from "@material-ui/core/Avatar";
 import IconButton from "@material-ui/core/IconButton";
 import Typography from "@material-ui/core/Typography";
 import Switch from "@material-ui/core/Switch";
-import RemoveIcon from "@material-ui/icons/Remove";
 import CloseIcon from "@material-ui/icons/Close";
 import HistoryIcon from "@material-ui/icons/History";
 import AddCommentIcon from "@material-ui/icons/AddComment";
+import FullscreenIcon from "@material-ui/icons/Fullscreen";
+import FullscreenExitIcon from "@material-ui/icons/FullscreenExit";
 import radzLogo from "./Assets/SHARED] Radztech Interns Logo - 32.png";
 
 export default function ChatHeader({
   maintenanceOpen,
   onMaintenanceChange,
-  onMinimize,
   onClose,
   onDragStart,
   onHistoryClick,
   onNewChatClick,
+  isExpanded,
+  onExpandToggle,
+  chatMode = "support",
+  onChatModeChange,
 }) {
   return (
     <div
@@ -30,6 +34,42 @@ export default function ChatHeader({
           <Typography variant="body1" className="chat-titleText">
             Ulap Chat
           </Typography>
+          {onChatModeChange && (
+            <div style={{ display: "flex", gap: 4, marginTop: 2 }}>
+              <button
+                type="button"
+                onClick={() => onChatModeChange("support")}
+                style={{
+                  padding: "2px 8px",
+                  fontSize: 11,
+                  border: "none",
+                  background: chatMode === "support" ? "rgba(255, 111, 0, 0.2)" : "transparent",
+                  color: chatMode === "support" ? "#e65100" : "#888",
+                  borderRadius: 4,
+                  cursor: "pointer",
+                  fontWeight: chatMode === "support" ? 600 : 400,
+                }}
+              >
+                Support
+              </button>
+              <button
+                type="button"
+                onClick={() => onChatModeChange("group")}
+                style={{
+                  padding: "2px 8px",
+                  fontSize: 11,
+                  border: "none",
+                  background: chatMode === "group" ? "rgba(255, 111, 0, 0.2)" : "transparent",
+                  color: chatMode === "group" ? "#e65100" : "#888",
+                  borderRadius: 4,
+                  cursor: "pointer",
+                  fontWeight: chatMode === "group" ? 600 : 400,
+                }}
+              >
+                Group
+              </button>
+            </div>
+          )}
           <div className="chat-header-statusRow">
             {maintenanceOpen ? (
               <span className="chat-header-statusLabel">
@@ -68,6 +108,20 @@ export default function ChatHeader({
         </div>
       </div>
       <div className="chat-controlIcons">
+        {onExpandToggle && (
+          <IconButton
+            size="small"
+            onClick={onExpandToggle}
+            aria-label={isExpanded ? "Exit expanded view" : "Expand chat"}
+            title={isExpanded ? "Exit expanded view" : "Expand chat"}
+          >
+            {isExpanded ? (
+              <FullscreenExitIcon fontSize="small" />
+            ) : (
+              <FullscreenIcon fontSize="small" />
+            )}
+          </IconButton>
+        )}
         {onHistoryClick && (
           <IconButton size="small" onClick={onHistoryClick} aria-label="Chat history">
             <HistoryIcon fontSize="small" />
@@ -78,9 +132,6 @@ export default function ChatHeader({
             <AddCommentIcon fontSize="small" />
           </IconButton>
         )}
-        <IconButton size="small" onClick={onMinimize} aria-label="Minimize">
-          <RemoveIcon fontSize="small" />
-        </IconButton>
         <IconButton size="small" onClick={onClose} aria-label="Close">
           <CloseIcon fontSize="small" />
         </IconButton>

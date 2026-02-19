@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Paper from "@material-ui/core/Paper";
 import IconButton from "@material-ui/core/IconButton";
 import InputBase from "@material-ui/core/InputBase";
@@ -24,6 +24,7 @@ export default function ChatInputArea({
   onKeyDown,
   onDragStart,
   themeProps,
+  isExpanded = false,
 }) {
   const {
     showThemePicker,
@@ -35,21 +36,30 @@ export default function ChatInputArea({
     PRESET_THEMES,
   } = themeProps;
 
+  // Added state for hover tracking on the theme toggle
+  const [isHoveringTheme, setIsHoveringTheme] = useState(false);
+
   return (
     <div
-      className="chat-inputArea chat-inputArea-draggable chat-inputArea-emojiAnchor"
-      onMouseDown={onDragStart}
-      aria-label="Drag to move chat window"
+      className={
+        "chat-inputArea chat-inputArea-emojiAnchor" +
+        (isExpanded ? "" : " chat-inputArea-draggable")
+      }
+      onMouseDown={isExpanded ? undefined : onDragStart}
+      aria-label={isExpanded ? "Message input" : "Drag to move chat window"}
     >
-      {/* Emoji panel: positioned above the whole input bar so it never overlaps */}
-      {showEmoji && (
-        <div className="emoji-picker-dropdown">
-          <EmojiPicker onEmojiClick={onEmojiClick} />
-        </div>
-      )}
       <Paper className="chat-inputPaper" elevation={0}>
-        {/* Emoji Section */}
+        {/* Emoji Section: dropdown anchored to icon so it pops up on top of it */}
         <div className="emoji-wrapper" style={{ position: "relative" }}>
+          {showEmoji && (
+            <div className="emoji-picker-dropdown">
+              <EmojiPicker
+                width={280}
+                height={320}
+                onEmojiClick={onEmojiClick}
+              />
+            </div>
+          )}
           <IconButton
             size="small"
             onClick={() => setShowEmoji((prev) => !prev)}
@@ -142,17 +152,44 @@ export default function ChatInputArea({
 
         {/* Theme Toggle */}
         <div style={{ position: "relative" }}>
-          <IconButton
-            size="small"
-            onClick={toggleThemePicker}
-            aria-label="theme"
+          <div
+            style={{ position: "relative", display: "inline-block" }}
+            onMouseEnter={() => setIsHoveringTheme(true)}
+            onMouseLeave={() => setIsHoveringTheme(false)}
           >
-            <img
-              src={ulapLogo}
-              alt="ulapbiz logo"
-              className="theme-toggle-logo"
-            />
-          </IconButton>
+            <IconButton
+              size="small"
+              onClick={toggleThemePicker}
+              aria-label="theme"
+            >
+              <img
+                src={ulapLogo}
+                alt="ulapbiz logo"
+                className="theme-toggle-logo"
+              />
+            </IconButton>
+            {isHoveringTheme && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "0%",  
+                  left: "50%",  // Centers horizontally over the image
+                  transform: "translate(-50%, -50%)",  
+                  background: "rgba(0, 0, 0, 0.8)",  
+                  color: "white",
+                  padding: "4px 8px",
+                  borderRadius: 9,
+                  fontSize: "12px",
+                  whiteSpace: "nowrap",
+                  zIndex: 10,
+                  pointerEvents: "none",  // Prevents blocking clicks
+                  fontFamily: "Poppins",
+                }}
+              >
+                choose theme
+              </div>
+            )}
+          </div>
           {showThemePicker && (
             <div
               className="theme-picker"

@@ -40,6 +40,7 @@ const DefaultLayout = () => {
             <div id="schedules-and-reports"><SchedsnReps /></div>
             <div id="contact-us"><Contacts /></div>
             <Interns />
+
           </>
         )}
       </main>

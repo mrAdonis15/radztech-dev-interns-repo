@@ -1,23 +1,13 @@
-import { CHAT_STORAGE_KEY, CHAT_HISTORY_STORAGE_KEY } from "./chatboxConstants.js";
+// Separate storage keys for ChatboxGC so message/history are not shared with Chatbox
+const CHAT_STORAGE_KEY = "ulap-chat-messages-gc";
+const CHAT_HISTORY_STORAGE_KEY = "ulap-chat-history-gc";
 
 export function loadMessages() {
   try {
     const raw = localStorage.getItem(CHAT_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) return null;
-    
-    // Remove duplicate messages by ID
-    const uniqueMessages = [];
-    const seenIds = new Set();
-    for (const msg of parsed) {
-      if (!seenIds.has(msg.id)) {
-        seenIds.add(msg.id);
-        uniqueMessages.push(msg);
-      }
-    }
-    
-    return uniqueMessages.length > 0 ? uniqueMessages : null;
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
   } catch {
     return null;
   }
@@ -55,7 +45,6 @@ function getTitleFromMessages(messages) {
   const firstUser = messages.find((m) => m.sender === "me");
   if (firstUser && firstUser.text) {
     let text = firstUser.text.trim();
-    // Strip slash command prefix to get the actual search/query (e.g. "/ai what is React?" -> "what is React?")
     if (text.startsWith("/")) {
       const afterSlash = text.slice(1).trim();
       if (afterSlash.toLowerCase().startsWith("ai ")) {
@@ -65,7 +54,6 @@ function getTitleFromMessages(messages) {
       }
     }
     if (!text) return "Chat";
-    // Capitalize first letter for display
     text = text.charAt(0).toUpperCase() + text.slice(1);
     const maxLen = 40;
     return text.length > maxLen ? text.slice(0, maxLen).trim() + "…" : text;
@@ -73,11 +61,6 @@ function getTitleFromMessages(messages) {
   return "Chat";
 }
 
-/**
- * Add current conversation to history and return updated history.
- * @param {Array} messages
- * @returns {Array} updated history
- */
 export function addToHistory(messages) {
   if (!messages || messages.length === 0) return loadHistory();
   const history = loadHistory();
