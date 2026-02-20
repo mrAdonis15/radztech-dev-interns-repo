@@ -1,9 +1,12 @@
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getProductsContext, getProductStats } from "./productService.js";
 
 const apiKey = process.env.REACT_APP_GEMINI_API_KEY || "";
-const modelNames = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite"];
+const modelNames = [
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-2.5-flash-lite",
+];
 
 /**
 
@@ -52,10 +55,22 @@ export async function sendToGemini(userMessage, messageHistory) {
           temperature: 0.7,
         },
         safetySettings: [
-          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
-          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
-          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
-          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" },
+          {
+            category: "HARM_CATEGORY_HARASSMENT",
+            threshold: "BLOCK_ONLY_HIGH",
+          },
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH",
+            threshold: "BLOCK_ONLY_HIGH",
+          },
+          {
+            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            threshold: "BLOCK_ONLY_HIGH",
+          },
+          {
+            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+            threshold: "BLOCK_ONLY_HIGH",
+          },
         ],
       });
 
@@ -69,16 +84,26 @@ export async function sendToGemini(userMessage, messageHistory) {
 
       if (response.candidates && response.candidates.length > 0) {
         const c = response.candidates[0];
-        if (c.finishReason && c.finishReason !== "STOP" && c.finishReason !== "MAX_TOKENS") {
-          lastError = new Error("Response blocked or incomplete: " + (c.finishReason || ""));
+        if (
+          c.finishReason &&
+          c.finishReason !== "STOP" &&
+          c.finishReason !== "MAX_TOKENS"
+        ) {
+          lastError = new Error(
+            "Response blocked or incomplete: " + (c.finishReason || ""),
+          );
           continue;
         }
       }
 
       try {
         if (response.text) {
-          const reply = typeof response.text === "function" ? response.text() : response.text;
-          if (reply != null && String(reply).trim()) return String(reply).trim();
+          const reply =
+            typeof response.text === "function"
+              ? response.text()
+              : response.text;
+          if (reply != null && String(reply).trim())
+            return String(reply).trim();
         }
       } catch (e) {
         lastError = e;
@@ -92,18 +117,29 @@ export async function sendToGemini(userMessage, messageHistory) {
   }
 
   console.error("Gemini API error (all models failed):", lastError);
-  const msg = lastError && lastError.message ? lastError.message : String(lastError);
+  const msg =
+    lastError && lastError.message ? lastError.message : String(lastError);
   if (msg.includes("API key") || msg.includes("403") || msg.includes("401")) {
     return "API key is invalid or missing. Check REACT_APP_GEMINI_API_KEY.";
   }
   if (msg.includes("blocked") || msg.includes("SAFETY")) {
     return "Your message or the reply was blocked by safety filters. Try rephrasing.";
   }
-  if (msg.includes("quota") || msg.includes("429") || msg.includes("resource_exhausted")) {
+  if (
+    msg.includes("quota") ||
+    msg.includes("429") ||
+    msg.includes("resource_exhausted")
+  ) {
     return "Rate limit or quota exceeded. Please try again later.";
   }
-  if (msg.includes("network") || msg.includes("Failed to fetch") || msg.includes("CORS")) {
+  if (
+    msg.includes("network") ||
+    msg.includes("Failed to fetch") ||
+    msg.includes("CORS")
+  ) {
     return "Network error. Check your connection or try again later.";
   }
-  return "Something went wrong: " + (msg.length > 80 ? msg.slice(0, 80) + "…" : msg);
+  return (
+    "Something went wrong: " + (msg.length > 80 ? msg.slice(0, 80) + "…" : msg)
+  );
 }

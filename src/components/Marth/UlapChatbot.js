@@ -8,6 +8,7 @@ import { sendToGemini } from "./geminiService.js";
 import {
   getInitialMessages,
   getDefaultPanelPosition,
+  SLASH_OPTIONS,
   PANEL_PADDING,
   DEFAULT_BOTTOM,
 } from "src/Chatbox/chatboxConstants.js";
@@ -100,7 +101,7 @@ export default function Chatbox() {
     const typingMsg = createMessage(placeholderId, "bot", "...");
     setMessages((prev) => [...prev, typingMsg]);
 
-    const messageForAi = text || "Hello";
+    let messageForAi = text.trim() || "Hello";
 
     sendToGemini(messageForAi, messages)
       .then((reply) => {
@@ -129,7 +130,7 @@ export default function Chatbox() {
             msg.id === placeholderId
               ? {
                   ...msg,
-                  text: "Sorry, something went wrong. Please try again.",
+                  text: "Sorry, I'm having trouble processing your request. Please try again.",
                 }
               : msg,
           ),

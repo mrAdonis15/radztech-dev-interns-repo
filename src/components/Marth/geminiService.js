@@ -106,8 +106,13 @@ const tools = [
  */
 
 export async function sendToGemini(userMessage, messageHistory) {
+  // console.log("Gemini API Key:", apiKey);
+
   if (!apiKey) {
-    return "Gemini is not configured. Please set REACT_APP_GEMINI_API_KEY in your .env file.";
+    return {
+      type: "text",
+      text: "Sorry, I'm currently unable to process your request because I'm not properly configured. Please contact support to resolve this issue.",
+    };
   }
 
   const systemContext = `
