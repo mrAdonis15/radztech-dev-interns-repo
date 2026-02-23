@@ -46,15 +46,18 @@ export default function Chatbox() {
 
   const theme = useChatboxTheme(rootRef);
 
-  // Scroll to bottom when messages change
+  // Scroll to latest messages when messages change or panel opens
   useEffect(() => {
-    if (bodyRef.current) {
-      bodyRef.current.scrollTo({
-        top: bodyRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  }, [messages]);
+    const el = bodyRef.current;
+    if (!el || !isOpen) return;
+    const scrollToBottom = () => {
+      el.scrollTop = el.scrollHeight;
+    };
+    requestAnimationFrame(() => {
+      scrollToBottom();
+      requestAnimationFrame(scrollToBottom);
+    });
+  }, [messages, isOpen, isExpanded]);
 
   // Persist messages to localStorage when they change
   useEffect(() => {

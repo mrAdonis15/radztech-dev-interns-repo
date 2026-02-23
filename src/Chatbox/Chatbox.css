@@ -330,323 +330,55 @@
   100% {
     opacity: 1;
   }
-  50% {
-    opacity: 0.35;
+  .chat-history-delete {
+    opacity: 0.5;
+    color: #666;
   }
-}
-.chat-bubbleRight {
-  max-width: 72%;
-  /* use the theme variable directly so changing theme updates the bubble */
-  background: var(--bubble-right, #fff);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  color: #212121;
-  padding: 14px 18px;
-  border-radius: 16px;
-  margin-top: 12px;
-  margin-left: auto;
-  box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-}
+  .chat-history-delete:hover {
+    color: #f57c00;
+  }
 
-.message-content {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-width: 0;
-  align-items: flex-start;
-}
-.message-content.left {
-  align-items: flex-start;
-}
-.message-content.right {
-  align-items: flex-end;
-}
-/* Expanded: bubbles may konting max-width para readable, tables pwede pa rin lumapad */
-.chat-panel-expanded .chat-bubbleLeft,
-.chat-panel-expanded .chat-bubbleRight {
-  max-width: 85%;
-}
+  /* Chart customization controls */
+  .chart-with-controls {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  .chart-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0 4px;
+    margin-bottom: 4px;
+  }
+  .chart-control-label {
+    font-size: 12px;
+    color: #666;
+  }
+  .chart-type-select {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    font-size: 13px;
+    background: #fff;
+  }
+  .chart-dataset-toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .chart-dataset-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #555;
+    cursor: pointer;
+  }
+  .chart-dataset-checkbox input {
+    cursor: pointer;
+  }
 
-/* Prevent bubbles from collapsing: allow wrapping and set sensible min-width */
-.chat-bubbleLeft,
-.chat-bubbleRight {
-  word-wrap: break-word;
-  word-break: break-word;
-  white-space: pre-wrap;
-  min-width: 64px;
-}
 
-.bubble-text {
-  font-size: 14px;
-  line-height: 1.35;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-}
-.bubble-text.left {
-  color: #050505;
-}
-.bubble-text.right {
-  color: black;
-}
-
-.bubble-time {
-  display: block;
-  margin-top: 6px;
-  font-size: 11px;
-  line-height: 1;
-}
-.bubble-time.left {
-  color: #666;
-}
-.bubble-time.right {
-  color: #666;
-}
-.chat-timestamp {
-  text-align: center;
-  margin: 12px 0;
-  color: #777;
-  font-size: 12px;
-}
-.chat-inputArea {
-  flex-shrink: 0;
-  padding: 8px 12px;
-  min-height: 56px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-width: 0;
-}
-.chat-inputArea .chat-inputPaper {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  flex: 1;
-}
-
-/* Anchor for emoji picker so it positions above the input bar */
-.chat-inputArea-emojiAnchor {
-  position: relative;
-}
-
-/* Emoji picker floats above the input area and never overlaps the chat input */
-.emoji-picker-dropdown {
-  position: absolute;
-  left: 0;
-  bottom: 100%;
-  margin-bottom: 4px;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-radius: 8px;
-  overflow: hidden;
-  max-height: min(320px, 60vh);
-  max-width: 280px;
-  width: 280px;
-}
-
-/* Fit content inside container: smaller emojis and tighter spacing */
-.emoji-picker-dropdown .EmojiPickerReact,
-.emoji-picker-dropdown aside.EmojiPickerReact {
-  --epr-emoji-size: 22px;
-  --epr-emoji-padding: 3px;
-  --epr-search-input-height: 32px;
-  --epr-category-navigation-button-size: 24px;
-  --epr-category-label-height: 28px;
-  --epr-preview-height: 48px;
-  --epr-preview-text-size: 12px;
-  --epr-horizontal-padding: 6px;
-  --epr-skin-tone-size: 16px;
-}
-
-.emoji-picker-dropdown .epr-main {
-  max-height: inherit;
-}
-
-.chat-inputArea-draggable {
-  cursor: default;
-}
-
-.chat-inputArea-draggable:active {
-  cursor: default;
-}
-
-.chat-inputArea-draggable input {
-  cursor: text;
-}
-.chat-inputPaper {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 24px;
-  padding: 6px 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  min-width: 0;
-  gap: 0;
-}
-.chat-inputPaper .MuiIconButton-root {
-  padding: 4px;
-}
-.chat-inputPaper .MuiIconButton-root svg {
-  font-size: 20px;
-}
-.chat-inputArea .chat-input-wrapper {
-  max-width: 260px;
-  min-width: 80px;
-}
-.chat-inputBase {
-  margin-left: 4px;
-  flex: 1;
-  min-width: 0;
-}
-.chat-sendButton {
-  margin-left: 6px;
-  padding: 6px;
-  background: #ff8a50;
-  color: white;
-}
-.chat-sendButton svg {
-  font-size: 20px;
-}
-.chat-sendButton:hover {
-  background: #ff7043;
-}
-
-.reply-icon {
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-}
-.chat-bubbleLeft {
-  display: inline-block;
-}
-
-/* Maintenance overrides */
-.maintenance .chat-inputPaper {
-  background: #f0e0d6;
-}
-.maintenance .chat-inputBase {
-  color: #999;
-}
-.maintenance .chat-sendButton {
-  background: #bdbdbd;
-}
-.maintenance .chat-sendButton:hover {
-  background: #bdbdbd;
-}
-.maintenance .chat-statusDot {
-  width: 10px;
-  height: 10px;
-  background: #f57c00;
-  border-radius: 50%;
-  margin-right: 8px;
-  display: inline-block;
-}
-
-/* Theme picker styles */
-.theme-picker {
-  font-family: "Poppins", sans-serif;
-}
-.theme-picker .swatch-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-.theme-swatch {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 4px 2px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-}
-.theme-swatch .swatch-box {
-  width: 48px;
-  height: 28px;
-  border-radius: 6px;
-  border: 2px solid transparent;
-  box-sizing: border-box;
-  margin-bottom: 6px;
-}
-.theme-swatch .swatch-label {
-  font-size: 12px;
-  color: #333;
-}
-.theme-swatch.selected .swatch-box {
-  box-shadow: 0 0 0 3px rgba(0, 132, 255, 0.12);
-  transform: translateY(-2px);
-}
-.theme-action {
-  padding: 6px 10px;
-  font-size: 13px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  background: #fff;
-  cursor: pointer;
-}
-.theme-action.save {
-  background: #0084ff;
-  color: #fff;
-  border-color: #0073e6;
-}
-.theme-action.reset {
-  background: #fff;
-}
-
-/* Theme toggle logo ( Ulap Biz ) - mas maliit sa message input */
-.theme-toggle-logo {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  opacity: 0.95;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  object-fit: contain;
-  display: block;
-}
-
-/* Chat history drawer */
-.chat-history-drawer-paper {
-  width: 280px;
-  max-width: 85vw;
-  z-index: 10000 !important;
-}
-.chat-history-drawer {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
-.chat-history-header {
-  padding: 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  flex-shrink: 0;
-}
-.chat-history-title {
-  font-weight: 600;
-  color: #333;
-}
-.chat-history-list {
-  flex: 1;
-  overflow-y: auto;
-}
-.chat-history-item {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-}
-.chat-history-item:hover .chat-history-delete {
-  opacity: 1;
-}
-.chat-history-delete {
-  opacity: 0.5;
-  color: #666;
-}
-.chat-history-delete:hover {
-  color: #f57c00;
-}
