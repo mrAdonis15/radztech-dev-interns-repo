@@ -65,7 +65,7 @@ export default function ChatMessage({ msg }) {
                     "bubble-text left" + (isTyping ? " chat-typing-text" : "")
                   }
                 >
-                  {msg.text}
+                  <ReactMarkdown>{msg.text}</ReactMarkdown>
                 </Typography>
               </div>
               <Typography
@@ -88,7 +88,7 @@ export default function ChatMessage({ msg }) {
                   "bubble-text left" + (isTyping ? " chat-typing-text" : "")
                 }
               >
-                {msg.text}
+                <ReactMarkdown>{msg.text}</ReactMarkdown>
               </Typography>
             </div>
             <Typography

@@ -3,7 +3,11 @@ import { getProductsContext, getProductStats, getValidProductNames, loadProducts
 import { buildChartFromSpec } from "./chatboxChartUtils.js";
 
 const apiKey = process.env.REACT_APP_GEMINI_API_KEY || "";
-const modelNames = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite"];
+const modelNames = [
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-2.5-flash-lite",
+];
 
 const functions = {
   displayChart: (opts) => buildChartFromSpec(opts),
@@ -97,10 +101,22 @@ export async function sendToGemini(userMessage, messageHistory) {
           temperature: 0.5,
         },
         safetySettings: [
-          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
-          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
-          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
-          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" },
+          {
+            category: "HARM_CATEGORY_HARASSMENT",
+            threshold: "BLOCK_ONLY_HIGH",
+          },
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH",
+            threshold: "BLOCK_ONLY_HIGH",
+          },
+          {
+            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            threshold: "BLOCK_ONLY_HIGH",
+          },
+          {
+            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+            threshold: "BLOCK_ONLY_HIGH",
+          },
         ],
         tools,
       });
@@ -176,11 +192,21 @@ export async function sendToGemini(userMessage, messageHistory) {
   if (msg.includes("blocked") || msg.includes("SAFETY")) {
     return "Your message or the reply was blocked by safety filters. Try rephrasing.";
   }
-  if (msg.includes("quota") || msg.includes("429") || msg.includes("resource_exhausted")) {
+  if (
+    msg.includes("quota") ||
+    msg.includes("429") ||
+    msg.includes("resource_exhausted")
+  ) {
     return "Rate limit or quota exceeded. Please try again later.";
   }
-  if (msg.includes("network") || msg.includes("Failed to fetch") || msg.includes("CORS")) {
+  if (
+    msg.includes("network") ||
+    msg.includes("Failed to fetch") ||
+    msg.includes("CORS")
+  ) {
     return "Network error. Check your connection or try again later.";
   }
-  return "Something went wrong: " + (msg.length > 80 ? msg.slice(0, 80) + "…" : msg);
+  return (
+    "Something went wrong: " + (msg.length > 80 ? msg.slice(0, 80) + "…" : msg)
+  );
 }

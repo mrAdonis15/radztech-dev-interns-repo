@@ -64,7 +64,10 @@ export default function ChatInputArea({
           </IconButton>
         </div>
 
-        <div className="chat-input-wrapper" style={{ position: "relative", flex: 1 }}>
+        <div
+          className="slash-menu-wrapper"
+          style={{ position: "relative", flex: 1 }}
+        >
           <InputBase
             inputRef={inputRef}
             className="chat-inputBase"
@@ -97,17 +100,17 @@ export default function ChatInputArea({
               <div
                 style={{
                   position: "absolute",
-                  top: "0%",  
-                  left: "50%",  // Centers horizontally over the image
-                  transform: "translate(-50%, -50%)",  
-                  background: "rgba(0, 0, 0, 0.8)",  
+                  top: "0%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  background: "rgba(0, 0, 0, 0.8)",
                   color: "white",
                   padding: "4px 8px",
                   borderRadius: 9,
                   fontSize: "12px",
                   whiteSpace: "nowrap",
                   zIndex: 10,
-                  pointerEvents: "none",  // Prevents blocking clicks
+                  pointerEvents: "none",
                   fontFamily: "Poppins",
                 }}
               >
@@ -134,9 +137,7 @@ export default function ChatInputArea({
                   width: 220,
                 }}
               >
-                <div
-                  style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}
-                >
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
                   Chat Theme
                 </div>
                 <div style={{ marginBottom: 12 }}>
@@ -174,10 +175,7 @@ export default function ChatInputArea({
                     gap: 8,
                   }}
                 >
-                  <button
-                    onClick={resetTheme}
-                    className="theme-action reset"
-                  >
+                  <button onClick={resetTheme} className="theme-action reset">
                     Reset
                   </button>
                   <button onClick={saveTheme} className="theme-action save">

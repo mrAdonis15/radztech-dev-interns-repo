@@ -4,6 +4,7 @@ import dummyProducts from "./dummyProducts.json";
 import ledger from "./ledger.json";
 import stockCardGraph from "./stockCardGraph.json";
 import { getStockCardData } from "./chartUtils.js";
+import { Message } from "@material-ui/icons";
 
 const apiKey = process.env.REACT_APP_GEMINI_API_KEY || "";
 
@@ -18,7 +19,11 @@ const functions = {
   // response based on dummyProducts.json
   getProductBalance: ({ description }) => {
     if (!description || typeof description !== "string") {
-      return "Please provide a valid product description.";
+      return {
+        type: "text",
+        status: "invalid_description",
+        text: "Invalid product description.",
+      };
     }
 
     const matches = dummyProducts.filter((p) =>
@@ -26,15 +31,44 @@ const functions = {
     );
 
     if (matches.length === 0) {
-      return `Sorry, no product found matching "${description}".`;
+      return {
+        type: "text",
+        status: "not_found",
+        text: "Sorry, I coudn't found product match.",
+      };
     }
 
     if (matches.length === 1) {
       const product = matches[0];
-      return `The current balance of ${product.product} is ${product.balance}.`;
+      return {
+        type: "text",
+        status: "single",
+        text: `The current balance of ${product.product} is ${product.balance}.;`,
+      };
     }
-    const options = matches.map((p) => p.product).join(", ");
-    return `Multiple products match "${description}". Please specify which one: ${options}.`;
+
+    if (matches.length > 1 && matches.length <= 20) {
+      return {
+        type: "text",
+        status: "multiple",
+        text: `${matches.length} products matched.`,
+        products: matches,
+      };
+    }
+
+    if (matches.length > 20) {
+      return {
+        type: "text",
+        status: "too_many",
+        text: "Too many matches. Please be more specific.",
+      };
+    }
+
+    return {
+      type: "text",
+      status: "multiple",
+      products: matches,
+    };
   },
 
   getStockData: () => {
@@ -58,7 +92,7 @@ const tools = [
       {
         name: "getProductBalance",
         description:
-          "Get the current balance for certain products. Use this when user specify products name/description and ask for its balance.",
+          "Get the current balance for certain products. If there are multiple products matched, ask user if they want to specify one or they want to list all of the products balance.",
         parameters: {
           type: "OBJECT",
           properties: {
@@ -106,8 +140,13 @@ const tools = [
  */
 
 export async function sendToGemini(userMessage, messageHistory) {
+  // console.log("Gemini API Key:", apiKey);
+
   if (!apiKey) {
-    return "Gemini is not configured. Please set REACT_APP_GEMINI_API_KEY in your .env file.";
+    return {
+      type: "text",
+      text: "Sorry, I'm currently unable to process your request because I'm not properly configured. Please contact support to resolve this issue.",
+    };
   }
 
   const systemContext = `
@@ -133,6 +172,7 @@ FINANCIAL INTERPRETATION RULES:
 - If interpretation depends on account classification and it is unclear, state that interpretation depends on account type.
 
 CHART & STRUCTURED OUTPUT RULES:
+- If the response is a list, always format it in bulleted form
 - Provide a concise business summary and insights.
 - Do not describe the chart configuration, technical structure, or internal keys.
 - Focus on trends, comparisons, growth/decline, highest/lowest values, and notable patterns.
@@ -145,6 +185,7 @@ When selecting an endpoint from the catalog:
 - If none clearly match, ask a clarification question.
 - Do not invent endpoints.
 - Do not modify endpoint names.
+- Do not give endpoint names.
 
 RESPONSE STYLE:
 - Be concise, clear, and professional.
@@ -265,7 +306,14 @@ Your goal is to convert structured business data into meaningful insights suitab
       if (err.status === 429) {
         return {
           type: "text",
-          text: "Oops! You've hit the rate limit. Please try again tomorrow.",
+          text: "Sorry, I'm feeling a bit tired right now. Let's pick this up tomorrow.",
+        };
+      }
+
+      if (err.status === 403) {
+        return {
+          type: "text",
+          text: "Sorry, I'm currently unable to process your request because I'm not properly configured. Please contact support to resolve this issue.",
         };
       }
     }
