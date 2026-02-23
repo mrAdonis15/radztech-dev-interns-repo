@@ -1,8 +1,9 @@
 import React from "react";
+import ReactMarkdown from "react-markdown";
 import Avatar from "@material-ui/core/Avatar";
 import Typography from "@material-ui/core/Typography";
 import radzLogo from "./Assets/SHARED] Radztech Interns Logo - 32.png";
-import ChartRenderer from "src/components/Marth/chartRenderer";
+import ChartWithControls from "./ChartWithControls.js";
 
 export default function ChatMessage({ msg }) {
   const isMe = msg.sender === "me";
@@ -54,7 +55,7 @@ export default function ChatMessage({ msg }) {
         <Avatar src={radzLogo} className="reply-icon" />
         {isChart ? (
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <ChartRenderer chart={msg.data} />
+            <ChartWithControls chart={msg.data} />
             <div className="message-content left" style={{ marginLeft: 8 }}>
               <div
                 className={"chat-bubbleLeft" + (isTyping ? " chat-typing" : "")}
@@ -65,7 +66,7 @@ export default function ChatMessage({ msg }) {
                     "bubble-text left" + (isTyping ? " chat-typing-text" : "")
                   }
                 >
-                  {msg.text}
+                  <ReactMarkdown>{msg.text}</ReactMarkdown>
                 </Typography>
               </div>
               <Typography
@@ -88,7 +89,7 @@ export default function ChatMessage({ msg }) {
                   "bubble-text left" + (isTyping ? " chat-typing-text" : "")
                 }
               >
-                {msg.text}
+                <ReactMarkdown>{msg.text}</ReactMarkdown>
               </Typography>
             </div>
             <Typography

@@ -1,38 +1,60 @@
-import productsData from "./Data/products.json";
+import fallbackData from "./Data/dummyProductsCopy.json";
 
-/**
- * Extract products from stock card data
- */
-export function getProducts() {
-  if (!productsData.products || !Array.isArray(productsData.products)) {
-    return [];
-  }
+const PRODUCTS_URL = `${process.env.PUBLIC_URL || ""}/Data/dummyProductsCopy.json`;
+let productsCache = null;
 
-  return productsData.products.map((productData) => {
-    const transactions = productData.rep || [];
-    const totals = productData.totals || {};
-
-    // Get latest price from transactions
-    let lastPrice = 0;
-    for (let i = transactions.length - 1; i >= 0; i--) {
-      if (transactions[i].priceOUT > 0) {
-        lastPrice = transactions[i].priceOUT;
-        break;
-      }
-    }
+function parseRawProducts(raw) {
+  const arr = Array.isArray(raw) ? raw : [];
+  if (arr.length === 0) return [];
+  return arr.map((item, idx) => {
+    const stockIn = typeof item.stockIn === "number" ? item.stockIn : parseInt(item.stockIn, 10) || 0;
+    const stockOut = typeof item.stockOut === "number" ? item.stockOut : parseInt(item.stockOut, 10) || 0;
+    const balance = typeof item.balance === "number" ? item.balance : parseInt(item.balance, 10) || 0;
 
     return {
-      id: productData.ixProd,
-      name: productData.sProd,
+      id: item.productCode || `prod-${idx}`,
+      name: item.product || "Unknown",
       category: "Vehicles",
-      currentStock: totals.runBal || 0,
-      stockIn: totals.qtyIN || 0,
-      stockOut: totals.qtyOUT || 0,
-      lastPrice: lastPrice,
-      transactions: transactions,
-      endQty: productData.endQty,
+      currentStock: balance,
+      stockIn,
+      stockOut,
+      lastPrice: balance > 0 ? 1 : 0,
+      transactions: [],
+      productCode: item.productCode,
     };
   });
+}
+
+function initCache() {
+  if (productsCache == null) {
+    productsCache = parseRawProducts(fallbackData);
+  }
+}
+
+/**
+ * Load products from JSON file (real-time).
+ * Fetches from public/Data/dummyProductsCopy.json — edit THAT file to add/update products;
+ * changes are picked up on the next chat message.
+ * @returns {Promise<void>}
+ */
+export async function loadProducts() {
+  try {
+    const res = await fetch(PRODUCTS_URL, { cache: "no-store" });
+    if (res.ok) {
+      const raw = await res.json();
+      productsCache = parseRawProducts(raw);
+    }
+  } catch {
+    initCache();
+  }
+}
+
+/**
+ * Get products (uses cached data; call loadProducts() first for fresh data).
+ */
+export function getProducts() {
+  initCache();
+  return productsCache || [];
 }
 
 export function getProductCount() {
@@ -41,6 +63,28 @@ export function getProductCount() {
 
 export function getProductById(id) {
   return getProducts().find((p) => p.id === id);
+}
+
+/** Check if a product exists by name (case-insensitive exact match) */
+export function getProductByName(name) {
+  if (!name || typeof name !== "string") return null;
+  const lower = String(name).trim().toLowerCase();
+  return getProducts().find((p) => p.name.toLowerCase() === lower);
+}
+
+/** Return product if name matches exactly, or single product if unambiguous partial match */
+export function resolveProductByName(name) {
+  if (!name || typeof name !== "string") return null;
+  const lower = String(name).trim().toLowerCase();
+  const exact = getProducts().find((p) => p.name.toLowerCase() === lower);
+  if (exact) return exact;
+  const partial = getProducts().filter((p) => p.name.toLowerCase().includes(lower));
+  return partial.length === 1 ? partial[0] : null;
+}
+
+/** Get all valid product names for validation */
+export function getValidProductNames() {
+  return getProducts().map((p) => p.name);
 }
 
 export function getProductsByCategory(category) {
@@ -75,32 +119,21 @@ export function getProductsContext() {
     totalStockOut += p.stockOut;
   });
 
-  let summary = `INVENTORY OVERVIEW:\n`;
+  let summary = `STOCK CARD OVERVIEW:\n`;
   summary += `- Total Products: ${products.length}\n`;
   summary += `- Total Stock Balance: ${totalStockBalance} units\n`;
   summary += `- Total Stock In: ${totalStockIn} units\n`;
   summary += `- Total Stock Out: ${totalStockOut} units\n\n`;
 
-  summary += `PRODUCTS IN INVENTORY:\n\n`;
+  summary += `STOCK CARD - PRODUCTS:\n\n`;
 
   const productList = products
-    .map((p, idx) => {
-      const transactionCount = p.transactions.length;
-      const latestTransaction = p.transactions[p.transactions.length - 1];
-      const lastDate = latestTransaction?.jDate
-        ? new Date(latestTransaction.jDate).toLocaleDateString()
-        : "N/A";
-
-      return (
-        `${idx + 1}. ${p.name} (ID: ${p.id})\n` +
-        `   - Current Stock: ${p.currentStock} units\n` +
-        `   - Stock In: ${p.stockIn} units\n` +
-        `   - Stock Out: ${p.stockOut} units\n` +
-        `   - Last Transaction Date: ${lastDate}\n` +
-        `   - Last Price: ${p.lastPrice > 0 ? `₱${p.lastPrice.toLocaleString()}` : "N/A"}\n` +
-        `   - Total Transactions: ${transactionCount}`
-      );
-    })
+    .map((p, idx) => (
+      `${idx + 1}. ${p.name} (Code: ${p.productCode || p.id})\n` +
+      `   - Balance: ${p.currentStock} units\n` +
+      `   - Stock In: ${p.stockIn} units\n` +
+      `   - Stock Out: ${p.stockOut} units`
+    ))
     .join("\n\n");
 
   return summary + productList;

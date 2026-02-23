@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
-import defaultTheme, { sanitizeColor, PRESET_THEMES } from "./colotheme.js";
+import { sanitizeColor, PRESET_THEMES } from "./colotheme.js";
 import { applyThemeToElement } from "./chatboxUtils.js";
 
 const STORAGE_KEY = "ulapChatTheme";
 
-const defaultThemeValues = {
-  bubbleLeft: "rgba(255,117,4,0.5)",
-  bubbleRight: "#ffffff",
-  borderColor: "#f57c00",
+/* Default to Flamingo (light pink) to match Ulap Chat design */
+const defaultThemeValues = PRESET_THEMES.find((p) => p.key === "flamingo")?.theme ?? {
+  bubbleLeft: "rgba(255,99,132,0.12)",
+  bubbleRight: "#ffd6e0",
+  borderColor: "#ff6f91",
 };
 
 export function useChatboxTheme(rootRef) {
-  const [theme, setTheme] = useState(defaultTheme);
+  const [theme, setTheme] = useState(defaultThemeValues);
   const [selectedThemeKey, setSelectedThemeKey] = useState(null);
   const [showThemePicker, setShowThemePicker] = useState(false);
 
@@ -37,6 +38,7 @@ export function useChatboxTheme(rootRef) {
   function resetTheme() {
     setTheme(defaultThemeValues);
     applyTheme(defaultThemeValues);
+    setSelectedThemeKey("flamingo");
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (e) {}
@@ -69,12 +71,12 @@ export function useChatboxTheme(rootRef) {
         } catch (e) {}
         requestAnimationFrame(() => applyTheme(t));
       } else {
-        applyTheme(theme);
+        setSelectedThemeKey("flamingo");
+        applyTheme(defaultThemeValues);
       }
     } catch (e) {
-      applyTheme(theme);
+      applyTheme(defaultThemeValues);
     }
-
   }, []);
 
   return {
