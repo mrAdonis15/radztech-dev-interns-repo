@@ -16,6 +16,7 @@ import ListofApplicants from "./Evaluation/ListofApplicants";
 import UlapChatBot from "./components/Marth/UlapChatbot";
 import Chatbox from "./Chatbox/chatbox";
 import MenuDisplay from "./components/Merlvin/MenuDisplay";
+import ImageCompressor from "./ImageCompress/ImageCompressor";
 
 
 const routes = [
@@ -62,6 +63,10 @@ const routes = [
       {
         path: "/MenuDisplay",
         element: MenuDisplay,
+      },
+      {
+        path: "/ImageCompressor",
+        element: ImageCompressor,
       },
     ],
   },
