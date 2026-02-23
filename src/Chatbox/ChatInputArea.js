@@ -51,6 +51,7 @@ export default function ChatInputArea({
                 width={280}
                 height={320}
                 onEmojiClick={onEmojiClick}
+                className="chat-emoji-picker"
               />
             </div>
           )}
@@ -128,15 +129,7 @@ export default function ChatInputArea({
                 zIndex: 2000,
               }}
             >
-              <div
-                style={{
-                  background: "#fff",
-                  padding: 12,
-                  borderRadius: 8,
-                  boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
-                  width: 220,
-                }}
-              >
+              <div className="theme-picker-panel">
                 <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
                   Chat Theme
                 </div>
@@ -144,7 +137,7 @@ export default function ChatInputArea({
                   <div style={{ fontSize: 13, marginBottom: 8 }}>
                     Choose theme
                   </div>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <div className="theme-swatches-grid">
                     {PRESET_THEMES.map((t) => (
                       <button
                         key={t.key}
