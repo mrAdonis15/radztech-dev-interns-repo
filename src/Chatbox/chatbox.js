@@ -44,7 +44,6 @@ export default function Chatbox() {
 
   const theme = useChatboxTheme(rootRef);
 
-  // Scroll to bottom when messages change or when panel opens (after refresh, bodyRef isn't mounted until isOpen)
   useEffect(() => {
     if (!isOpen || !bodyRef.current) return;
     const raf = requestAnimationFrame(() => {
@@ -109,9 +108,16 @@ export default function Chatbox() {
 
     sendToGemini(messageForAi, messages)
       .then((reply) => {
+        const isChart = reply && typeof reply === "object" && reply.type === "chart";
+        const text = typeof reply === "string" ? reply : (reply?.text ?? "");
+        if (isChart) setIsExpanded(true);
         setMessages((prev) =>
           prev.map((msg) =>
-            msg.id === placeholderId ? { ...msg, text: reply } : msg
+            msg.id === placeholderId
+              ? isChart
+                ? { ...msg, type: "chart", data: reply.data, text }
+                : { ...msg, text }
+              : msg
           )
         );
       })
