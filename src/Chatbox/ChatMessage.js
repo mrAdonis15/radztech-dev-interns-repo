@@ -3,6 +3,7 @@ import Avatar from "@material-ui/core/Avatar";
 import Typography from "@material-ui/core/Typography";
 import radzLogo from "./Assets/SHARED] Radztech Interns Logo - 32.png";
 import ChartRenderer from "src/components/Marth/chartRenderer";
+import ReactMarkdown from "react-markdown";
 
 export default function ChatMessage({ msg }) {
   const isMe = msg.sender === "me";
@@ -65,7 +66,7 @@ export default function ChatMessage({ msg }) {
                     "bubble-text left" + (isTyping ? " chat-typing-text" : "")
                   }
                 >
-                  {msg.text}
+                  <ReactMarkdown>{msg.text}</ReactMarkdown>
                 </Typography>
               </div>
               <Typography
@@ -88,7 +89,7 @@ export default function ChatMessage({ msg }) {
                   "bubble-text left" + (isTyping ? " chat-typing-text" : "")
                 }
               >
-                {msg.text}
+                <ReactMarkdown>{msg.text}</ReactMarkdown>
               </Typography>
             </div>
             <Typography
