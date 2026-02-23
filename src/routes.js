@@ -1,5 +1,6 @@
 
 import DefaultLayout from "./layouts/DefaultLayout";
+import Login from "./components/Login/Login";
 import Ulap from "./components/Ulap/Ulap";
 import DisplayPage from "./components/Kurt/pages/DisplayPage";
 import Graphs from "./components/HistoricalGraph/pages/graphs";
@@ -20,6 +21,10 @@ import ImageCompressor from "./ImageCompress/ImageCompressor";
 
 
 const routes = [
+  {
+    path: "/login",
+    element: Login,
+  },
   {
     path: "/",
     element: DefaultLayout,

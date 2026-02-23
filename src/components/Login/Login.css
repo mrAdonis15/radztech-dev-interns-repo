@@ -1,0 +1,202 @@
+/* UlapBiz Login - Design matching staging.ulap.biz */
+
+.login-root {
+  min-height: 100vh;
+  background: #f7f7f7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.login-content {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Logo */
+.login-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.login-logo-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.login-logo-text {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.login-logo-ulap {
+  color: #333333;
+}
+
+.login-logo-biz {
+  color: #ff8c00;
+}
+
+/* Form */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-field {
+  position: relative;
+}
+
+.login-field input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 1rem;
+  font-family: inherit;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #333333;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.login-field input::placeholder {
+  color: #9e9e9e;
+}
+
+.login-field input:focus {
+  outline: none;
+  border-color: #ff8c00;
+}
+
+.login-field-password {
+  display: flex;
+  align-items: center;
+}
+
+.login-field-password input {
+  padding-right: 44px;
+}
+
+.login-password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #757575;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-password-toggle:hover {
+  color: #333333;
+}
+
+/* Checkbox */
+.login-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.login-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: #ff8c00;
+  cursor: pointer;
+}
+
+.login-checkbox label {
+  font-size: 0.9rem;
+  color: #333333;
+  cursor: pointer;
+}
+
+.login-checkbox a {
+  color: #ff8c00;
+  text-decoration: none;
+}
+
+.login-checkbox a:hover {
+  text-decoration: underline;
+}
+
+/* Error */
+.login-error {
+  font-size: 0.875rem;
+  color: #d32f2f;
+  background: #ffebee;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+/* Submit button */
+.login-submit {
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  background: #ff8c00;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 8px;
+}
+
+.login-submit:hover:not(:disabled) {
+  background: #e67e00;
+}
+
+.login-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Links */
+.login-links {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.login-links p {
+  margin: 8px 0;
+  font-size: 0.9rem;
+  color: #333333;
+}
+
+.login-links a {
+  color: #ff8c00;
+  text-decoration: none;
+}
+
+.login-links a:hover {
+  text-decoration: underline;
+}
+
+/* Version */
+.login-version {
+  margin-top: 32px;
+  font-size: 0.8rem;
+  color: #757575;
+}
