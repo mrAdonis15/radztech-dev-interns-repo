@@ -15,7 +15,6 @@ import RemoveIcon from "@material-ui/icons/Remove";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import { useCart } from "../../contexts/CartContext";
 
-// Styles for MenuBox component
 const useStyles = makeStyles((theme) => ({
   card: {
     position: "relative",
