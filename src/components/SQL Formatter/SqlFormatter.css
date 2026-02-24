@@ -1,0 +1,111 @@
+/* SQL Formatter - uses Chatbox.css design tokens and patterns */
+@import "../../Chatbox/Chatbox.css";
+
+/* SQL Formatter specific overrides */
+.sql-formatter-root {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: "Poppins", sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 80px;
+  min-height: calc(100vh - 60px);
+  box-sizing: border-box;
+}
+
+.sql-formatter-panel {
+  width: 100%;
+  border-radius: 8px;
+  border: 3px solid var(--border-color, #f57c00);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    var(--panel-accent, #fff3e0) 100%
+  );
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  min-height: 480px;
+}
+
+.sql-formatter-header {
+  font-family: "Poppins", sans-serif;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  gap: 8px;
+  background: #fff;
+  border-bottom: 1px solid var(--border-color, #f57c00);
+  flex-shrink: 0;
+}
+
+.sql-formatter-title {
+  margin-left: 8px;
+  font-weight: 200;
+  color: #333;
+  font-size: 15px;
+  line-height: 1.25;
+  flex: 1;
+}
+
+.sql-formatter-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: transparent;
+}
+
+.sql-formatter-textarea {
+  font-family: "Poppins", sans-serif !important;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.sql-formatter-textarea .MuiInputBase-input {
+  font-family: "Poppins", sans-serif !important;
+}
+
+.sql-formatter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.sql-formatter-button {
+  background: linear-gradient(135deg, #ff7504 0%, #ff8a50 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(255, 117, 4, 0.35) !important;
+}
+
+.sql-formatter-button:hover {
+  box-shadow: 0 6px 20px rgba(255, 117, 4, 0.45) !important;
+}
+
+.sql-formatter-button-outline {
+  border-color: var(--border-color, #f57c00) !important;
+  color: var(--border-color, #f57c00) !important;
+}
+
+.sql-formatter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sql-formatter-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
