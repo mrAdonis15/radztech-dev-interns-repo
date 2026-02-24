@@ -1,15 +1,3 @@
-// Static reply when user does not use a slash command (e.g. /ai)
-export const STATIC_REPLY =
-  "Hello! Welcome to Ulap Biz support chatbot.";
-// Slash command options
-export const SLASH_OPTIONS = [
-  {
-    command: "ai",
-    label: "Ask AI",
-    description: "Ask the Ulap Biz AI assistant",
-  },
-];
-
 
 
 // Initial chat messages (empty - no default conversation)

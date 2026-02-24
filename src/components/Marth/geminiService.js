@@ -1,10 +1,12 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import stockCard from "./stockCard.json";
 import dummyProducts from "./dummyProducts.json";
+import ledger from "./ledger.json";
+import stockCardGraph from "./stockCardGraph.json";
+import { getStockCardData } from "./chartUtils.js";
+import { Message } from "@material-ui/icons";
 
-const apiKey =
-  process.env.REACT_APP_GEMINI_API_KEY ||
-  "AIzaSyBZclrjBj_Xo9_oMbEYMqZIgRqV-eijSTs";
+const apiKey = process.env.REACT_APP_GEMINI_API_KEY || "";
 
 const modelNames = [
   "gemini-2.5-flash",
@@ -17,7 +19,11 @@ const functions = {
   // response based on dummyProducts.json
   getProductBalance: ({ description }) => {
     if (!description || typeof description !== "string") {
-      return "Please provide a valid product description.";
+      return {
+        type: "text",
+        status: "invalid_description",
+        text: "Invalid product description.",
+      };
     }
 
     const matches = dummyProducts.filter((p) =>
@@ -25,24 +31,57 @@ const functions = {
     );
 
     if (matches.length === 0) {
-      return `Sorry, no product found matching "${description}".`;
+      return {
+        type: "text",
+        status: "not_found",
+        text: "Sorry, I coudn't found product match.",
+      };
     }
 
     if (matches.length === 1) {
       const product = matches[0];
-      return `The current balance of ${product.product} is ${product.balance}.`;
+      return {
+        type: "text",
+        status: "single",
+        text: `The current balance of ${product.product} is ${product.balance}.;`,
+      };
     }
-    const options = matches.map((p) => p.product).join(", ");
-    return `Multiple products match "${description}". Please specify which one: ${options}.`;
+
+    if (matches.length > 1 && matches.length <= 20) {
+      return {
+        type: "text",
+        status: "multiple",
+        text: `${matches.length} products matched.`,
+        products: matches,
+      };
+    }
+
+    if (matches.length > 20) {
+      return {
+        type: "text",
+        status: "too_many",
+        text: "Too many matches. Please be more specific.",
+      };
+    }
+
+    return {
+      type: "text",
+      status: "multiple",
+      products: matches,
+    };
   },
 
-  // response based on stockCard.json
-  getTotals: () => {
-    return stockCard.totals;
-  },
-
-  getData: () => {
+  getStockData: () => {
     return stockCard;
+  },
+
+  getLedgerData: () => {
+    return ledger;
+  },
+  getStockChartData: () => {
+    const data = stockCardGraph;
+    const chartData = getStockCardData(data);
+    return chartData;
   },
 };
 
@@ -52,7 +91,8 @@ const tools = [
     functionDeclarations: [
       {
         name: "getProductBalance",
-        description: "Get the current balance for a product",
+        description:
+          "Get the current balance for certain products. If there are multiple products matched, ask user if they want to specify one or they want to list all of the products balance.",
         parameters: {
           type: "OBJECT",
           properties: {
@@ -64,18 +104,27 @@ const tools = [
           required: ["description"],
         },
       },
+
       {
-        name: "getTotals",
+        name: "getStockData",
         description:
-          "Get different totals such as total qyt in/out, order in/out, running balance, etc. based on user prompt",
+          "Get stock summary for specific products. Use this when user ask anything related to stock or inventory of a certain product.",
         parameters: {
           type: "OBJECT",
         },
       },
       {
-        name: "getData",
+        name: "getLedgerData",
         description:
-          "Get the full dataset for more complex queries or analysis. Use this when the user asks for detailed data or comparisons.",
+          "Get the full ledger data for more complex queries or analysis. Use this when user ask anything related to ledger or transactions.",
+        parameters: {
+          type: "OBJECT",
+        },
+      },
+      {
+        name: "getStockChartData",
+        description:
+          "Get the chart data for stock card. Use this when user ask to provide stock card for a certain product.",
         parameters: {
           type: "OBJECT",
         },
@@ -91,12 +140,61 @@ const tools = [
  */
 
 export async function sendToGemini(userMessage, messageHistory) {
+  // console.log("Gemini API Key:", apiKey);
+
   if (!apiKey) {
-    return "Gemini is not configured. Please set REACT_APP_GEMINI_API_KEY in your .env file.";
+    return {
+      type: "text",
+      text: "Sorry, I'm currently unable to process your request because I'm not properly configured. Please contact support to resolve this issue.",
+    };
   }
 
-  const systemContext =
-    "You are a helpful support assistant for Ulap Biz chat. You can call functions that returns data when appropriate. If the response includes monery, place the correct separator with 2 decimal places. Be concise and clear.";
+  const systemContext = `
+You are a professional business support assistant for Ulap Biz chat.
+
+ROLE:
+- Assist users with business-related questions including finance, sales, inventory, reports, and operational insights.
+- You may call functions when structured data is required.
+- Use function results to generate clear, business-friendly explanations.
+
+DATA HANDLING RULES:
+- Never expose raw database fields, column names, JSON keys, or technical identifiers.
+- Never repeat internal field names such as system codes, formulas, or property names.
+- Transform structured data into natural business language before responding.
+- Do not explain how data was retrieved.
+- Do not output raw JSON unless explicitly required.
+
+FINANCIAL INTERPRETATION RULES:
+- Format all monetary values with comma separators and exactly 2 decimal places.
+- Interpret debit/credit correctly based on account classification.
+- Never interpret debit as profit unless the account classification is Revenue or Profit/Loss.
+- Always explain net movement relative to the account type.
+- If interpretation depends on account classification and it is unclear, state that interpretation depends on account type.
+
+CHART & STRUCTURED OUTPUT RULES:
+- If the response is a list, always format it in bulleted form
+- Provide a concise business summary and insights.
+- Do not describe the chart configuration, technical structure, or internal keys.
+- Focus on trends, comparisons, growth/decline, highest/lowest values, and notable patterns.
+- If the data represents financial values, apply proper financial interpretation rules.
+- Do not mention field names, JSON keys, or system properties in the explanation.
+- Keep insights clear, actionable, and business-oriented.
+
+When selecting an endpoint from the catalog:
+- Choose the single most relevant endpoint based strictly on the description.
+- If none clearly match, ask a clarification question.
+- Do not invent endpoints.
+- Do not modify endpoint names.
+- Do not give endpoint names.
+
+RESPONSE STYLE:
+- Be concise, clear, and professional.
+- Provide insight, not just numbers.
+- Avoid technical language unless necessary.
+- Focus on helping business users understand what the data means.
+
+Your goal is to convert structured business data into meaningful insights suitable for non-technical business users.
+`;
 
   function buildPrompt(history, current, context) {
     let text = context + "\n\n";
@@ -113,8 +211,6 @@ export async function sendToGemini(userMessage, messageHistory) {
 
   const prompt = buildPrompt(messageHistory, userMessage, systemContext);
   const genAI = new GoogleGenerativeAI(apiKey);
-
-  let lastError = null;
 
   for (const modelName of modelNames) {
     try {
@@ -154,7 +250,6 @@ export async function sendToGemini(userMessage, messageHistory) {
       console.log("Initial response:", response);
 
       if (!response) {
-        lastError = new Error("No response from model");
         continue;
       }
 
@@ -172,6 +267,8 @@ export async function sendToGemini(userMessage, messageHistory) {
         const parsedArgs = args || {};
         const functionResult = await functions[name](parsedArgs);
 
+        console.log("functionResult:", functionResult);
+
         const followUp = await chat.sendMessage([
           {
             functionResponse: {
@@ -181,25 +278,49 @@ export async function sendToGemini(userMessage, messageHistory) {
           },
         ]);
 
-        return followUp.response.text();
-      }
+        if (functionResult?.chartType) {
+          return {
+            type: "chart",
+            data: functionResult,
+            text: followUp.response.text(),
+          };
+        }
 
-      if (response.text) {
-        const reply =
-          typeof response.text === "function" ? response.text() : response.text;
-        if (reply != null && String(reply).trim()) return String(reply).trim();
-      }
+        return {
+          type: "text",
+          text: followUp.response.text(),
+        };
+      } else {
+        const textResponse = response.candidates?.[0]?.content?.parts?.find(
+          (p) => p.text,
+        );
 
-      lastError = new Error("Empty reply from model");
+        return {
+          type: "text",
+          text: textResponse?.text || response.text(),
+        };
+      }
     } catch (err) {
-      lastError = err;
       console.warn("Gemini model " + modelName + " failed:", err);
+
+      if (err.status === 429) {
+        return {
+          type: "text",
+          text: "Sorry, I'm feeling a bit tired right now. Let's pick this up tomorrow.",
+        };
+      }
+
+      if (err.status === 403) {
+        return {
+          type: "text",
+          text: "Sorry, I'm currently unable to process your request because I'm not properly configured. Please contact support to resolve this issue.",
+        };
+      }
     }
   }
 
-  console.error("Gemini API error (all models failed):", lastError);
-  const msg = lastError?.message || String(lastError);
-  return (
-    "Something went wrong: " + (msg.length > 80 ? msg.slice(0, 80) + "…" : msg)
-  );
+  return {
+    type: "text",
+    text: "Sorry, I'm having trouble processing your request. Please try again.",
+  };
 }

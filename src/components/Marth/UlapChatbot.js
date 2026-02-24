@@ -9,7 +9,6 @@ import {
   getInitialMessages,
   getDefaultPanelPosition,
   SLASH_OPTIONS,
-  STATIC_REPLY,
   PANEL_PADDING,
   DEFAULT_BOTTOM,
 } from "src/Chatbox/chatboxConstants.js";
@@ -38,8 +37,6 @@ export default function Chatbox() {
   );
   const [input, setInput] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
-  const [showSlashMenu, setShowSlashMenu] = useState(false);
-  const [selectedSlashIndex, setSelectedSlashIndex] = useState(0);
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [panelPosition, setPanelPosition] = useState({ x: null, y: null });
@@ -49,31 +46,25 @@ export default function Chatbox() {
 
   const theme = useChatboxTheme(rootRef);
 
-  const filteredSlashOptions = SLASH_OPTIONS.filter((opt) => {
-    const afterSlash = input.slice(1).toLowerCase();
-    return (
-      afterSlash === "" ||
-      opt.command.toLowerCase().startsWith(afterSlash) ||
-      opt.label.toLowerCase().includes(afterSlash)
-    );
-  });
-
-  // Scroll to bottom when messages change
+  // Scroll to latest messages when messages change or panel opens
   useEffect(() => {
-    if (bodyRef.current) {
-      bodyRef.current.scrollTo({
-        top: bodyRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  }, [messages]);
+    const el = bodyRef.current;
+    if (!el || !isOpen) return;
+    const scrollToBottom = () => {
+      el.scrollTop = el.scrollHeight;
+    };
+    requestAnimationFrame(() => {
+      scrollToBottom();
+      requestAnimationFrame(scrollToBottom);
+    });
+  }, [messages, isOpen, isExpanded]);
 
   // Persist messages to localStorage when they change
   useEffect(() => {
     saveMessages(messages);
   }, [messages]);
 
-  // Click outside to close emoji/slash menu
+  // Click outside to close emoji picker
   useEffect(() => {
     function handleClickOutside(e) {
       if (
@@ -81,7 +72,6 @@ export default function Chatbox() {
         !e.target.closest(".emoji-picker-dropdown")
       )
         setShowEmoji(false);
-      if (!e.target.closest(".slash-menu-wrapper")) setShowSlashMenu(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -97,13 +87,6 @@ export default function Chatbox() {
   // Drag disabled - chat box stays fixed
   const handleDragStart = () => {};
 
-  const handleSlashSelect = (opt) => {
-    setInput("/" + opt.command + " ");
-    setShowSlashMenu(false);
-    setSelectedSlashIndex(0);
-    if (inputRef.current) inputRef.current.focus();
-  };
-
   const handleEmojiClick = (emojiData) => {
     setInput((prev) => prev + emojiData.emoji);
   };
@@ -117,52 +100,45 @@ export default function Chatbox() {
     setInput("");
     setShowEmoji(false);
 
-    const isSlashCommand = text.startsWith("/");
     const placeholderId = Date.now() + 1;
     const typingMsg = createMessage(placeholderId, "bot", "...");
     setMessages((prev) => [...prev, typingMsg]);
 
-    if (isSlashCommand) {
-      // AI mode: only when / command is used
-      let messageForAi = text.slice(1).trim();
+    let messageForAi = text.trim() || "Hello";
 
-      console.log("Sending to Gemini:", {
-        messageForAi,
-        history: messages,
-      });
-
-      if (messageForAi.toLowerCase().startsWith("ai "))
-        messageForAi = messageForAi.slice(3).trim();
-      messageForAi = messageForAi || "Hello";
-
-      sendToGemini(messageForAi, messages)
-        .then((reply) => {
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === placeholderId ? { ...msg, text: reply } : msg,
-            ),
-          );
-        })
-        .catch(() => {
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === placeholderId
+    sendToGemini(messageForAi, messages)
+      .then((reply) => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === placeholderId
+              ? reply.type === "chart"
                 ? {
                     ...msg,
-                    text: "Sorry, something went wrong. Please try again.",
+                    type: "chart",
+                    data: structuredClone(reply.data),
+                    text: reply.text || "",
                   }
-                : msg,
-            ),
-          );
-        });
-    } else {
-      // Static reply when no slash command is used
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === placeholderId ? { ...msg, text: STATIC_REPLY } : msg,
-        ),
-      );
-    }
+                : {
+                    ...msg,
+                    type: "text",
+                    text: reply.text,
+                  }
+              : msg,
+          ),
+        );
+      })
+      .catch(() => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === placeholderId
+              ? {
+                  ...msg,
+                  text: "Sorry, I'm having trouble processing your request. Please try again.",
+                }
+              : msg,
+          ),
+        );
+      });
   };
 
   const handleNewChat = () => {
@@ -185,31 +161,6 @@ export default function Chatbox() {
   };
 
   const handleKeyDown = (e) => {
-    if (showSlashMenu && filteredSlashOptions.length > 0) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setSelectedSlashIndex((i) => (i + 1) % filteredSlashOptions.length);
-        return;
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setSelectedSlashIndex(
-          (i) =>
-            (i - 1 + filteredSlashOptions.length) % filteredSlashOptions.length,
-        );
-        return;
-      }
-      if (e.key === "Enter") {
-        e.preventDefault();
-        handleSlashSelect(filteredSlashOptions[selectedSlashIndex]);
-        return;
-      }
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setShowSlashMenu(false);
-        return;
-      }
-    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -257,8 +208,14 @@ export default function Chatbox() {
               <ChatHeader
                 maintenanceOpen={maintenanceOpen}
                 onMaintenanceChange={setMaintenanceOpen}
-                onMinimize={() => setIsOpen(false)}
-                onClose={() => setIsOpen(false)}
+                onMinimize={() => {
+                  setIsOpen(false);
+                  setIsExpanded(false);
+                }}
+                onClose={() => {
+                  setIsOpen(false);
+                  setIsExpanded(false);
+                }}
                 onDragStart={handleDragStart}
                 onHistoryClick={
                   maintenanceOpen
@@ -327,12 +284,6 @@ export default function Chatbox() {
                     inputRef={inputRef}
                     showEmoji={showEmoji}
                     setShowEmoji={setShowEmoji}
-                    showSlashMenu={showSlashMenu}
-                    setShowSlashMenu={setShowSlashMenu}
-                    selectedSlashIndex={selectedSlashIndex}
-                    setSelectedSlashIndex={setSelectedSlashIndex}
-                    filteredSlashOptions={filteredSlashOptions}
-                    onSlashSelect={handleSlashSelect}
                     onEmojiClick={handleEmojiClick}
                     onSend={handleSend}
                     onKeyDown={handleKeyDown}
@@ -357,8 +308,14 @@ export default function Chatbox() {
             <ChatHeader
               maintenanceOpen={maintenanceOpen}
               onMaintenanceChange={setMaintenanceOpen}
-              onMinimize={() => setIsOpen(false)}
-              onClose={() => setIsOpen(false)}
+              onMinimize={() => {
+                setIsOpen(false);
+                setIsExpanded(false);
+              }}
+              onClose={() => {
+                setIsOpen(false);
+                setIsExpanded(false);
+              }}
               onDragStart={handleDragStart}
               onHistoryClick={
                 maintenanceOpen
@@ -428,12 +385,6 @@ export default function Chatbox() {
                   inputRef={inputRef}
                   showEmoji={showEmoji}
                   setShowEmoji={setShowEmoji}
-                  showSlashMenu={showSlashMenu}
-                  setShowSlashMenu={setShowSlashMenu}
-                  selectedSlashIndex={selectedSlashIndex}
-                  setSelectedSlashIndex={setSelectedSlashIndex}
-                  filteredSlashOptions={filteredSlashOptions}
-                  onSlashSelect={handleSlashSelect}
                   onEmojiClick={handleEmojiClick}
                   onSend={handleSend}
                   onKeyDown={handleKeyDown}

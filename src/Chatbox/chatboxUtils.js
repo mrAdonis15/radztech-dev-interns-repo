@@ -34,8 +34,9 @@ export function applyThemeToElement(el, theme) {
     "--border-color",
     sanitizeColor(theme.borderColor, "#f57c00")
   );
+  /* Use bubbleRight for panel accent to match chat body background (e.g. light pink) */
   el.style.setProperty(
     "--panel-accent",
-    sanitizeColor(theme.bubbleLeft, "rgba(255,179,128,0.6)")
+    sanitizeColor(theme.bubbleRight, "#fff3e0")
   );
 }

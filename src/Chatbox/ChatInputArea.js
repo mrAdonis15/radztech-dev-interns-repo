@@ -13,12 +13,6 @@ export default function ChatInputArea({
   inputRef,
   showEmoji,
   setShowEmoji,
-  showSlashMenu,
-  setShowSlashMenu,
-  selectedSlashIndex,
-  setSelectedSlashIndex,
-  filteredSlashOptions,
-  onSlashSelect,
   onEmojiClick,
   onSend,
   onKeyDown,
@@ -57,6 +51,7 @@ export default function ChatInputArea({
                 width={280}
                 height={320}
                 onEmojiClick={onEmojiClick}
+                className="chat-emoji-picker"
               />
             </div>
           )}
@@ -70,82 +65,16 @@ export default function ChatInputArea({
           </IconButton>
         </div>
 
-        {/* Slash Menu */}
         <div
           className="slash-menu-wrapper"
           style={{ position: "relative", flex: 1 }}
         >
-          {showSlashMenu && filteredSlashOptions.length > 0 && (
-            <div
-              className="slash-menu"
-              style={{
-                position: "absolute",
-                bottom: "100%",
-                left: 0,
-                marginBottom: 4,
-                minWidth: 260,
-                maxWidth: 320,
-                background: "#fff",
-                borderRadius: 8,
-                boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                overflow: "hidden",
-                zIndex: 1500,
-              }}
-            >
-              <div
-                style={{
-                  padding: "6px 0",
-                  fontSize: 12,
-                  color: "#666",
-                  paddingLeft: 12,
-                  paddingRight: 12,
-                  paddingTop: 8,
-                }}
-              >
-                AI commands
-              </div>
-              {filteredSlashOptions.map((opt, idx) => (
-                <div
-                  key={opt.command}
-                  onClick={() => onSlashSelect(opt)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") onSlashSelect(opt);
-                  }}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "10px 12px",
-                    cursor: "pointer",
-                    background:
-                      idx === selectedSlashIndex
-                        ? "rgba(255, 111, 0, 0.12)"
-                        : "transparent",
-                  }}
-                >
-                  <span style={{ fontWeight: 600, color: "#333" }}>
-                    / {opt.command}
-                  </span>
-                  <span style={{ color: "#888", fontSize: 12 }}>
-                    {opt.description}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
           <InputBase
             inputRef={inputRef}
             className="chat-inputBase"
             placeholder="Message"
             value={input}
-            onChange={(e) => {
-              const v = e.target.value;
-              setInput(v);
-              setShowSlashMenu(v.startsWith("/"));
-              if (v.startsWith("/")) setSelectedSlashIndex(0);
-            }}
+            onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
           />
         </div>
@@ -172,17 +101,17 @@ export default function ChatInputArea({
               <div
                 style={{
                   position: "absolute",
-                  top: "0%",  
-                  left: "50%",  // Centers horizontally over the image
-                  transform: "translate(-50%, -50%)",  
-                  background: "rgba(0, 0, 0, 0.8)",  
+                  top: "0%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  background: "rgba(0, 0, 0, 0.8)",
                   color: "white",
                   padding: "4px 8px",
                   borderRadius: 9,
                   fontSize: "12px",
                   whiteSpace: "nowrap",
                   zIndex: 10,
-                  pointerEvents: "none",  // Prevents blocking clicks
+                  pointerEvents: "none",
                   fontFamily: "Poppins",
                 }}
               >
@@ -200,25 +129,15 @@ export default function ChatInputArea({
                 zIndex: 2000,
               }}
             >
-              <div
-                style={{
-                  background: "#fff",
-                  padding: 12,
-                  borderRadius: 8,
-                  boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
-                  width: 220,
-                }}
-              >
-                <div
-                  style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}
-                >
+              <div className="theme-picker-panel">
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
                   Chat Theme
                 </div>
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ fontSize: 13, marginBottom: 8 }}>
                     Choose theme
                   </div>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <div className="theme-swatches-grid">
                     {PRESET_THEMES.map((t) => (
                       <button
                         key={t.key}
@@ -249,10 +168,7 @@ export default function ChatInputArea({
                     gap: 8,
                   }}
                 >
-                  <button
-                    onClick={resetTheme}
-                    className="theme-action reset"
-                  >
+                  <button onClick={resetTheme} className="theme-action reset">
                     Reset
                   </button>
                   <button onClick={saveTheme} className="theme-action save">

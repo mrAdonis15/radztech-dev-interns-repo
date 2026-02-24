@@ -18,7 +18,8 @@ import { useCart } from "../../contexts/CartContext";
 const useStyles = makeStyles((theme) => ({
   card: {
     position: "relative",
-    width: 280,
+    width: "100%",
+    minWidth: 0,
     transition: "all 0.3s ease",
     "&:hover": {
       transform: "translateY(-8px)",
@@ -108,10 +109,15 @@ const useStyles = makeStyles((theme) => ({
   },
   modalCard: {
     position: "relative",
-    width: 900,
+    width: "90vw",
+    maxWidth: 900,
     maxHeight: "75vh",
     overflow: "auto",
     outline: "none",
+    margin: 16,
+    [theme.breakpoints.up("sm")]: {
+      margin: 24,
+    },
   },
   closeButton: {
     position: "absolute",

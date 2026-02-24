@@ -53,13 +53,31 @@ const useStyles = makeStyles((theme) => ({
       padding: "6px 12px",
     },
   },
+  pageWrapper: {
+    width: "100%",
+    maxWidth: 1400,
+    margin: "0 auto",
+    paddingLeft: 16,
+    paddingRight: 16,
+    [theme.breakpoints.up("sm")]: {
+      paddingLeft: 24,
+      paddingRight: 24,
+    },
+    [theme.breakpoints.up("md")]: {
+      paddingLeft: 48,
+      paddingRight: 48,
+    },
+    [theme.breakpoints.up("lg")]: {
+      paddingLeft: 80,
+      paddingRight: 80,
+    },
+  },
   filterContainer: {
     display: "flex",
     justifyContent: "flex-end",
     alignItems: "center",
     gap: "16px",
     padding: "20px",
-    paddingRight: "120px",
     paddingTop: "85px",
     [theme.breakpoints.down("sm")]: {
       justifyContent: "center",
@@ -100,21 +118,20 @@ const useStyles = makeStyles((theme) => ({
     overflowY: "auto",
   },
   menuGrid: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "8px",
-    padding: "10px 120px",
-    paddingTop: "20px",
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    [theme.breakpoints.down("md")]: {
-      padding: "10px 30px",
-      paddingTop: "15px",
-    },
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+    gap: 16,
+    padding: "20px 0",
+    paddingTop: 20,
+    paddingBottom: 24,
+    justifyContent: "start",
     [theme.breakpoints.down("sm")]: {
-      padding: "10px 8px",
-      paddingTop: "10px",
-      gap: "4px",
+      gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+      gap: 8,
+      padding: "10px 0",
+    },
+    [theme.breakpoints.down(360)]: {
+      gridTemplateColumns: "1fr",
     },
   },
 }));
@@ -153,6 +170,7 @@ function MenuDisplayContent() {
 
   return (
     <>
+      <div className={classes.pageWrapper}>
       {/* Filter Bar */}
       <div className={classes.filterContainer}>
         <Button
@@ -202,6 +220,7 @@ function MenuDisplayContent() {
             imageUrl={getImageUrl(item.sProd)}
           />
         ))}
+      </div>
       </div>
 
       {/* Cart Total Display */}
