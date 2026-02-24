@@ -17,6 +17,7 @@ import UlapChatBot from "./components/Marth/UlapChatbot";
 import Chatbox from "./Chatbox/chatbox";
 import MenuDisplay from "./components/Merlvin/MenuDisplay";
 import ImageCompressor from "./ImageCompress/ImageCompressor";
+import SqlFormatter from "./components/SQL Formatter/SqlFormatter";
 
 
 const routes = [
@@ -67,6 +68,10 @@ const routes = [
       {
         path: "/ImageCompressor",
         element: ImageCompressor,
+      },
+      {
+        path: "/SqlFormatter",
+        element: SqlFormatter,
       },
     ],
   },
