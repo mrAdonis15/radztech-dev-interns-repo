@@ -1,10 +1,17 @@
-import React, { useState, useRef, useEffect } from 'react';
-import Chart from 'chart.js';
-import { Paper, Typography, Box, Button } from '@material-ui/core';
-import sampleData from '../data/sampleData.json';
+import React, { useState, useRef, useEffect } from "react";
+import Chart from "chart.js";
+import {
+  Paper,
+  Typography,
+  Box,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from "@material-ui/core";
+import sampleData from "../data/sampleData.json";
 
 const WINDOW_MS = 3 * 60 * 1000;
-
 
 function extractFinalPerCpu(obj) {
   let cur = obj;
@@ -14,13 +21,12 @@ function extractFinalPerCpu(obj) {
   return cur || {};
 }
 
-
 function perCpuToArray(perCpu) {
-  if (!perCpu || typeof perCpu !== 'object') return [];
+  if (!perCpu || typeof perCpu !== "object") return [];
 
   return Object.keys(perCpu)
-    .filter((k) => k.startsWith('cpu'))
-    .sort((a, b) => Number(a.replace('cpu', '')) - Number(b.replace('cpu', '')))
+    .filter((k) => k.startsWith("cpu"))
+    .sort((a, b) => Number(a.replace("cpu", "")) - Number(b.replace("cpu", "")))
     .map((k) => Number(perCpu[k]) || 0);
 }
 
@@ -48,7 +54,10 @@ function getHistoricalChart(data, intervalMs = 1000) {
     if (t < cutoff) return;
 
     labels.push(
-      new Date(t).toLocaleTimeString([], { minute: '2-digit', second: '2-digit' })
+      new Date(t).toLocaleTimeString([], {
+        minute: "2-digit",
+        second: "2-digit",
+      }),
     );
 
     const finalCpuObj = extractFinalPerCpu(d.per_cpu);
@@ -62,13 +71,13 @@ function getHistoricalChart(data, intervalMs = 1000) {
   });
 
   const colors = [
-    '#e65100',
-    '#1565c0',
-    '#43a047',
-    '#fbc02d',
-    '#8e24aa',
-    '#00acc1',
-    '#f57c00',
+    "#e65100",
+    "#1565c0",
+    "#43a047",
+    "#fbc02d",
+    "#8e24aa",
+    "#00acc1",
+    "#f57c00",
   ];
 
   // Always create datasets for all CPUs, even if no data
@@ -98,40 +107,46 @@ function getHistoricalChart(data, intervalMs = 1000) {
 
   return {
     chartData: {
-      labels: labels.length ? labels : ['0:00'],
+      labels: labels.length ? labels : ["0:00"],
       datasets,
     },
     chartOptions: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: { duration: 300 },
+      animation: { duration: 0 },
       legend: {
         display: true,
-        position: 'bottom',
+        position: "bottom",
         labels: {
-          fontColor: '#333',
+          fontColor: "#333",
           padding: 15,
           boxWidth: 30,
         },
       },
       tooltips: {
-        mode: 'index',
+        mode: "index",
         intersect: false,
-        backgroundColor: 'rgba(33,33,33,0.9)',
-        titleFontColor: '#fff',
-        bodyFontColor: '#fff',
+        backgroundColor: "rgba(33,33,33,0.9)",
+        titleFontColor: "#fff",
+        bodyFontColor: "#fff",
       },
       scales: {
         xAxes: [
           {
             gridLines: { display: false },
-            ticks: { autoSkip: true, fontSize: 10, fontColor: '#666' },
+            ticks: { autoSkip: true, fontSize: 10, fontColor: "#666" },
           },
         ],
         yAxes: [
           {
-            gridLines: { color: 'rgba(0,0,0,0.06)' },
-            ticks: { min: 0, max: 100, stepSize: 25, fontSize: 11, fontColor: '#666' },
+            gridLines: { color: "rgba(0,0,0,0.06)" },
+            ticks: {
+              min: 0,
+              max: 100,
+              stepSize: 25,
+              fontSize: 11,
+              fontColor: "#666",
+            },
           },
         ],
       },
@@ -140,38 +155,41 @@ function getHistoricalChart(data, intervalMs = 1000) {
   };
 }
 
-
 export default function Percpu({ intervalMs = 1000, height = 320 }) {
   const [localData, setLocalData] = useState([]);
   const [dataIndex, setDataIndex] = useState(0);
+  const [maxDataPoints, setMaxDataPoints] = useState(10);
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
-  const maxDataPoints = sampleData.percpu.length;
 
-  const { chartData, chartOptions } =
-    getHistoricalChart(localData, intervalMs);
+  const { chartData, chartOptions } = getHistoricalChart(localData, intervalMs);
 
-  const isMax = dataIndex >= maxDataPoints;
+  // Auto-update data every 1 second with looping
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const nextIndex = dataIndex % sampleData.percpu.length;
+      const newEntry = {
+        ...sampleData.percpu[nextIndex],
+        timestamp: now,
+      };
 
-  function addDataPoint() {
-    if (isMax) return;
+      setLocalData((prev) => {
+        const next = [...prev, newEntry];
+        // Keep only the last 10 data points
+        if (next.length > maxDataPoints) {
+          return next.slice(-maxDataPoints);
+        }
+        return next;
+      });
+      setDataIndex((prevIndex) => prevIndex + 1);
+    }, 1000);
 
-    const now = Date.now();
-    const newEntry = {
-      ...sampleData.percpu[dataIndex],
-      timestamp: now,
-    };
-
-    setLocalData((prev) => {
-      const next = [...prev, newEntry];
-      if (next.length > maxDataPoints) return next.slice(-maxDataPoints);
-      return next;
-    });
-    setDataIndex((prevIndex) => prevIndex + 1);
-  }
+    return () => clearInterval(interval);
+  }, [dataIndex]);
 
   useEffect(() => {
-    const ctx = canvasRef.current?.getContext('2d');
+    const ctx = canvasRef.current?.getContext("2d");
     if (!ctx) return;
 
     if (chartRef.current) {
@@ -180,7 +198,7 @@ export default function Percpu({ intervalMs = 1000, height = 320 }) {
       chartRef.current.update();
     } else {
       chartRef.current = new Chart(ctx, {
-        type: 'line',
+        type: "line",
         data: chartData,
         options: chartOptions,
       });
@@ -201,32 +219,59 @@ export default function Percpu({ intervalMs = 1000, height = 320 }) {
     <Paper
       elevation={0}
       style={{
-        border: '1px solid rgba(230, 81, 0, 0.2)',
-        backgroundColor: '#FFFFFF',
+        border: "1px solid rgba(230, 81, 0, 0.2)",
+        backgroundColor: "#FFFFFF",
         height: height,
-        display: 'flex',
-        flexDirection: 'column',
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      <Box px={2} pt={2} pb={0} display="flex" alignItems="baseline" justifyContent="space-between" flexWrap="wrap">
-        <Typography variant="h6" style={{ color: '#333', fontWeight: 600 }}>
-          CPU
+      <Box
+        px={2}
+        pt={2}
+        pb={0}
+        display="flex"
+        alignItems="baseline"
+        justifyContent="space-between"
+        flexWrap="wrap"
+      >
+        <Typography variant="h6" style={{ color: "#333", fontWeight: 600 }}>
+          CPU (Live)
         </Typography>
-        <div>
-          <Button
-            variant="contained"
-            color="primary"
-            size="small"
-            onClick={addDataPoint}
-            disabled={isMax}
-          >
-            Add Data ({localData.length}/{maxDataPoints})
-          </Button>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <FormControl size="small" style={{ minWidth: "100px" }}>
+            <InputLabel style={{ fontSize: "12px" }}>Data Points</InputLabel>
+            <Select
+              value={maxDataPoints}
+              onChange={(e) => setMaxDataPoints(e.target.value)}
+              label="Data Points"
+            >
+              <MenuItem value={5}>5</MenuItem>
+              <MenuItem value={10}>10</MenuItem>
+              <MenuItem value={15}>15</MenuItem>
+              <MenuItem value={20}>20</MenuItem>
+              <MenuItem value={30}>30</MenuItem>
+              <MenuItem value={50}>50</MenuItem>
+            </Select>
+          </FormControl>
+          <Typography variant="caption" style={{ color: "#999" }}>
+            {localData.length}/{maxDataPoints}
+          </Typography>
         </div>
       </Box>
 
-      <div style={{ height: chartHeight, padding: '0 8px 8px', position: 'relative' }}>
-        <canvas ref={canvasRef} height={chartHeight} style={{ width: '100%', height: '100%' }} />
+      <div
+        style={{
+          height: chartHeight,
+          padding: "0 8px 8px",
+          position: "relative",
+        }}
+      >
+        <canvas
+          ref={canvasRef}
+          height={chartHeight}
+          style={{ width: "100%", height: "100%" }}
+        />
       </div>
     </Paper>
   );
