@@ -18,6 +18,7 @@ import Chatbox from "./Chatbox/chatbox";
 import MenuDisplay from "./components/Merlvin/MenuDisplay";
 import ImageCompressor from "./ImageCompress/ImageCompressor";
 import SqlFormatter from "./components/SQL Formatter/SqlFormatter";
+import Timelogstest from "./components/Adam/components/timelogstest";
 
 
 const routes = [
@@ -72,6 +73,10 @@ const routes = [
       {
         path: "/SqlFormatter",
         element: SqlFormatter,
+      },
+      {
+        path: "/TimeLogs",
+        element: Timelogstest,
       },
     ],
   },
