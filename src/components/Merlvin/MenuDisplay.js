@@ -8,7 +8,13 @@ import MenuBox from "./MenuBox";
 import Cart from "./Cart";
 import menuData from "./MenuData/Menu.json";
 import { CartProvider, useCart } from "../../contexts/CartContext";
+import {
+  KITCHEN_CATEGORY,
+  MIN_PRICE,
+  getImageUrl,
+} from "./constants/menuConstants";
 
+// Styles for MenuDisplay component
 const useStyles = makeStyles((theme) => ({
   cartButton: {
     position: "fixed",
@@ -19,6 +25,10 @@ const useStyles = makeStyles((theme) => ({
     "&:hover": {
       transform: "scale(1.1)",
       boxShadow: "0 6px 16px rgba(0,0,0,0.3)",
+    },
+    [theme.breakpoints.down("sm")]: {
+      bottom: 16,
+      right: 16,
     },
   },
   cartTotal: {
@@ -36,6 +46,12 @@ const useStyles = makeStyles((theme) => ({
       transform: "translateY(-2px)",
       boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
     },
+    [theme.breakpoints.down("sm")]: {
+      bottom: 82,
+      right: 16,
+      fontSize: "0.875rem",
+      padding: "6px 12px",
+    },
   },
   filterContainer: {
     display: "flex",
@@ -45,6 +61,14 @@ const useStyles = makeStyles((theme) => ({
     padding: "20px",
     paddingRight: "120px",
     paddingTop: "85px",
+    [theme.breakpoints.down("sm")]: {
+      justifyContent: "center",
+      paddingRight: "10px",
+      paddingLeft: "10px",
+      paddingTop: "100px",
+      paddingBottom: "10px",
+      gap: "8px",
+    },
   },
   filterButton: {
     textTransform: "none",
@@ -59,6 +83,10 @@ const useStyles = makeStyles((theme) => ({
       boxShadow: "0 4px 8px rgba(255, 140, 0, 0.4)",
     },
     transition: "all 0.3s ease",
+    [theme.breakpoints.down("sm")]: {
+      padding: "8px 16px",
+      fontSize: "0.875rem",
+    },
   },
   menuItem: {
     padding: "12px 24px",
@@ -71,6 +99,24 @@ const useStyles = makeStyles((theme) => ({
     maxHeight: 320,
     overflowY: "auto",
   },
+  menuGrid: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px",
+    padding: "10px 120px",
+    paddingTop: "20px",
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    [theme.breakpoints.down("md")]: {
+      padding: "10px 30px",
+      paddingTop: "15px",
+    },
+    [theme.breakpoints.down("sm")]: {
+      padding: "10px 8px",
+      paddingTop: "10px",
+      gap: "4px",
+    },
+  },
 }));
 
 function MenuDisplayContent() {
@@ -80,69 +126,34 @@ function MenuDisplayContent() {
   const [anchorEl, setAnchorEl] = useState(null);
   const { getCartTotal, getCartCount } = useCart();
 
-  const handleFilterClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleFilterClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleCategorySelect = (category) => {
-    setSelectedCategory(category);
-    handleFilterClose();
-  };
-
+  // Get kitchen items matching our criteria
   const kitchenItems = menuData.filter(
-    (item) => item.sCat === "Kitchen" && item.cPrice1 > 0,
+    (item) => item.sCat === KITCHEN_CATEGORY && item.cPrice1 > MIN_PRICE,
   );
 
+  // Extract unique categories from items
   const categories = [
     "All",
     ...new Set(kitchenItems.map((item) => item.category)),
   ];
 
+  // Filter items based on selected category
   const filteredItems =
     selectedCategory === "All"
       ? kitchenItems
       : kitchenItems.filter((item) => item.category === selectedCategory);
 
-  const imageMap = {
-    "3 WAY COOKED FISH": "3waycookedfish.png",
-    "BEEF STEAK": "beefsteak.png",
-    "CHICKEN ADOBO": "chickenadobo.png",
-    "FRIED RICE": "friedrice.png",
-    "GRILLED SQUID": "grilledsquid.png",
-    "PORK SINIGANG": "porksinigang.png",
-    "5 KINDS": "5kind.png",
-    "5 MEAL COURSE FISH": "5mealcoursefish.png",
-    "5 MEAL COURSE LAMB SHANK": "5mealcourselambshank.png",
-    "5 MEAL COURSE SEABASS": "5mealcourseseabass.png",
-    "5 MEAL COURSE STEAK": "5mealcoursesteak.png",
-    "5MC ADOBAR": "5mcadobar.png",
-    "5MC PATOTILLO": "5mcpatotillo.png",
-    "7 MEAL COURSE": "7mealcourse.png",
-    "8 COURSE MEAL": "8coursemeal.png",
-    "ADD DESSERT": "adddessert.png",
-    "ADOBONG PATO NI PAPA": "adobongpato.png",
-    "ACQUA PANNA (750ML)": "acquapanna.png",
-    "AGUA KIWI": "aguakiwi.png",
-    "ALFREDO MUSHROOM PASTA WITH SEARED CHICKEN":
-      "alfredomushroompastawithsearedchicken.png",
-    "AMERICAN GIANT SCALLOP": "americangiantscallop.png",
-    "AMERICAN PANCAKE BREAKFAST": "americanpancakebreakfast.png",
-    "AMERICANO (COLD)": "americanocold.png",
-    "AMERICANO (HOT)": "americanohot.png",
-    "ANGUS PORTERHOUSE": "angusporterhouse.png",
-    "ANGUS RIBEYE": "angusribeye.png",
-    "ANGUS TOMAHAWK STEAK": "angustomahawk.png",
-    "ANGUS TRUFFLE ARANCINI": "angustrufflearancini.png",
-    APPETIZERS: "appetizers.png",
-    "APRICOT DIJON GLAZED": "apricotdijonglazed.png",
+  // Menu dropdown handlers
+  const handleFilterClick = (event) => setAnchorEl(event.currentTarget);
+  const handleFilterClose = () => setAnchorEl(null);
+  const handleCategorySelect = (category) => {
+    setSelectedCategory(category);
+    handleFilterClose();
   };
 
   return (
     <>
+      {/* Filter Bar */}
       <div className={classes.filterContainer}>
         <Button
           className={classes.filterButton}
@@ -153,20 +164,15 @@ function MenuDisplayContent() {
         >
           {selectedCategory}
         </Button>
+
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={handleFilterClose}
           getContentAnchorEl={null}
           PaperProps={{ className: classes.menuPaper }}
-          anchorOrigin={{
-            vertical: "bottom",
-            horizontal: "center",
-          }}
-          transformOrigin={{
-            vertical: "top",
-            horizontal: "center",
-          }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          transformOrigin={{ vertical: "top", horizontal: "center" }}
         >
           {categories.map((category) => (
             <MenuItem
@@ -181,17 +187,8 @@ function MenuDisplayContent() {
         </Menu>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "8px",
-          padding: "10px 120px",
-          paddingTop: "20px",
-          justifyContent: "flex-start",
-          alignItems: "flex-start",
-        }}
-      >
+      {/* Menu Items Grid */}
+      <div className={classes.menuGrid}>
         {filteredItems.map((item) => (
           <MenuBox
             key={item.ixProd}
@@ -202,21 +199,19 @@ function MenuDisplayContent() {
             description={item.description}
             ingredients={item.ingredients}
             cooking_instructions={item.cooking_instructions}
-            imageUrl={
-              imageMap[item.sProd]
-                ? `${process.env.PUBLIC_URL}/MenuImages/${imageMap[item.sProd]}`
-                : null
-            }
+            imageUrl={getImageUrl(item.sProd)}
           />
         ))}
       </div>
 
+      {/* Cart Total Display */}
       {getCartCount() > 0 && (
         <div className={classes.cartTotal}>
           Total: ₱{getCartTotal().toFixed(2)}
         </div>
       )}
 
+      {/* Cart Button */}
       <Fab
         color="primary"
         className={classes.cartButton}
@@ -227,6 +222,7 @@ function MenuDisplayContent() {
         </Badge>
       </Fab>
 
+      {/* Cart Modal */}
       <Cart open={cartOpen} onClose={() => setCartOpen(false)} />
     </>
   );

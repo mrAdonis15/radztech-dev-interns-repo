@@ -15,6 +15,7 @@ import RemoveIcon from "@material-ui/icons/Remove";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import { useCart } from "../../contexts/CartContext";
 
+// Styles for MenuBox component
 const useStyles = makeStyles((theme) => ({
   card: {
     position: "relative",
@@ -158,26 +159,107 @@ const useStyles = makeStyles((theme) => ({
     whiteSpace: "pre-wrap",
     lineHeight: 1.6,
   },
+  ingredientGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "8px",
+  },
   expandIcon: {
     transition: "transform 0.3s ease",
   },
-  stepBox: {
-    padding: theme.spacing(2),
-    marginBottom: theme.spacing(1.5),
-    backgroundColor: "#fff",
-    border: "1px solid #ddd",
-    borderRadius: 6,
-    borderLeft: "4px solid #1976d2",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-  },
-  stepNumber: {
-    fontWeight: 700,
-    color: "#1976d2",
-    marginRight: theme.spacing(1),
-    display: "inline-block",
-    minWidth: 24,
-  },
 }));
+
+// Helper component: Display food image or placeholder
+const ImageDisplay = ({ imageUrl, foodName, isModal = false }) => {
+  const classes = useStyles();
+  const mediaClass = isModal ? classes.modalMedia : classes.media;
+  return (
+    <CardMedia className={mediaClass} image={imageUrl} title={foodName}>
+      {!imageUrl && (
+        <Typography className={classes.placeholderText}>Food Image</Typography>
+      )}
+    </CardMedia>
+  );
+};
+
+// Helper component: Price and quantity section
+const PriceQuantitySection = ({
+  price,
+  quantity,
+  totalPrice,
+  onIncrement,
+  onDecrement,
+}) => {
+  const classes = useStyles();
+  return (
+    <div className={classes.priceSection}>
+      <div className={classes.totalSection}>
+        <Typography variant="body2" style={{ fontWeight: 600 }}>
+          Total:
+        </Typography>
+        <Typography className={classes.price}>
+          ₱{totalPrice.toFixed(2)}
+        </Typography>
+      </div>
+      <div className={classes.quantityControls}>
+        <IconButton
+          className={classes.quantityButton}
+          onClick={onDecrement}
+          size="small"
+        >
+          <RemoveIcon />
+        </IconButton>
+        <Typography className={classes.quantity}>{quantity}</Typography>
+        <IconButton
+          className={classes.quantityButton}
+          onClick={onIncrement}
+          size="small"
+        >
+          <AddIcon />
+        </IconButton>
+      </div>
+    </div>
+  );
+};
+
+// Helper component: Expandable section (accordion)
+const ExpandableSection = ({
+  title,
+  content,
+  isExpanded,
+  onToggle,
+  classes,
+  type = "text",
+}) => {
+  return (
+    <div style={{ marginBottom: "12px" }}>
+      <div className={classes.accordionHeader} onClick={onToggle}>
+        <Typography variant="subtitle2" style={{ fontWeight: 600 }}>
+          {title}
+        </Typography>
+        <ExpandMoreIcon
+          className={classes.expandIcon}
+          style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
+        />
+      </div>
+      {isExpanded && (
+        <div className={classes.accordionContent}>
+          {type === "ingredients" ? (
+            <div className={classes.ingredientGrid}>
+              {content.split(",").map((item, idx) => (
+                <Typography key={idx} variant="body2">
+                  • {item.trim()}
+                </Typography>
+              ))}
+            </div>
+          ) : (
+            <Typography variant="body2">{content}</Typography>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function MenuBox({
   id,
@@ -193,11 +275,13 @@ export default function MenuBox({
   const [open, setOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
   const { cartItems, addToCart, updateQuantity } = useCart();
-  
+
+  // Get current cart item and calculate total price
   const cartItem = cartItems.find((item) => item.id === id);
   const quantity = cartItem ? cartItem.quantity : 0;
   const totalPrice = price * quantity;
 
+  // Toggle accordion sections in modal
   const toggleSection = (section) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -205,14 +289,7 @@ export default function MenuBox({
     }));
   };
 
-  const handleOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
+  // Handle quantity increment (add to cart if not in cart)
   const handleIncrement = () => {
     if (quantity === 0) {
       addToCart({ id, name: foodName, price, unit, imageUrl });
@@ -221,6 +298,7 @@ export default function MenuBox({
     }
   };
 
+  // Handle quantity decrement
   const handleDecrement = () => {
     if (quantity > 0) {
       updateQuantity(id, quantity - 1);
@@ -229,22 +307,17 @@ export default function MenuBox({
 
   return (
     <>
+      {/* Card View - Small menu item preview */}
       <Card className={classes.card} elevation={3}>
         <IconButton
           className={classes.expandButton}
-          onClick={handleOpen}
+          onClick={() => setOpen(true)}
           size="small"
         >
           <FullscreenIcon />
         </IconButton>
 
-        <CardMedia className={classes.media} image={imageUrl} title={foodName}>
-          {!imageUrl && (
-            <Typography className={classes.placeholderText}>
-              Food Image
-            </Typography>
-          )}
-        </CardMedia>
+        <ImageDisplay imageUrl={imageUrl} foodName={foodName} />
 
         <CardContent className={classes.content}>
           <Typography variant="h6" className={classes.foodName}>
@@ -256,72 +329,41 @@ export default function MenuBox({
             {unit ? ` ${unit}` : ""}
           </Typography>
 
-          <div className={classes.priceSection}>
-            <div className={classes.totalSection}>
-              <Typography variant="body2" style={{ fontWeight: 600 }}>
-                Total:
-              </Typography>
-              <Typography className={classes.price}>
-                ₱{totalPrice.toFixed(2)}
-              </Typography>
-            </div>
-
-            <div className={classes.quantityControls}>
-              <IconButton
-                className={classes.quantityButton}
-                onClick={handleDecrement}
-                size="small"
-              >
-                <RemoveIcon />
-              </IconButton>
-
-              <Typography className={classes.quantity}>{quantity}</Typography>
-
-              <IconButton
-                className={classes.quantityButton}
-                onClick={handleIncrement}
-                size="small"
-              >
-                <AddIcon />
-              </IconButton>
-            </div>
-          </div>
+          <PriceQuantitySection
+            price={price}
+            quantity={quantity}
+            totalPrice={totalPrice}
+            onIncrement={handleIncrement}
+            onDecrement={handleDecrement}
+          />
         </CardContent>
       </Card>
 
+      {/* Modal View - Full details with ingredients and cooking instructions */}
       <Modal
         className={classes.modal}
         open={open}
-        onClose={handleClose}
+        onClose={() => setOpen(false)}
         closeAfterTransition
         BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-        }}
+        BackdropProps={{ timeout: 500 }}
       >
         <Fade in={open}>
           <Card className={classes.modalCard} elevation={24}>
             <IconButton
               className={classes.closeButton}
-              onClick={handleClose}
+              onClick={() => setOpen(false)}
               size="small"
             >
               <CloseIcon />
             </IconButton>
 
-            <CardMedia
-              className={classes.modalMedia}
-              image={imageUrl}
-              title={foodName}
-            >
-              {!imageUrl && (
-                <Typography className={classes.placeholderText}>
-                  Food Image
-                </Typography>
-              )}
-            </CardMedia>
+            <ImageDisplay imageUrl={imageUrl} foodName={foodName} isModal />
 
-            <CardContent className={classes.content} style={{ maxHeight: "400px", overflowY: "auto" }}>
+            <CardContent
+              className={classes.content}
+              style={{ maxHeight: "400px", overflowY: "auto" }}
+            >
               <Typography variant="h5" className={classes.foodName}>
                 {foodName}
               </Typography>
@@ -332,105 +374,42 @@ export default function MenuBox({
               </Typography>
 
               {description && (
-                <Typography variant="body2" style={{ marginTop: "16px", marginBottom: "16px" }}>
+                <Typography
+                  variant="body2"
+                  style={{ marginTop: "16px", marginBottom: "16px" }}
+                >
                   {description}
                 </Typography>
               )}
 
               {ingredients && (
-                <div style={{ marginBottom: "12px" }}>
-                  <div
-                    className={classes.accordionHeader}
-                    onClick={() => toggleSection("ingredients")}
-                  >
-                    <Typography variant="subtitle2" style={{ fontWeight: 600 }}>
-                      Ingredients
-                    </Typography>
-                    <ExpandMoreIcon
-                      className={classes.expandIcon}
-                      style={{
-                        transform: expandedSections.ingredients
-                          ? "rotate(180deg)"
-                          : "rotate(0deg)",
-                        transition: "transform 0.3s ease",
-                      }}
-                    />
-                  </div>
-                  {expandedSections.ingredients && (
-                    <div className={classes.accordionContent}>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                        {ingredients.split(",").map((item, index) => (
-                          <Typography key={index} variant="body2">
-                            • {item.trim()}
-                          </Typography>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <ExpandableSection
+                  title="Ingredients"
+                  content={ingredients}
+                  isExpanded={expandedSections.ingredients}
+                  onToggle={() => toggleSection("ingredients")}
+                  classes={classes}
+                  type="ingredients"
+                />
               )}
 
               {cooking_instructions && (
-                <div style={{ marginBottom: "16px" }}>
-                  <div
-                    className={classes.accordionHeader}
-                    onClick={() => toggleSection("cooking_instructions")}
-                  >
-                    <Typography variant="subtitle2" style={{ fontWeight: 600 }}>
-                      How It's Cooked
-                    </Typography>
-                    <ExpandMoreIcon
-                      className={classes.expandIcon}
-                      style={{
-                        transform: expandedSections.cooking_instructions
-                          ? "rotate(180deg)"
-                          : "rotate(0deg)",
-                        transition: "transform 0.3s ease",
-                      }}
-                    />
-                  </div>
-                  {expandedSections.cooking_instructions && (
-                    <div className={classes.accordionContent}>
-                      <Typography variant="body2">
-                        {cooking_instructions}
-                      </Typography>
-                    </div>
-                  )}
-                </div>
+                <ExpandableSection
+                  title="How It's Cooked"
+                  content={cooking_instructions}
+                  isExpanded={expandedSections.cooking_instructions}
+                  onToggle={() => toggleSection("cooking_instructions")}
+                  classes={classes}
+                />
               )}
 
-              <div className={classes.priceSection}>
-                <div className={classes.totalSection}>
-                  <Typography variant="body2" style={{ fontWeight: 600 }}>
-                    Total:
-                  </Typography>
-                  <Typography className={classes.price}>
-                    ₱{totalPrice.toFixed(2)}
-                  </Typography>
-                </div>
-
-                <div className={classes.quantityControls}>
-                  <IconButton
-                    className={classes.quantityButton}
-                    onClick={handleDecrement}
-                    size="small"
-                  >
-                    <RemoveIcon />
-                  </IconButton>
-
-                  <Typography className={classes.quantity}>
-                    {quantity}
-                  </Typography>
-
-                  <IconButton
-                    className={classes.quantityButton}
-                    onClick={handleIncrement}
-                    size="small"
-                  >
-                    <AddIcon />
-                  </IconButton>
-                </div>
-              </div>
+              <PriceQuantitySection
+                price={price}
+                quantity={quantity}
+                totalPrice={totalPrice}
+                onIncrement={handleIncrement}
+                onDecrement={handleDecrement}
+              />
             </CardContent>
           </Card>
         </Fade>

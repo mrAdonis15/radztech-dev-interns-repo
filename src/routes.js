@@ -1,4 +1,3 @@
-
 import DefaultLayout from "./layouts/DefaultLayout";
 import Ulap from "./components/Ulap/Ulap";
 import DisplayPage from "./components/Kurt/pages/DisplayPage";
@@ -15,7 +14,7 @@ import Evaluation from "./Evaluation/Evaluation";
 import ListofApplicants from "./Evaluation/ListofApplicants";
 import UlapChatBot from "./components/Marth/UlapChatbot";
 import Chatbox from "./Chatbox/chatbox";
-
+import MenuDisplay from "./components/Merlvin/MenuDisplay";
 
 const routes = [
   {
@@ -46,9 +45,9 @@ const routes = [
         path: "/BrayanJSON",
         element: JsonData,
       },
-      { 
+      {
         path: "/Chatbox",
-        element: Chatbox, 
+        element: Chatbox,
       },
       {
         path: "/ChatboxGC",
@@ -57,6 +56,10 @@ const routes = [
       {
         path: "/chatbot",
         element: UlapChatBot,
+      },
+      {
+        path: "/MenuDisplay",
+        element: MenuDisplay,
       },
     ],
   },
