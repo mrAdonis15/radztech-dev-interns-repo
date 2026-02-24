@@ -1,6 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import Chart from "chart.js";
-import { Paper, Typography, Box, FormControl, InputLabel, Select, MenuItem } from "@material-ui/core";
+import {
+  Paper,
+  Typography,
+  Box,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from "@material-ui/core";
 import sampleData from "../data/sampleData.json";
 
 const WINDOW_MS = 3 * 60 * 1000;

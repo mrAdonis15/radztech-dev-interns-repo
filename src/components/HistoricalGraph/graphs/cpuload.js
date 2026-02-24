@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Paper, Typography, Box, TextField, Select, MenuItem, FormControl, InputLabel } from "@material-ui/core";
+import {
+  Paper,
+  Typography,
+  Box,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+} from "@material-ui/core";
 import Chart from "chart.js";
 import sampleData from "../data/sampleData.json";
 
