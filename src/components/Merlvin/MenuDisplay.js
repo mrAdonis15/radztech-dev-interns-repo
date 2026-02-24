@@ -171,56 +171,56 @@ function MenuDisplayContent() {
   return (
     <>
       <div className={classes.pageWrapper}>
-      {/* Filter Bar */}
-      <div className={classes.filterContainer}>
-        <Button
-          className={classes.filterButton}
-          onClick={handleFilterClick}
-          variant="contained"
-          startIcon={<FilterListIcon />}
-          endIcon={<ArrowDropDownIcon />}
-        >
-          {selectedCategory}
-        </Button>
+        {/* Filter Bar */}
+        <div className={classes.filterContainer}>
+          <Button
+            className={classes.filterButton}
+            onClick={handleFilterClick}
+            variant="contained"
+            startIcon={<FilterListIcon />}
+            endIcon={<ArrowDropDownIcon />}
+          >
+            {selectedCategory}
+          </Button>
 
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleFilterClose}
-          getContentAnchorEl={null}
-          PaperProps={{ className: classes.menuPaper }}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          transformOrigin={{ vertical: "top", horizontal: "center" }}
-        >
-          {categories.map((category) => (
-            <MenuItem
-              key={category}
-              className={classes.menuItem}
-              onClick={() => handleCategorySelect(category)}
-              selected={selectedCategory === category}
-            >
-              {category}
-            </MenuItem>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleFilterClose}
+            getContentAnchorEl={null}
+            PaperProps={{ className: classes.menuPaper }}
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            transformOrigin={{ vertical: "top", horizontal: "center" }}
+          >
+            {categories.map((category) => (
+              <MenuItem
+                key={category}
+                className={classes.menuItem}
+                onClick={() => handleCategorySelect(category)}
+                selected={selectedCategory === category}
+              >
+                {category}
+              </MenuItem>
+            ))}
+          </Menu>
+        </div>
+
+        {/* Menu Items Grid */}
+        <div className={classes.menuGrid}>
+          {filteredItems.map((item) => (
+            <MenuBox
+              key={item.ixProd}
+              id={item.ixProd}
+              foodName={item.sProd}
+              price={item.cPrice1 / 100}
+              unit={item.unit}
+              description={item.description}
+              ingredients={item.ingredients}
+              cooking_instructions={item.cooking_instructions}
+              imageUrl={getImageUrl(item.sProd)}
+            />
           ))}
-        </Menu>
-      </div>
-
-      {/* Menu Items Grid */}
-      <div className={classes.menuGrid}>
-        {filteredItems.map((item) => (
-          <MenuBox
-            key={item.ixProd}
-            id={item.ixProd}
-            foodName={item.sProd}
-            price={item.cPrice1 / 100}
-            unit={item.unit}
-            description={item.description}
-            ingredients={item.ingredients}
-            cooking_instructions={item.cooking_instructions}
-            imageUrl={getImageUrl(item.sProd)}
-          />
-        ))}
-      </div>
+        </div>
       </div>
 
       {/* Cart Total Display */}
