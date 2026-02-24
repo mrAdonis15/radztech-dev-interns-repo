@@ -99,6 +99,7 @@ class AdvancedSettings extends Component {
   // Render individual box
   renderBox = (box, indent = 0) => {
     const isChild = indent > 0;
+
     return (
       <div
         key={box.path.join("-")}
@@ -112,7 +113,7 @@ class AdvancedSettings extends Component {
           fontFamily: "Arial, sans-serif",
           boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
           transition: "transform 0.2s, box-shadow 0.2s",
-          cursor: "default",
+          cursor: "default"
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = "scale(1.03)";
@@ -163,7 +164,7 @@ class AdvancedSettings extends Component {
             padding: "12px 16px",
             fontSize: isChild ? 16 : 20,
             color: "#333",
-            fontWeight: isChild ? 400 : 600,
+            fontWeight: isChild ? 400 : 600
           }}
         >
           {box.caption}
@@ -177,7 +178,7 @@ class AdvancedSettings extends Component {
     const boxes = this.flattenJsonToBoxes(jsonData);
 
     return (
-      <div style={{ display: "flex", padding: 40, paddingTop: 80, fontFamily: "Arial, sans-serif" }}>
+      <div style={{ display: "flex", padding: 40, fontFamily: "Arial, sans-serif" }}>
         {/* LEFT: Boxes */}
         <div>
           {boxes.map((box) => {

@@ -9,17 +9,18 @@ const DefaultLayout = () => {
   const isHome = location.pathname === '/';
 
   return (
-    <div>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Navbar />
-      <div>
+      <main className="layout-content" style={{ flex: 1 }}>
         <Outlet />
         {isHome && (
           <>
             <Ulap />
             <Interns />
+
           </>
         )}
-      </div>
+      </main>
     </div>
   );
 };
