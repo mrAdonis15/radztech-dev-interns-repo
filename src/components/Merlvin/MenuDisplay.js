@@ -1,13 +1,10 @@
 import React, { useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import { Fab, Badge, Button, Menu, MenuItem } from "@material-ui/core";
-import ShoppingCartIcon from "@material-ui/icons/ShoppingCart";
+import { Button, Menu, MenuItem } from "@material-ui/core";
 import FilterListIcon from "@material-ui/icons/FilterList";
 import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
 import MenuBox from "./MenuBox";
-import Cart from "./Cart";
 import menuData from "./MenuData/Menu.json";
-import { CartProvider, useCart } from "../../contexts/CartContext";
 import {
   KITCHEN_CATEGORY,
   MIN_PRICE,
@@ -16,43 +13,6 @@ import {
 
 // Styles for MenuDisplay component
 const useStyles = makeStyles((theme) => ({
-  cartButton: {
-    position: "fixed",
-    bottom: 24,
-    right: 24,
-    zIndex: 1000,
-    transition: "all 0.3s ease",
-    "&:hover": {
-      transform: "scale(1.1)",
-      boxShadow: "0 6px 16px rgba(0,0,0,0.3)",
-    },
-    [theme.breakpoints.down("sm")]: {
-      bottom: 16,
-      right: 16,
-    },
-  },
-  cartTotal: {
-    position: "fixed",
-    bottom: 90,
-    right: 24,
-    backgroundColor: "#fff",
-    padding: "8px 16px",
-    borderRadius: 20,
-    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-    fontWeight: 700,
-    fontSize: "1rem",
-    transition: "all 0.3s ease",
-    "&:hover": {
-      transform: "translateY(-2px)",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
-    },
-    [theme.breakpoints.down("sm")]: {
-      bottom: 82,
-      right: 16,
-      fontSize: "0.875rem",
-      padding: "6px 12px",
-    },
-  },
   pageWrapper: {
     width: "100%",
     maxWidth: 1400,
@@ -138,10 +98,8 @@ const useStyles = makeStyles((theme) => ({
 
 function MenuDisplayContent() {
   const classes = useStyles();
-  const [cartOpen, setCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [anchorEl, setAnchorEl] = useState(null);
-  const { getCartTotal, getCartCount } = useCart();
 
   // Get kitchen items matching our criteria
   const kitchenItems = menuData.filter(
@@ -151,14 +109,14 @@ function MenuDisplayContent() {
   // Extract unique categories from items
   const categories = [
     "All",
-    ...new Set(kitchenItems.map((item) => item.category)),
+    ...new Set(kitchenItems.map((item) => item.sCatSub)),
   ];
 
   // Filter items based on selected category
   const filteredItems =
     selectedCategory === "All"
       ? kitchenItems
-      : kitchenItems.filter((item) => item.category === selectedCategory);
+      : kitchenItems.filter((item) => item.sCatSub === selectedCategory);
 
   // Menu dropdown handlers
   const handleFilterClick = (event) => setAnchorEl(event.currentTarget);
@@ -222,35 +180,8 @@ function MenuDisplayContent() {
           ))}
         </div>
       </div>
-
-      {/* Cart Total Display */}
-      {getCartCount() > 0 && (
-        <div className={classes.cartTotal}>
-          Total: ₱{getCartTotal().toFixed(2)}
-        </div>
-      )}
-
-      {/* Cart Button */}
-      <Fab
-        color="primary"
-        className={classes.cartButton}
-        onClick={() => setCartOpen(true)}
-      >
-        <Badge badgeContent={getCartCount()} color="secondary">
-          <ShoppingCartIcon />
-        </Badge>
-      </Fab>
-
-      {/* Cart Modal */}
-      <Cart open={cartOpen} onClose={() => setCartOpen(false)} />
     </>
   );
 }
 
-export default function MenuDisplay() {
-  return (
-    <CartProvider>
-      <MenuDisplayContent />
-    </CartProvider>
-  );
-}
+export default MenuDisplayContent;

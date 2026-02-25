@@ -10,10 +10,10 @@ import Backdrop from "@material-ui/core/Backdrop";
 import Fade from "@material-ui/core/Fade";
 import FullscreenIcon from "@material-ui/icons/Fullscreen";
 import CloseIcon from "@material-ui/icons/Close";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import AddIcon from "@material-ui/icons/Add";
 import RemoveIcon from "@material-ui/icons/Remove";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import { useCart } from "../../contexts/CartContext";
+import RestaurantMenuIcon from "@material-ui/icons/RestaurantMenu";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -57,50 +57,6 @@ const useStyles = makeStyles((theme) => ({
   foodName: {
     fontWeight: 600,
     marginBottom: theme.spacing(1),
-  },
-  priceSection: {
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginTop: theme.spacing(2),
-  },
-  totalSection: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-start",
-  },
-  unitPrice: {
-    fontSize: "1rem",
-    fontWeight: 600,
-    color: "#333",
-  },
-  price: {
-    fontSize: "1.25rem",
-    fontWeight: 700,
-    color: "#111",
-  },
-  quantityControls: {
-    display: "flex",
-    alignItems: "center",
-    gap: theme.spacing(1),
-  },
-  quantityButton: {
-    minWidth: 36,
-    width: 36,
-    height: 36,
-    padding: 0,
-    transition: "all 0.2s ease",
-    "&:hover": {
-      backgroundColor: "#1976d2",
-      color: "#fff",
-      transform: "scale(1.15)",
-    },
-  },
-  quantity: {
-    fontSize: "1.25rem",
-    fontWeight: 600,
-    minWidth: 30,
-    textAlign: "center",
   },
   modal: {
     display: "flex",
@@ -172,6 +128,79 @@ const useStyles = makeStyles((theme) => ({
   expandIcon: {
     transition: "transform 0.3s ease",
   },
+  imageGallery: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gap: "16px",
+    padding: "16px",
+    backgroundColor: "#fafafa",
+  },
+  galleryImage: {
+    width: "100%",
+    height: "200px",
+    backgroundColor: "#e0e0e0",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "8px",
+  },
+  quantitySection: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: theme.spacing(2),
+    borderTop: "1px solid #e0e0e0",
+    marginTop: theme.spacing(2),
+  },
+  quantitySectionCompact: {
+    padding: theme.spacing(1.25),
+    marginTop: theme.spacing(1.25),
+  },
+  priceDisplay: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+  },
+  totalPrice: {
+    fontSize: "1.5rem",
+    fontWeight: 700,
+    color: "#111",
+  },
+  totalPriceCompact: {
+    fontSize: "1.1rem",
+  },
+  quantityControls: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(1),
+  },
+  quantityButton: {
+    minWidth: 40,
+    width: 40,
+    height: 40,
+    padding: 0,
+    transition: "all 0.2s ease",
+    "&:hover": {
+      backgroundColor: "#ff9500",
+      color: "#fff",
+      transform: "scale(1.15)",
+    },
+  },
+  quantityButtonCompact: {
+    minWidth: 30,
+    width: 30,
+    height: 30,
+  },
+  quantityValue: {
+    fontSize: "1.25rem",
+    fontWeight: 600,
+    minWidth: 40,
+    textAlign: "center",
+  },
+  quantityValueCompact: {
+    fontSize: "1rem",
+    minWidth: 28,
+  },
 }));
 
 // Helper component: Display food image or placeholder
@@ -181,49 +210,11 @@ const ImageDisplay = ({ imageUrl, foodName, isModal = false }) => {
   return (
     <CardMedia className={mediaClass} image={imageUrl} title={foodName}>
       {!imageUrl && (
-        <Typography className={classes.placeholderText}>Food Image</Typography>
+        <RestaurantMenuIcon
+          style={{ fontSize: isModal ? "100px" : "60px", color: "#999" }}
+        />
       )}
     </CardMedia>
-  );
-};
-
-// Helper component: Price and quantity section
-const PriceQuantitySection = ({
-  price,
-  quantity,
-  totalPrice,
-  onIncrement,
-  onDecrement,
-}) => {
-  const classes = useStyles();
-  return (
-    <div className={classes.priceSection}>
-      <div className={classes.totalSection}>
-        <Typography variant="body2" style={{ fontWeight: 600 }}>
-          Total:
-        </Typography>
-        <Typography className={classes.price}>
-          ₱{totalPrice.toFixed(2)}
-        </Typography>
-      </div>
-      <div className={classes.quantityControls}>
-        <IconButton
-          className={classes.quantityButton}
-          onClick={onDecrement}
-          size="small"
-        >
-          <RemoveIcon />
-        </IconButton>
-        <Typography className={classes.quantity}>{quantity}</Typography>
-        <IconButton
-          className={classes.quantityButton}
-          onClick={onIncrement}
-          size="small"
-        >
-          <AddIcon />
-        </IconButton>
-      </div>
-    </div>
   );
 };
 
@@ -279,12 +270,7 @@ export default function MenuBox({
   const classes = useStyles();
   const [open, setOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
-  const { cartItems, addToCart, updateQuantity } = useCart();
-
-  // Get current cart item and calculate total price
-  const cartItem = cartItems.find((item) => item.id === id);
-  const quantity = cartItem ? cartItem.quantity : 0;
-  const totalPrice = price * quantity;
+  const [quantity, setQuantity] = useState(0);
 
   // Toggle accordion sections in modal
   const toggleSection = (section) => {
@@ -294,21 +280,20 @@ export default function MenuBox({
     }));
   };
 
-  // Handle quantity increment (add to cart if not in cart)
+  // Handle quantity increment
   const handleIncrement = () => {
-    if (quantity === 0) {
-      addToCart({ id, name: foodName, price, unit, imageUrl });
-    } else {
-      updateQuantity(id, quantity + 1);
-    }
+    setQuantity(quantity + 1);
   };
 
   // Handle quantity decrement
   const handleDecrement = () => {
     if (quantity > 0) {
-      updateQuantity(id, quantity - 1);
+      setQuantity(quantity - 1);
     }
   };
+
+  // Calculate total price
+  const totalPrice = price * quantity;
 
   return (
     <>
@@ -334,13 +319,41 @@ export default function MenuBox({
             {unit ? ` ${unit}` : ""}
           </Typography>
 
-          <PriceQuantitySection
-            price={price}
-            quantity={quantity}
-            totalPrice={totalPrice}
-            onIncrement={handleIncrement}
-            onDecrement={handleDecrement}
-          />
+          <div
+            className={`${classes.quantitySection} ${classes.quantitySectionCompact}`}
+          >
+            <div className={classes.priceDisplay}>
+              <Typography variant="body2" style={{ fontWeight: 600 }}>
+                Total:
+              </Typography>
+              <Typography
+                className={`${classes.totalPrice} ${classes.totalPriceCompact}`}
+              >
+                ₱{totalPrice.toFixed(2)}
+              </Typography>
+            </div>
+            <div className={classes.quantityControls}>
+              <IconButton
+                className={`${classes.quantityButton} ${classes.quantityButtonCompact}`}
+                onClick={handleDecrement}
+                size="small"
+              >
+                <RemoveIcon />
+              </IconButton>
+              <Typography
+                className={`${classes.quantityValue} ${classes.quantityValueCompact}`}
+              >
+                {quantity}
+              </Typography>
+              <IconButton
+                className={`${classes.quantityButton} ${classes.quantityButtonCompact}`}
+                onClick={handleIncrement}
+                size="small"
+              >
+                <AddIcon />
+              </IconButton>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -363,12 +376,18 @@ export default function MenuBox({
               <CloseIcon />
             </IconButton>
 
-            <ImageDisplay imageUrl={imageUrl} foodName={foodName} isModal />
+            {/* Image Gallery with Placeholders */}
+            <div className={classes.imageGallery}>
+              {[1, 2, 3, 4].map((index) => (
+                <div key={index} className={classes.galleryImage}>
+                  <RestaurantMenuIcon
+                    style={{ fontSize: "60px", color: "#bdbdbd" }}
+                  />
+                </div>
+              ))}
+            </div>
 
-            <CardContent
-              className={classes.content}
-              style={{ maxHeight: "400px", overflowY: "auto" }}
-            >
+            <CardContent className={classes.content}>
               <Typography variant="h5" className={classes.foodName}>
                 {foodName}
               </Typography>
@@ -387,17 +406,6 @@ export default function MenuBox({
                 </Typography>
               )}
 
-              {ingredients && (
-                <ExpandableSection
-                  title="Ingredients"
-                  content={ingredients}
-                  isExpanded={expandedSections.ingredients}
-                  onToggle={() => toggleSection("ingredients")}
-                  classes={classes}
-                  type="ingredients"
-                />
-              )}
-
               {cooking_instructions && (
                 <ExpandableSection
                   title="How It's Cooked"
@@ -408,13 +416,36 @@ export default function MenuBox({
                 />
               )}
 
-              <PriceQuantitySection
-                price={price}
-                quantity={quantity}
-                totalPrice={totalPrice}
-                onIncrement={handleIncrement}
-                onDecrement={handleDecrement}
-              />
+              {/* Quantity and Price Section */}
+              <div className={classes.quantitySection}>
+                <div className={classes.priceDisplay}>
+                  <Typography variant="body2" style={{ fontWeight: 600 }}>
+                    Total:
+                  </Typography>
+                  <Typography className={classes.totalPrice}>
+                    ₱{totalPrice.toFixed(2)}
+                  </Typography>
+                </div>
+                <div className={classes.quantityControls}>
+                  <IconButton
+                    className={classes.quantityButton}
+                    onClick={handleDecrement}
+                    size="small"
+                  >
+                    <RemoveIcon />
+                  </IconButton>
+                  <Typography className={classes.quantityValue}>
+                    {quantity}
+                  </Typography>
+                  <IconButton
+                    className={classes.quantityButton}
+                    onClick={handleIncrement}
+                    size="small"
+                  >
+                    <AddIcon />
+                  </IconButton>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </Fade>
