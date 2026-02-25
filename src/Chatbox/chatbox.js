@@ -8,24 +8,26 @@ import { sendToGemini } from "./geminiService.js";
 import {
   getInitialMessages,
   getDefaultPanelPosition,
+  PANEL_WIDTH,
+  PANEL_HEIGHT,
   PANEL_PADDING,
   DEFAULT_BOTTOM,
 } from "./chatboxConstants.js";
-import { createMessage } from "./chatboxUtils.js";
-import { useChatboxTheme } from "./useChatboxTheme.js";
 import {
+  createMessage,
   loadMessages,
   saveMessages,
   loadHistory,
   addToHistory,
   deleteHistoryItem,
-} from "./chatStorage.js";
-import ChatHeader from "./ChatHeader.js";
+  ChatHeader,
+} from "./chatboxUtils.js";
+import { useChatboxTheme } from "./useChatboxTheme.js";
 import ChatMessage from "./ChatMessage.js";
 import ChatInputArea from "./ChatInputArea.js";
 import ChatHistory from "./ChatHistory.js";
 
-export default function Chatbox() {
+export default function Chatbox({ defaultOpen = false }) {
   const rootRef = useRef(null);
   const bodyRef = useRef(null);
   const inputRef = useRef(null);
@@ -36,7 +38,7 @@ export default function Chatbox() {
   const [input, setInput] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [panelPosition, setPanelPosition] = useState({ x: null, y: null });
   const [showHistoryOpen, setShowHistoryOpen] = useState(false);
   const [history, setHistory] = useState(loadHistory());
@@ -83,7 +85,66 @@ export default function Chatbox() {
     }
   }, [isOpen, panelPosition.x, panelPosition.y]);
 
-  const handleDragStart = () => {};
+  // Reposition panel on resize (e.g. console open) - keep panel within viewport
+  useEffect(() => {
+    if (!isOpen || isExpanded) return;
+    const handleResize = () => {
+      setPanelPosition((prev) => {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const maxW = Math.min(340, vw - 32);
+        const maxH = Math.min(480, vh - 120);
+        const x = prev.x ?? vw - maxW - PANEL_PADDING;
+        const y = prev.y ?? vh - maxH - DEFAULT_BOTTOM;
+        const clampedX = Math.max(PANEL_PADDING, Math.min(vw - maxW - PANEL_PADDING, x));
+        const clampedY = Math.max(PANEL_PADDING, Math.min(vh - maxH - PANEL_PADDING, y));
+        return { x: clampedX, y: clampedY };
+      });
+    };
+    const viewport = window.visualViewport;
+    window.addEventListener("resize", handleResize);
+    if (viewport) viewport.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (viewport) viewport.removeEventListener("resize", handleResize);
+    };
+  }, [isOpen, isExpanded]);
+
+  const handleDragStart = (e) => {
+    if (isExpanded) return;
+    const clientX = e.clientX ?? e.touches?.[0]?.clientX;
+    const clientY = e.clientY ?? e.touches?.[0]?.clientY;
+    if (clientX == null || clientY == null) return;
+    if (e.type === "touchstart") e.preventDefault();
+    const startClientX = clientX;
+    const startClientY = clientY;
+    const startPanelX =
+      panelPosition.x ?? window.innerWidth - PANEL_WIDTH - PANEL_PADDING;
+    const startPanelY =
+      panelPosition.y ?? window.innerHeight - PANEL_HEIGHT - DEFAULT_BOTTOM;
+
+    const handleMove = (moveE) => {
+      const cx = moveE.clientX ?? moveE.touches?.[0]?.clientX;
+      const cy = moveE.clientY ?? moveE.touches?.[0]?.clientY;
+      if (cx == null || cy == null) return;
+      setPanelPosition({
+        x: startPanelX + (cx - startClientX),
+        y: startPanelY + (cy - startClientY),
+      });
+    };
+    const handleUp = () => {
+      document.removeEventListener("mousemove", handleMove);
+      document.removeEventListener("mouseup", handleUp);
+      document.removeEventListener("touchmove", handleMove, { passive: false });
+      document.removeEventListener("touchend", handleUp);
+      document.removeEventListener("touchcancel", handleUp);
+    };
+    document.addEventListener("mousemove", handleMove);
+    document.addEventListener("mouseup", handleUp);
+    document.addEventListener("touchmove", handleMove, { passive: false });
+    document.addEventListener("touchend", handleUp);
+    document.addEventListener("touchcancel", handleUp);
+  };
 
   const handleEmojiClick = (emojiData) => {
     const emoji = emojiData?.emoji ?? emojiData?.character ?? (typeof emojiData === "string" ? emojiData : "");
@@ -328,7 +389,13 @@ export default function Chatbox() {
                   </div>
                 ) : (
                   <>
-                    <div className="chat-body" ref={bodyRef}>
+                    <div
+                      className="chat-body chat-body-draggable"
+                      ref={bodyRef}
+                      onMouseDown={handleDragStart}
+                      role="button"
+                      aria-label="Drag to move chat window"
+                    >
                       <div style={{ display: "flex", flexDirection: "column" }}>
                         {messages.map((msg) => (
                           <ChatMessage key={msg.id} msg={msg} />

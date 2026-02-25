@@ -1,0 +1,57 @@
+/* Login Toolbar - sariling toolbar para sa Login page */
+
+.login-toolbar-appbar {
+  background: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: #333333;
+}
+
+.login-toolbar {
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  min-height: 56px !important;
+}
+
+.login-toolbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-toolbar-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.login-toolbar-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.login-toolbar-ulap {
+  color: #333333;
+}
+
+.login-toolbar-biz {
+  color: #ff8c00;
+}
+
+.login-toolbar-spacer {
+  flex: 1;
+}
+
+.login-toolbar-logout {
+  border-color: rgba(0, 0, 0, 0.23) !important;
+  color: #333333 !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+}
+
+.login-toolbar-logout:hover {
+  border-color: #ff8c00 !important;
+  color: #ff8c00 !important;
+  background: rgba(255, 140, 0, 0.04) !important;
+}

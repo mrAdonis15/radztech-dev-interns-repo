@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getProductsContext, getProductStats, getValidProductNames, loadProducts } from "./productService.js";
-import { buildChartFromSpec } from "./chatboxChartUtils.js";
+import { buildChartFromSpec } from "./chatboxUtils.js";
 
 const apiKey = process.env.REACT_APP_GEMINI_API_KEY || "";
 const modelNames = [
