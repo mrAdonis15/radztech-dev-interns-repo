@@ -164,7 +164,7 @@ const CpuLoad = ({ height = 320 }) => {
             gridLines: { color: "rgba(0,0,0,0.06)" },
             ticks: {
               beginAtZero: true,
-              max: 1.0,
+              max: Math.max(1.0, maxValue),
               stepSize: 0.25,
               fontSize: 11,
               fontColor: "#666",

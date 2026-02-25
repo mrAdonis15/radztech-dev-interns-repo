@@ -1,6 +1,3 @@
-import { AddAlarm, CakeOutlined } from "@material-ui/icons";
-
-
 const GITHUB_API = "https://api.github.com";
 const DEFAULT_REPO = "mrAdonis15/radztech-dev-interns-repo";
 

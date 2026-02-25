@@ -140,7 +140,7 @@ export function addToHistory(messages) {
     messages: [...messages],
     createdAt: Date.now(),
   };
-  const next = [item, ...history].slice(0, 50);
+  const next = [item, ...history].slice(0, 50);   
   saveHistory(next);
   return next;
 }

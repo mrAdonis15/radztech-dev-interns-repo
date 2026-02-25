@@ -8,7 +8,6 @@ import { sendToGemini } from "./geminiService.js";
 import {
   getInitialMessages,
   getDefaultPanelPosition,
-  SLASH_OPTIONS,
   PANEL_PADDING,
   DEFAULT_BOTTOM,
 } from "src/Chatbox/chatboxConstants.js";
