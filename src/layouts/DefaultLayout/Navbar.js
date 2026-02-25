@@ -4,6 +4,7 @@ import MenuIcon from "@material-ui/icons/Menu";
 import CloseIcon from "@material-ui/icons/Close";
 import { useAuth } from "src/contexts/AuthContext";
 
+import { Link as RouterLink } from "react-router-dom";
 import {
   Avatar,
   AppBar,
@@ -244,9 +245,9 @@ const Navbar = () => {
                     ) : (
                       <>
                         <Link
-                          key="signin"
+                          component={RouterLink}
+                          to="/login"
                           variant="h6"
-                          onClick={() => setSignInOpen(true)}
                           underline="none"
                           color="textPrimary"
                           className={classes.signin}
@@ -300,9 +301,9 @@ const Navbar = () => {
                 ) : (
                   <>
                     <Link
-                      key="signin"
+                      component={RouterLink}
+                      to="/login"
                       variant="h6"
-                      onClick={() => setSignInOpen(true)}
                       underline="none"
                       color="textPrimary"
                       style={{ color: theme.palette.primary.main, cursor: "pointer" }}>
