@@ -1,5 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Box from "@material-ui/core/Box";
+import TextField from "@material-ui/core/TextField";
+import Button from "@material-ui/core/Button";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Checkbox from "@material-ui/core/Checkbox";
+import Typography from "@material-ui/core/Typography";
+import InputAdornment from "@material-ui/core/InputAdornment";
+import IconButton from "@material-ui/core/IconButton";
 import VisibilityIcon from "@material-ui/icons/Visibility";
 import VisibilityOffIcon from "@material-ui/icons/VisibilityOff";
 import "./Login.css";
@@ -68,8 +76,7 @@ export default function Login() {
         if (isOtherDevice) {
           msg = "Please log off from other device.";
         } else if (response.status === 401) {
-          msg =
-            "Invalid username or password. Please try again.";
+          msg = "Invalid username or password. Please try again.";
         } else if (rawMsg) {
           msg = rawMsg;
         } else {
@@ -101,93 +108,128 @@ export default function Login() {
     }
   };
 
-  return (
-    <div className="login-root">
-      <div className="login-body">
-      <div className="login-content">
-        <div className="login-logo">
-          <img src="/favicon.ico" alt="UlapBiz" className="login-logo-icon" />
-          <span className="login-logo-text">
-            <span className="login-logo-ulap">Ulap</span>
-            <span className="login-logo-biz">.Biz</span>
-          </span>
-        </div>
+  const inputProps = {
+    style: { fontFamily: "Poppins, sans-serif" },
+  };
+  const inputLabelProps = { style: { fontFamily: "Poppins, sans-serif" } };
 
-        <form className="login-form" onSubmit={handleSubmit}>
-          <div className="login-field">
-            <input
-              type="text"
+  return (
+    <Box className="login-root">
+      <Box className="login-body">
+        <Box className="login-content">
+          <Box className="login-logo">
+            <img src="/favicon.ico" alt="UlapBiz" className="login-logo-icon" />
+            <Typography variant="h6" className="login-logo-text" component="span">
+              <Typography component="span" className="login-logo-ulap">
+                Ulap
+              </Typography>
+              <Typography component="span" className="login-logo-biz">
+                .Biz
+              </Typography>
+            </Typography>
+          </Box>
+
+          <form className="login-form" onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              variant="outlined"
               placeholder="Username"
               value={Username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
               required
+              inputProps={inputProps}
+              InputLabelProps={inputLabelProps}
+              className="login-field"
             />
-          </div>
-          <div className="login-field login-field-password">
-            <input
+            <TextField
+              fullWidth
+              variant="outlined"
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               value={Password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               required
+              inputProps={inputProps}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                      size="small"
+                      className="login-password-toggle"
+                    >
+                      {showPassword ? (
+                        <VisibilityOffIcon fontSize="small" />
+                      ) : (
+                        <VisibilityIcon fontSize="small" />
+                      )}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              InputLabelProps={inputLabelProps}
+              className="login-field"
             />
-            <button
-              type="button"
-              className="login-password-toggle"
-              onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={agreeTerms}
+                  onChange={(e) => setAgreeTerms(e.target.checked)}
+                  color="primary"
+                  className="login-checkbox-input"
+                />
+              }
+              label={
+                <Typography variant="body2" component="span">
+                  I agree with{" "}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer">
+                    Terms of Service
+                  </a>
+                </Typography>
+              }
+              className="login-checkbox"
+              classes={{ label: "login-checkbox-label" }}
+            />
+
+            {error && (
+              <Typography variant="body2" className="login-error">
+                {error}
+              </Typography>
+            )}
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              disabled={loading}
+              className="login-submit"
             >
-              {showPassword ? (
-                <VisibilityOffIcon fontSize="small" />
-              ) : (
-                <VisibilityIcon fontSize="small" />
-              )}
-            </button>
-          </div>
+              {loading ? "Logging in..." : "LOG IN"}
+            </Button>
+          </form>
 
-          <div className="login-checkbox">
-            <input
-              type="checkbox"
-              id="terms"
-              checked={agreeTerms}
-              onChange={(e) => setAgreeTerms(e.target.checked)}
-            />
-            <label htmlFor="terms">
-              I agree with{" "}
-              <a href="/terms" target="_blank" rel="noopener noreferrer">
-                Terms of Service
-              </a>
-            </label>
-          </div>
+          <Box className="login-links" component="div">
+            <Typography variant="body2" paragraph>
+              Don&apos;t have an account yet? <Link to="/signup">Sign Up</Link>
+            </Typography>
+            <Typography variant="body2" paragraph>
+              <Link to="/forgot-password">Forgot password?</Link>
+            </Typography>
+            <Typography variant="body2" paragraph>
+              <Link to="/activate-phone">Activate Phone Number?</Link>
+            </Typography>
+          </Box>
+        </Box>
 
-          {error && <div className="login-error">{error}</div>}
-
-          <button
-            type="submit"
-            className="login-submit"
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "LOG IN"}
-          </button>
-        </form>
-
-        <div className="login-links">
-          <p>
-            Don&apos;t have an account yet? <Link to="/signup">Sign Up</Link>
-          </p>
-          <p>
-            <Link to="/forgot-password">Forgot password?</Link>
-          </p>
-          <p>
-            <Link to="/activate-phone">Activate Phone Number?</Link>
-          </p>
-        </div>
-      </div>
-
-      <div className="login-version">version 7.2602.112</div>
-      </div>
-    </div>
+        <Typography variant="caption" className="login-version">
+          version 7.2602.112
+        </Typography>
+      </Box>
+    </Box>
   );
 }
