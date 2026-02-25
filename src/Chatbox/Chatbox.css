@@ -311,6 +311,12 @@
 .chat-header-draggable:active {
   cursor: default;
 }
+
+.chat-body-draggable {
+  cursor: move;
+  user-select: none;
+}
+
 .chat-panel {
   width: 340px;
   height: 100%;
@@ -417,6 +423,7 @@
   background: transparent;
   display: flex;
   flex-direction: column;
+  -webkit-overflow-scrolling: touch;
 }
 .chat-avatarFloating {
   display: none;
