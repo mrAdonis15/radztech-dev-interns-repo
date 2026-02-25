@@ -4,7 +4,6 @@ import dummyProducts from "./dummyProducts.json";
 import ledger from "./ledger.json";
 import stockCardGraph from "./stockCardGraph.json";
 import { getStockCardData } from "./chartUtils.js";
-import { Message } from "@material-ui/icons";
 
 const apiKey = process.env.REACT_APP_GEMINI_API_KEY || "";
 

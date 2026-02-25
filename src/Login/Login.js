@@ -10,9 +10,8 @@ import InputAdornment from "@material-ui/core/InputAdornment";
 import IconButton from "@material-ui/core/IconButton";
 import VisibilityIcon from "@material-ui/icons/Visibility";
 import VisibilityOffIcon from "@material-ui/icons/VisibilityOff";
+import { request, API_URLS } from "../api/Request";
 import "./Login.css";
-
-const LOGIN_API_URL = "https://staging.ulap.biz/api/login";
 
 function getBasicAuthHeader(Username, Password) {
   const encoded = btoa(`${Username}:${Password}`);
@@ -49,7 +48,7 @@ export default function Login() {
     safeSetState(setLoading, true);
     try {
       const existingToken = localStorage.getItem("authToken") || "";
-      const response = await fetch(LOGIN_API_URL, {
+      const { status, text } = await request(API_URLS.login, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -59,9 +58,14 @@ export default function Login() {
         body: JSON.stringify({}),
       });
 
-      const data = await response.json().catch(() => ({}));
+      let data = {};
+      if (text && text.trim()) {
+        try {
+          data = JSON.parse(text) || {};
+        } catch (_) {}
+      }
 
-      if (!response.ok) {
+      if (status < 200 || status >= 300) {
         const rawMsg =
           data?.message ||
           data?.error ||
@@ -71,12 +75,13 @@ export default function Login() {
           /other device|another device|already logged in|log off|logout/i.test(
             rawMsg
           ) ||
-          response.status === 403;
+          status === 403;
         let msg;
         if (isOtherDevice) {
           msg = "Please log off from other device.";
-        } else if (response.status === 401) {
-          msg = "Invalid username or password. Please try again.";
+        } else if (status === 401) {
+          msg =
+            "Invalid username or password. Please try again.";
         } else if (rawMsg) {
           msg = rawMsg;
         } else {
@@ -93,7 +98,8 @@ export default function Login() {
         }
         sessionStorage.setItem("logoutUsername", Username.trim());
         sessionStorage.setItem("logoutPassword", Password);
-        navigate("/Chatbox", { replace: true });
+        // Redirect to Biz selection UI after login; from there user goes to Chatbox
+        navigate("/select-biz", { replace: true });
       } else {
         safeSetState(setError, data?.message || "Login successful. Redirecting...");
       }

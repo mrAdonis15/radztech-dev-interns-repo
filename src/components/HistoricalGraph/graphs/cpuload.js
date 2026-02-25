@@ -101,12 +101,6 @@ const CpuLoad = ({ height = 320 }) => {
     const now = Date.now();
     const cutoff = now - WINDOW_MS;
     const filteredPoints = dataPoints.filter(point => point.time >= cutoff);
-    
-    const load1minValues = filteredPoints.map(point => point.cpu_loadavg?.["1min"] ?? 0);
-    const load5minValues = filteredPoints.map(point => point.cpu_loadavg?.["5min"] ?? 0);
-    const load15minValues = filteredPoints.map(point => point.cpu_loadavg?.["15min"] ?? 0);
-    const allValues = [...load1minValues, ...load5minValues, ...load15minValues];
-    const maxValue = allValues.length > 0 ? Math.max(...allValues, 0.1) : 0.1;
 
     return {
       responsive: true,

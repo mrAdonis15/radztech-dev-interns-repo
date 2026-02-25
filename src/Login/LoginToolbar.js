@@ -1,16 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Button from "@material-ui/core/Button";
 import ExitToAppIcon from "@material-ui/icons/ExitToApp";
+import { request, API_URLS } from "../api/Request";
 import "./LoginToolbar.css";
-
-const LOGOUT_API_URL = "https://staging.ulap.biz/api/logout";
 
 export default function LoginToolbar() {
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
+
+  // Call select-biz when toolbar mounts (user is logged in) and store in localStorage for app use
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      request(API_URLS.selectBiz, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-access-tokens": token,
+        },
+      })
+        .then(({ text }) => {
+          if (!text || !text.trim()) return null;
+          try {
+            return JSON.parse(text);
+          } catch {
+            return null;
+          }
+        })
+        .then((data) => {
+          if (data != null && typeof data === "object") {
+            localStorage.setItem("selectedBiz", JSON.stringify(data));
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
 
   const handleLogout = async () => {
     const token = localStorage.getItem("authToken");
@@ -21,7 +48,7 @@ export default function LoginToolbar() {
     try {
       if (token && username != null && password != null) {
         const basicAuth = btoa(`${username}:${password}`);
-        await fetch(LOGOUT_API_URL, {
+        await request(API_URLS.logout, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
