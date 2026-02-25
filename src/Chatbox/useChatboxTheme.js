@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { sanitizeColor, PRESET_THEMES } from "./colotheme.js";
 import { applyThemeToElement } from "./chatboxUtils.js";
 
@@ -16,11 +16,11 @@ export function useChatboxTheme(rootRef) {
   const [selectedThemeKey, setSelectedThemeKey] = useState(null);
   const [showThemePicker, setShowThemePicker] = useState(false);
 
-  function applyTheme(t) {
+  const applyTheme = useCallback((t) => {
     if (rootRef?.current) {
       applyThemeToElement(rootRef.current, t);
     }
-  }
+  }, [rootRef]);
 
   function toggleThemePicker() {
     setShowThemePicker((s) => !s);
@@ -77,7 +77,7 @@ export function useChatboxTheme(rootRef) {
     } catch (e) {
       applyTheme(defaultThemeValues);
     }
-  }, []);
+  }, [applyTheme]);
 
   return {
     theme,

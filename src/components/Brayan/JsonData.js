@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useTheme } from "@material-ui/core/styles";
 import {
   Grid,
   Paper,
@@ -24,8 +23,6 @@ import EditIcon from "@material-ui/icons/Edit";
 import CodeIcon from "@material-ui/icons/Code";
 
 const JsonData = () => {
-  const theme = useTheme();
-
   const [jsonText, setJsonText] = useState("");
   const [config, setConfig] = useState({});
   const [error, setError] = useState("");
