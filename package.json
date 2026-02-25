@@ -41,7 +41,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "proxy": "http://6a191f907760.ngrok.app/",
+  "proxy": "http://staging.ulap.biz/",
   "eslintConfig": {
     "extends": [
       "react-app",
