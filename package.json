@@ -42,7 +42,9 @@
     "eject": "react-scripts eject"
   },
 
+
   "proxy": "https://staging.ulap.biz/",
+
 
   "eslintConfig": {
     "extends": [
