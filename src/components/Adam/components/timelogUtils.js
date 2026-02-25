@@ -93,7 +93,6 @@ export function getTimezoneOffset(timezoneId) {
 * @returns {Array<{ id: string, task: string, start: Date, end: Date, duration: number }>}
 */
 export function generateDemoTimelogs(timezoneId, count = 5) {
-  const tz = timezoneId || getMachineTimezone();
   const now = new Date();
   const tasks = [
     "Code review: Auth module",

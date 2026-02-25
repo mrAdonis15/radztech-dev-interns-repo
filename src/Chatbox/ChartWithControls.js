@@ -3,9 +3,7 @@ import ChartRenderer from "src/components/Marth/chartRenderer";
 
 const CHART_TYPES = ["line", "bar", "pie"];
 
-/**
- * Renders a chart with user controls to change chart type and toggle datasets.
- */
+
 export default function ChartWithControls({ chart }) {
   const [chartTypeOverride, setChartTypeOverride] = useState(null);
   const [visibleDatasets, setVisibleDatasets] = useState(() =>
