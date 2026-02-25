@@ -61,6 +61,7 @@ export default function ChatMessage({ msg }) {
                 className={"chat-bubbleLeft" + (isTyping ? " chat-typing" : "")}
               >
                 <Typography
+                  component="div"
                   variant="body2"
                   className={
                     "bubble-text left" + (isTyping ? " chat-typing-text" : "")
@@ -84,6 +85,7 @@ export default function ChatMessage({ msg }) {
               className={"chat-bubbleLeft" + (isTyping ? " chat-typing" : "")}
             >
               <Typography
+                component="div"
                 variant="body2"
                 className={
                   "bubble-text left" + (isTyping ? " chat-typing-text" : "")

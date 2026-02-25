@@ -1,20 +1,35 @@
-import React, { useState } from "react";
-import axios from "axios";
-import { Link } from "react-router-dom";
+import React, { useState, useRef, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import VisibilityIcon from "@material-ui/icons/Visibility";
 import VisibilityOffIcon from "@material-ui/icons/VisibilityOff";
 import "./Login.css";
 
-const LOGIN_API_URL =
-  process.env.REACT_APP_ULAP_API_URL || "https://staging.ulap.biz/api/login";
+const LOGIN_API_URL = "https://staging.ulap.biz/api/login";
+
+function getBasicAuthHeader(Username, Password) {
+  const encoded = btoa(`${Username}:${Password}`);
+  return `Basic ${encoded}`;
+}
 
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+  const isMountedRef = useRef(true);
+  const [Username, setUsername] = useState("");
+  const [Password, setPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const safeSetState = (setter, value) => {
+    if (isMountedRef.current) setter(value);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,58 +38,75 @@ export default function Login() {
       setError("Please agree to the Terms of Service.");
       return;
     }
-    setLoading(true);
+    safeSetState(setLoading, true);
     try {
-      const loginValue = username.trim();
-      const payload = {
-        username: loginValue,
-        user_name: loginValue,
-        email: loginValue,
-        password: password,
-      };
-
-      const response = await axios.post(LOGIN_API_URL, payload, {
-        withCredentials: true,
-        headers: { "Content-Type": "application/json" },
+      const existingToken = localStorage.getItem("authToken") || "";
+      const response = await fetch(LOGIN_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-access-tokens": existingToken,
+          Authorization: getBasicAuthHeader(Username.trim(), Password),
+        },
+        body: JSON.stringify({}),
       });
-      if (response.data?.token) {
-        localStorage.setItem("authToken", response.data.token);
-        if (response.data.user) {
-          localStorage.setItem("user", JSON.stringify(response.data.user));
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const rawMsg =
+          data?.message ||
+          data?.error ||
+          (typeof data === "string" ? data : null) ||
+          "";
+        const isOtherDevice =
+          /other device|another device|already logged in|log off|logout/i.test(
+            rawMsg
+          ) ||
+          response.status === 403;
+        let msg;
+        if (isOtherDevice) {
+          msg = "Please log off from other device.";
+        } else if (response.status === 401) {
+          msg =
+            "Invalid username or password. Please try again.";
+        } else if (rawMsg) {
+          msg = rawMsg;
+        } else {
+          msg = "Login failed. Please check your credentials and try again.";
         }
-        window.location.href = "/";
+        safeSetState(setError, msg);
+        return;
+      }
+
+      if (data?.token) {
+        localStorage.setItem("authToken", data.token);
+        if (data.user) {
+          localStorage.setItem("user", JSON.stringify(data.user));
+        }
+        sessionStorage.setItem("logoutUsername", Username.trim());
+        sessionStorage.setItem("logoutPassword", Password);
+        navigate("/Chatbox", { replace: true });
       } else {
-        setError(response.data?.message || "Login successful. Redirecting...");
+        safeSetState(setError, data?.message || "Login successful. Redirecting...");
       }
     } catch (err) {
-      const status = err.response?.status;
-      const data = err.response?.data;
-      let msg =
-        data?.message ||
-        data?.error ||
-        (typeof data === "string" ? data : null) ||
-        err.message;
-
-      if (status === 401) {
-        msg = msg || "Invalid username or password. Please try again.";
-      } else if (!msg) {
-        msg = "Login failed. Please check your credentials and try again.";
-      }
-      setError(msg);
+      safeSetState(
+        setError,
+        err.message ||
+          "Login failed. Please check your credentials and try again."
+      );
     } finally {
-      setLoading(false);
+      safeSetState(setLoading, false);
     }
   };
 
   return (
     <div className="login-root">
+      <div className="login-body">
       <div className="login-content">
         <div className="login-logo">
-          <img
-            src="/favicon.ico"
-            alt="UlapBiz"
-            className="login-logo-icon"
-          />
+          <img src="/favicon.ico" alt="UlapBiz" className="login-logo-icon" />
           <span className="login-logo-text">
             <span className="login-logo-ulap">Ulap</span>
             <span className="login-logo-biz">.Biz</span>
@@ -86,7 +118,7 @@ export default function Login() {
             <input
               type="text"
               placeholder="Username"
-              value={username}
+              value={Username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
               required
@@ -96,7 +128,7 @@ export default function Login() {
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
-              value={password}
+              value={Password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               required
@@ -143,8 +175,7 @@ export default function Login() {
 
         <div className="login-links">
           <p>
-            Don&apos;t have an account yet?{" "}
-            <Link to="/signup">Sign Up</Link>
+            Don&apos;t have an account yet? <Link to="/signup">Sign Up</Link>
           </p>
           <p>
             <Link to="/forgot-password">Forgot password?</Link>
@@ -156,6 +187,7 @@ export default function Login() {
       </div>
 
       <div className="login-version">version 7.2602.112</div>
+      </div>
     </div>
   );
 }

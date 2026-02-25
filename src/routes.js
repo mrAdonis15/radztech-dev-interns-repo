@@ -1,6 +1,7 @@
 
 import DefaultLayout from "./layouts/DefaultLayout";
-import Login from "./components/Login/Login";
+import ChatboxLayout from "./layouts/ChatboxLayout";
+import Login from "./Login/Login";
 import Ulap from "./components/Ulap/Ulap";
 import DisplayPage from "./components/Kurt/pages/DisplayPage";
 import Graphs from "./components/HistoricalGraph/pages/graphs";
@@ -19,11 +20,18 @@ import Chatbox from "./Chatbox/chatbox";
 import MenuDisplay from "./components/Merlvin/MenuDisplay";
 import ImageCompressor from "./ImageCompress/ImageCompressor";
 
+const ChatboxPage = () => <Chatbox defaultOpen />;
+
 
 const routes = [
   {
     path: "/login",
     element: Login,
+  },
+  {
+    path: "/Chatbox",
+    element: ChatboxLayout,
+    children: [{ index: true, element: ChatboxPage }],
   },
   {
     path: "/",
@@ -52,10 +60,6 @@ const routes = [
       {
         path: "/BrayanJSON",
         element: JsonData,
-      },
-      { 
-        path: "/Chatbox",
-        element: Chatbox, 
       },
       {
         path: "/ChatboxGC",
