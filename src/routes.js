@@ -2,6 +2,7 @@
 import DefaultLayout from "./layouts/DefaultLayout";
 import ChatboxLayout from "./layouts/ChatboxLayout";
 import Login from "./Login/Login";
+import BizUI from "./components/bizUI";
 import Ulap from "./components/Ulap/Ulap";
 import DisplayPage from "./components/Kurt/pages/DisplayPage";
 import Graphs from "./components/HistoricalGraph/pages/graphs";
@@ -29,6 +30,10 @@ const routes = [
   {
     path: "/login",
     element: Login,
+  },
+  {
+    path: "/select-biz",
+    element: BizUI,
   },
   {
     path: "/Chatbox",
