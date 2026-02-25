@@ -18,7 +18,7 @@
     addToHistory,
     deleteHistoryItem,
   } from "./chatStorageGC.js";
-  import ChatHeader from "../Chatbox/ChatHeader.js";
+  import { ChatHeader } from "../Chatbox/chatboxUtils.js";
   import ChatMessage from "../Chatbox/ChatMessage.js";
   import ChatInputArea from "../Chatbox/ChatInputArea.js";
   import ChatHistory from "../Chatbox/ChatHistory.js";

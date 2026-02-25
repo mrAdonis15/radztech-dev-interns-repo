@@ -12,16 +12,16 @@ import {
   PANEL_PADDING,
   DEFAULT_BOTTOM,
 } from "src/Chatbox/chatboxConstants.js";
-import { createMessage } from "src/Chatbox/chatboxUtils.js";
 import { useChatboxTheme } from "src/Chatbox/useChatboxTheme.js";
 import {
+  createMessage,
   loadMessages,
   saveMessages,
   loadHistory,
   addToHistory,
   deleteHistoryItem,
-} from "src/Chatbox/chatStorage.js";
-import ChatHeader from "src/Chatbox/ChatHeader.js";
+  ChatHeader,
+} from "src/Chatbox/chatboxUtils.js";
 import ChatMessage from "src/Chatbox/ChatMessage.js";
 import ChatInputArea from "src/Chatbox/ChatInputArea.js";
 import ChatHistory from "src/Chatbox/ChatHistory.js";
