@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Box from "@material-ui/core/Box";
 import TextField from "@material-ui/core/TextField";
@@ -20,23 +20,12 @@ function getBasicAuthHeader(Username, Password) {
 
 export default function Login() {
   const navigate = useNavigate();
-  const isMountedRef = useRef(true);
   const [Username, setUsername] = useState("");
   const [Password, setPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  const safeSetState = (setter, value) => {
-    if (isMountedRef.current) setter(value);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,7 +34,7 @@ export default function Login() {
       setError("Please agree to the Terms of Service.");
       return;
     }
-    safeSetState(setLoading, true);
+    setLoading(true);
     try {
       const existingToken = localStorage.getItem("authToken") || "";
       const { status, text } = await request(API_URLS.login, {
@@ -87,7 +76,7 @@ export default function Login() {
         } else {
           msg = "Login failed. Please check your credentials and try again.";
         }
-        safeSetState(setError, msg);
+        setError(msg);
         return;
       }
 
@@ -101,16 +90,15 @@ export default function Login() {
         // Redirect to Biz selection UI after login; from there user goes to Chatbox
         navigate("/select-biz", { replace: true });
       } else {
-        safeSetState(setError, data?.message || "Login successful. Redirecting...");
+        setError(data?.message || "Login successful. Redirecting...");
       }
     } catch (err) {
-      safeSetState(
-        setError,
+      setError(
         err.message ||
           "Login failed. Please check your credentials and try again."
       );
     } finally {
-      safeSetState(setLoading, false);
+      setLoading(false);
     }
   };
 
