@@ -25,12 +25,37 @@ const ChartRenderer = ({ chart }) => {
         responsive: true,
         maintainAspectRatio: false,
         legend: {
+          display: true,
           position: "top",
+          align: "start",
+          fullWidth: true,
+          labels: {
+            boxWidth: 14,
+            padding: 16,
+            usePointStyle: false,
+          },
         },
         title: {
-          display: !!chart.title,
+          display: false,
           text: chart.title || "",
         },
+        scales:
+          type !== "pie"
+            ? {
+                xAxes: [
+                  {
+                    gridLines: { color: "rgba(0,0,0,0.06)" },
+                    ticks: { fontColor: "#666", fontSize: 11 },
+                  },
+                ],
+                yAxes: [
+                  {
+                    gridLines: { color: "rgba(0,0,0,0.06)" },
+                    ticks: { fontColor: "#666", fontSize: 11, beginAtZero: true },
+                  },
+                ],
+              }
+            : undefined,
         tooltips: {
           mode: "index",
           intersect: false,

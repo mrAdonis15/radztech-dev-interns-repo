@@ -26,9 +26,27 @@ export function getBizName() {
 }
 
 
+/**
+ * Get the biz-specific token for data access (stockcard, products, graph).
+ * Token comes from set-biz response when user selects a biz.
+ */
 export function getBizToken() {
+  const raw = getSelectedBizRaw();
   const biz = getSelectedBiz();
-  return biz?.token ?? null;
+  const token =
+    biz?.token ??
+    biz?.dataAccessToken ??
+    biz?.accessToken ??
+    raw?.token ??
+    raw?.dataAccessToken ??
+    raw?.accessToken ??
+    raw?.access_token ??
+    raw?.auth_token ??
+    raw?.bizToken ??
+    raw?.data?.token ??
+    raw?.biz?.token ??
+    null;
+  return token;
 }
 
 export function getBizIxBiz() {

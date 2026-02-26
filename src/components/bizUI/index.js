@@ -122,7 +122,24 @@ export default function BizUI() {
           try {
             const parsedData = JSON.parse(responseText);
             if (parsedData != null && typeof parsedData === "object") {
-              const toStore = parsedData.biz ? parsedData : { biz: parsedData };
+              const toStore = parsedData.biz ? { ...parsedData } : { biz: parsedData };
+              const biz = toStore.biz || toStore;
+              // Token from set-biz response - used for stockcard, products, graph
+              const token =
+                parsedData.token ??
+                parsedData.dataAccessToken ??
+                parsedData.accessToken ??
+                parsedData.access_token ??
+                parsedData.bizToken ??
+                parsedData.data?.token ??
+                parsedData.biz?.token ??
+                (typeof biz === "object" ? biz.token ?? biz.dataAccessToken : null);
+              if (token && typeof biz === "object") {
+                biz.token = token;
+              }
+              if (token) {
+                toStore.token = token;
+              }
               localStorage.setItem("selectedBiz", JSON.stringify(toStore));
             }
           } catch (_) {}
