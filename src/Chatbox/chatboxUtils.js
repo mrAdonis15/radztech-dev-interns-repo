@@ -251,7 +251,8 @@ function yearFromLabels(labels) {
 
 /**
  * Build a chart config from stockcard API graph response.
- * Design: IN (light blue bars), OUT (red bars), Running Balance (green line); title "YEAR YYYY".
+ * Design: IN (blue bars), OUT (red bars), Running Balance (green line with circles);
+ * title "YEAR YYYY", legend top, dotted grid, Show Breakdown + arrows in header.
  */
 export function buildChartFromStockcardApi(apiData) {
   if (!apiData || !apiData.items || !Array.isArray(apiData.items)) return null;
@@ -267,39 +268,45 @@ export function buildChartFromStockcardApi(apiData) {
   const tIN = validItems.map((i) => Number(i.tIN) || 0);
   const tOUT = validItems.map((i) => Number(i.tOUT) || 0);
 
-  return buildChartFromSpec(
-    {
-      chartType: "line",
-      title: `YEAR ${year}`,
-      labels,
-      datasets: [
-        {
-          label: "IN",
-          data: tIN,
-          borderColor: "rgb(110, 198, 255)",
-          backgroundColor: "rgba(110, 198, 255, 0.6)",
-          fill: true,
-        },
-        {
-          label: "OUT",
-          data: tOUT,
-          borderColor: "rgb(244, 67, 54)",
-          backgroundColor: "rgba(244, 67, 54, 0.6)",
-          fill: true,
-        },
-        {
-          label: "Running Balance",
-          data: runBal,
-          borderColor: "rgb(76, 175, 80)",
-          backgroundColor: "rgba(76, 175, 80, 0.2)",
-          fill: true,
-          tension: 0.3,
-          pointRadius: 4,
-        },
-      ],
-    },
-    true
-  );
+  return {
+    chartType: "mixed",
+    title: `YEAR ${year}`,
+    labels,
+    datasets: [
+      {
+        type: "bar",
+        label: "IN",
+        data: tIN,
+        backgroundColor: "rgb(54, 162, 235)",
+        borderColor: "rgb(54, 162, 235)",
+        borderWidth: 0,
+        order: 1,
+      },
+      {
+        type: "bar",
+        label: "OUT",
+        data: tOUT,
+        backgroundColor: "rgb(255, 99, 132)",
+        borderColor: "rgb(255, 99, 132)",
+        borderWidth: 0,
+        order: 2,
+      },
+      {
+        type: "line",
+        label: "Running Balance",
+        data: runBal,
+        borderColor: "rgb(75, 192, 192)",
+        backgroundColor: "rgba(75, 192, 192, 0.1)",
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: "rgb(75, 192, 192)",
+        pointBorderColor: "#fff",
+        pointBorderWidth: 1,
+        order: 3,
+      },
+    ],
+  };
 }
 
 /**

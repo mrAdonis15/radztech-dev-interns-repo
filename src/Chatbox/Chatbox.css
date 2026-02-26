@@ -590,6 +590,12 @@
   margin-bottom: 4px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
+.chart-with-controls-stock .chart-renderer-wrap {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
 .chart-stock-title {
   margin: 0;
   font-size: 1.1rem;
