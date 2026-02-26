@@ -1,8 +1,4 @@
-/**
- * Helpers to read the selected business (biz) from localStorage.
- * After select-biz POST, the response is stored as selectedBiz with shape:
- * { biz: { name, ixBiz, token, ad1, ad2, image, settings, user_position, ... } }
- */
+
 
 const STORAGE_KEY = "selectedBiz";
 
@@ -15,10 +11,7 @@ function getSelectedBizRaw() {
   }
 }
 
-/**
- * Returns the biz object from the last select-biz response.
- * Use this to access biz contents: name, token, ixBiz, ad1, ad2, etc.
- */
+
 export function getSelectedBiz() {
   const data = getSelectedBizRaw();
   if (data?.biz && typeof data.biz === "object") return data.biz;
@@ -26,25 +19,24 @@ export function getSelectedBiz() {
   return null;
 }
 
-/** Biz display name */
+
 export function getBizName() {
   const biz = getSelectedBiz();
   return biz?.name ?? biz?.sBiz ?? biz?.businessName ?? null;
 }
 
-/** Biz token (for API calls that need biz context) */
+
 export function getBizToken() {
   const biz = getSelectedBiz();
   return biz?.token ?? null;
 }
 
-/** Biz identifier (number or string) */
 export function getBizIxBiz() {
   const biz = getSelectedBiz();
   return biz?.ixBiz ?? null;
 }
 
-/** Full selectedBiz object as stored (includes top-level biz key) */
+
 export function getSelectedBizStorage() {
   return getSelectedBizRaw();
 }
