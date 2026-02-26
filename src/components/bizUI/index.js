@@ -107,9 +107,9 @@ export default function BizUI() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <LoginToolbar />
-      <Box className="biz-ui-root" flex={1}>
+      <Box className="biz-ui-root" flex={1} style={{ overflow: "auto", paddingTop: 80 }}>
         <Typography variant="h4" gutterBottom color="textPrimary">
           Select a business
         </Typography>

@@ -75,7 +75,7 @@ class LoginToolbar extends Component {
     const { loggingOut } = this.state;
 
     return (
-      <AppBar position="static" className="login-toolbar-appbar">
+      <AppBar position="fixed" className="login-toolbar-appbar">
         <Toolbar className="login-toolbar" disableGutters>
           <div className="login-toolbar-logo">
             <img src="/favicon.ico" alt="UlapBiz" className="login-toolbar-icon" />

@@ -10,9 +10,9 @@ const ChatboxLayout = () => {
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <LoginToolbar />
-      <main style={{ flex: 1 }}>
+      <main style={{ flex: 1, overflow: "auto", paddingTop: 56 }}>
         <Outlet />
       </main>
     </div>
