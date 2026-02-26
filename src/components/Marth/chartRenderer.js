@@ -13,26 +13,35 @@ const ChartRenderer = ({ chart }) => {
     }
 
     const ctx = canvasRef.current.getContext("2d");
-    const type = chart.chartType === "line" ? "line" : chart.chartType === "bar" ? "bar" : chart.chartType === "pie" ? "pie" : "line";
+    const isMixed = chart.chartType === "mixed";
+    const defaultType = isMixed ? "bar" : (chart.chartType === "line" ? "line" : chart.chartType === "bar" ? "bar" : chart.chartType === "pie" ? "pie" : "line");
+
+    const datasets = chart.datasets.map((ds) => {
+      const type = isMixed && ds.type ? ds.type : defaultType;
+      return { ...ds, type };
+    });
 
     chartInstance.current = new Chart(ctx, {
-      type,
+      type: defaultType,
       data: {
         labels: chart.labels,
-        datasets: chart.datasets,
+        datasets,
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        backgroundColor: "#ffffff",
         legend: {
           display: true,
           position: "top",
-          align: "start",
-          fullWidth: true,
+          align: "end",
+          fullWidth: false,
           labels: {
             boxWidth: 14,
             padding: 16,
-            usePointStyle: false,
+            usePointStyle: true,
+            fontColor: "#333",
+            fontSize: 12,
           },
         },
         title: {
@@ -40,18 +49,18 @@ const ChartRenderer = ({ chart }) => {
           text: chart.title || "",
         },
         scales:
-          type !== "pie"
+          defaultType !== "pie"
             ? {
                 xAxes: [
                   {
-                    gridLines: { color: "rgba(0,0,0,0.06)" },
-                    ticks: { fontColor: "#666", fontSize: 11 },
+                    gridLines: { display: true, color: "rgba(0,0,0,0.08)", borderDash: [4, 4] },
+                    ticks: { fontColor: "#666", fontSize: 11, maxRotation: 45, minRotation: 0 },
                   },
                 ],
                 yAxes: [
                   {
-                    gridLines: { color: "rgba(0,0,0,0.06)" },
-                    ticks: { fontColor: "#666", fontSize: 11, beginAtZero: true },
+                    gridLines: { display: true, color: "rgba(0,0,0,0.08)", borderDash: [4, 4] },
+                    ticks: { fontColor: "#666", fontSize: 11, beginAtZero: true, stepSize: 0.5 },
                   },
                 ],
               }
@@ -75,10 +84,10 @@ const ChartRenderer = ({ chart }) => {
   }, [chart]);
 
   if (!chart || !chart.labels || !chart.datasets) return null;
-  if (!["line", "bar", "pie"].includes(chart.chartType)) return null;
+  if (!["line", "bar", "pie", "mixed"].includes(chart.chartType)) return null;
 
   return (
-    <div style={{ width: "100%", height: "400px", marginTop: "20px" }}>
+    <div className="chart-renderer-wrap" style={{ width: "100%", height: "400px", marginTop: "12px", background: "#fff" }}>
       <canvas ref={canvasRef} />
     </div>
   );

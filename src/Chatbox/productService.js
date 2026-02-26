@@ -1,7 +1,32 @@
 import fallbackData from "./Data/dummyProductsCopy.json";
+import { hasSelectedBiz, getProduct } from "./stockcardService.js";
 
 const PRODUCTS_URL = `${process.env.PUBLIC_URL || ""}/Data/dummyProductsCopy.json`;
 let productsCache = null;
+
+/**
+ * Map API product response (items from /api/lib/prod) to productService shape.
+ * @param {{ count?: number, items?: Array }} apiResponse - { count, flds, items, prod_cat_filter }
+ * @returns {Array<{ id, name, category, productCode, currentStock, ... }>}
+ */
+function mapApiProductsToLocal(apiResponse) {
+  const arr = Array.isArray(apiResponse)
+    ? apiResponse
+    : apiResponse?.items ?? apiResponse?.data ?? apiResponse?.products ?? [];
+  if (!arr.length) return [];
+  return arr.map((p, idx) => ({
+    id: p?.ProdCd ?? p?.productCode ?? p?.id ?? `prod-${idx}`,
+    name: p?.sProd ?? p?.name ?? p?.product ?? "Unknown",
+    category: p?.sCat ?? p?.sProdCat ?? p?.category ?? "Products",
+    currentStock: 0,
+    stockIn: 0,
+    stockOut: 0,
+    lastPrice: p?.cPrice1 != null ? Number(p.cPrice1) : 0,
+    transactions: [],
+    productCode: p?.ProdCd ?? p?.productCode ?? "",
+    ixProd: p?.ixProd,
+  }));
+}
 
 function parseRawProducts(raw) {
   const arr = Array.isArray(raw) ? raw : [];
@@ -32,17 +57,29 @@ function initCache() {
 }
 
 /**
- * Load products from JSON file (real-time).
- * Fetches from public/Data/dummyProductsCopy.json — edit THAT file to add/update products;
- * changes are picked up on the next chat message.
+ * Load products: from products API when a business is selected, otherwise from JSON file.
+ * When user has selected a biz, fetches from /api/lib/prod and displays all products (count, items).
  * @returns {Promise<void>}
  */
 export async function loadProducts() {
+  try {
+    if (hasSelectedBiz()) {
+      const apiData = await getProduct();
+      if (apiData && (apiData.items?.length || apiData.count > 0)) {
+        productsCache = mapApiProductsToLocal(apiData);
+        return;
+      }
+    }
+  } catch (_) {
+    // fall through to file fetch
+  }
   try {
     const res = await fetch(PRODUCTS_URL, { cache: "no-store" });
     if (res.ok) {
       const raw = await res.json();
       productsCache = parseRawProducts(raw);
+    } else {
+      initCache();
     }
   } catch {
     initCache();

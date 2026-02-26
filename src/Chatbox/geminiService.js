@@ -6,6 +6,7 @@ import {
   getProduct,
   fetchStockcardGraph,
   getStockcardDataForDiscussion,
+  formatProductAsText,
 } from "./stockcardService.js";
 
 function pickIxWH(warehouseData) {
@@ -45,6 +46,23 @@ const functions = {
     const text = await getStockcardDataForDiscussion({ productName, item: productName, product: productName });
     return { summary: text };
   },
+  getProducts: async () => {
+    if (!hasSelectedBiz()) {
+      return {
+        rejected: true,
+        reason: "Please select a business first to view products.",
+      };
+    }
+    const productData = await getProduct();
+    const formatted = formatProductAsText(productData);
+    if (!formatted || formatted.trim() === "PRODUCTS:\n" || formatted.includes("- No products")) {
+      return {
+        rejected: true,
+        reason: "No products found for the selected business.",
+      };
+    }
+    return { summary: formatted, productsList: formatted };
+  },
   displayStockcardGraph: async (opts) => {
     if (!hasSelectedBiz()) {
       console.warn("[geminiService] displayStockcardGraph: hasSelectedBiz=false");
@@ -81,6 +99,12 @@ const functions = {
 const tools = [
   {
     functionDeclarations: [
+      {
+        name: "getProducts",
+        description:
+          "Fetch the full product list from the products API. Use when the user asks to list products, show all products, what products we have, display products, or similar. Returns a formatted list of all products (name, code, category, price) for the selected business.",
+        parameters: { type: "OBJECT", properties: {}, required: [] },
+      },
       {
         name: "getStockcardData",
         description:
@@ -132,6 +156,7 @@ export async function sendToGemini(userMessage, messageHistory) {
 
   const systemContext =
     "You are a helpful support assistant for Ulap Biz. " +
+    "Use getProducts when the user asks to list products, show products, what products we have, display all products, or each product—then show the returned list in your reply. " +
     "Depending on the user's question about stock card: " +
     "Use getStockcardData when they ask about stock card contents, balance, movements, transactions, or want to discuss the report—then use the returned summary to answer in your own words. " +
     "Use displayStockcardGraph when they want to see a graph or visualization of stock movement. " +
