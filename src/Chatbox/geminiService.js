@@ -1,6 +1,36 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { getProductsContext, getProductStats, getValidProductNames, loadProducts } from "./productService.js";
-import { buildChartFromSpec } from "./chatboxUtils.js";
+import { buildChartFromStockcardApi } from "./chatboxUtils.js";
+import {
+  hasSelectedBiz,
+  getWarehouse,
+  getProduct,
+  fetchStockcardGraph,
+  getStockcardDataForDiscussion,
+} from "./stockcardService.js";
+
+function pickIxWH(warehouseData) {
+  const arr = Array.isArray(warehouseData)
+    ? warehouseData
+    : warehouseData?.data ?? warehouseData?.warehouses ?? [];
+  const first = arr[0];
+  return first?.ixWh ?? first?.ixWH ?? first?.id ?? first?.warehouseId;
+}
+
+function pickIxProd(productData, productName) {
+  const arr = Array.isArray(productData)
+    ? productData
+    : productData?.items ?? productData?.data ?? productData?.products ?? [];
+  if (productName) {
+    const lower = String(productName).toLowerCase();
+    const match = arr.find(
+      (p) =>
+        (p?.sProd ?? p?.name ?? p?.product ?? "").toLowerCase().includes(lower) ||
+        (p?.ProdCd ?? p?.productCode ?? "").toLowerCase().includes(lower)
+    );
+    return match?.ixProd ?? match?.id ?? arr[0]?.ixProd ?? arr[0]?.id;
+  }
+  return arr[0]?.ixProd ?? arr[0]?.id;
+}
 
 const apiKey = process.env.REACT_APP_GEMINI_API_KEY || "";
 const modelNames = [
@@ -10,39 +40,77 @@ const modelNames = [
 ];
 
 const functions = {
-  displayChart: (opts) => buildChartFromSpec(opts),
+  getStockcardData: async (opts) => {
+    const productName = opts?.item || opts?.product || opts?.productName || "";
+    const text = await getStockcardDataForDiscussion({ productName, item: productName, product: productName });
+    return { summary: text };
+  },
+  displayStockcardGraph: async (opts) => {
+    if (!hasSelectedBiz()) {
+      console.warn("[geminiService] displayStockcardGraph: hasSelectedBiz=false");
+      return {
+        rejected: true,
+        reason: "Please select a business first to view stockcard graph data.",
+      };
+    }
+    const productName = opts?.item || opts?.product || opts?.productName || "";
+    const [warehouseData, productData] = await Promise.all([getWarehouse(), getProduct()]);
+    const ixWH = pickIxWH(warehouseData);
+    const ixProd = pickIxProd(productData, productName);
+    if (ixProd == null || ixWH == null) {
+      return {
+        rejected: true,
+        reason: "Warehouse and product data are required to display the graph. Please try again.",
+      };
+    }
+    console.debug("[geminiService] displayStockcardGraph:", { ixProd, ixWH, product: productName || "(first)" });
+    const apiData = await fetchStockcardGraph({ ixProd, ixWH });
+    if (!apiData || !apiData.items?.length) {
+      console.warn("[geminiService] displayStockcardGraph: no data", { ixProd, ixWH, apiData });
+      return {
+        rejected: true,
+        reason: productName
+          ? `No stockcard graph data found for "${productName}".`
+          : "No stockcard data available. The report may be empty.",
+      };
+    }
+    return buildChartFromStockcardApi(apiData);
+  },
 };
 
 const tools = [
   {
     functionDeclarations: [
       {
-        name: "displayChart",
+        name: "getStockcardData",
         description:
-          "Display Stock Card data as a chart. Use when user asks for Stock Card report, visualization, or graph. Use data from the STOCK CARD (products with balance, stock in, stock out).",
+          "Fetch stock card report data to discuss with the user. Use when the user asks about stock card contents, balance, movements, transactions, or wants to talk about the report. Returns a text summary you can use to answer. Optionally pass item/product to filter by product name.",
         parameters: {
           type: "OBJECT",
           properties: {
-            chartType: {
+            item: { type: "STRING", description: "Product name (optional)." },
+            product: { type: "STRING", description: "Product name (optional)." },
+          },
+          required: [],
+        },
+      },
+      {
+        name: "displayStockcardGraph",
+        description:
+          "Fetch and display stockcard graph data from the API. Use when user has selected a business and asks for stockcard graph, stock movement over time, or transaction data as a graph. Optionally filter by product/item name.",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            item: {
               type: "STRING",
-              description: "One of: line, bar, pie",
-              enum: ["line", "bar", "pie"],
+              description: "Product or item name to filter the graph (optional).",
             },
-            title: {
+            product: {
               type: "STRING",
-              description: "Chart title (e.g. 'Top 5 Products by Balance')",
-            },
-            labels: {
-              type: "STRING",
-              description: "JSON array of category names, e.g. [\"Product A\", \"Product B\"]",
-            },
-            datasets: {
-              type: "STRING",
-              description:
-                "JSON array of {label: string, data: number[]}. Each object has label (series name) and data (values matching labels order).",
+              description: "Same as item - product name for graph filter.",
             },
           },
-          required: ["chartType", "labels", "datasets"],
+          required: [],
         },
       },
     ],
@@ -59,21 +127,35 @@ export async function sendToGemini(userMessage, messageHistory) {
     return "Gemini is not configured. Please set REACT_APP_GEMINI_API_KEY in your .env file.";
   }
 
-  await loadProducts();
-
-  const stats = getProductStats();
-  const validNames = getValidProductNames();
-  const validNamesList = validNames.length ? validNames.join(", ") : "(none)";
-  const productContext = `\n\n=== STOCK CARD (Product Database) ===\nThis is the primary report source. Stock Card = product inventory with balance, stock in, stock out.\n\nVALID PRODUCT NAMES (EXACT MATCH ONLY - use these names verbatim, no variations):\n${validNamesList}\n\nSTRICT RULE: Do NOT assume 'Honda Wave' = 'Wave', 'Aerox' = 'Aerox v2', etc. If the user says 'Honda Wave' and the list has 'Wave', respond that 'Honda Wave' was NOT FOUND. Only names in the list above are valid.\n\n${getProductsContext()}\n\nSTATISTICS:\n- Total Products: ${stats.totalProducts}\n- Categories: ${stats.categories.map((c) => `${c.name} (${c.count})`).join(", ")}\n- Total Inventory Value: $${stats.totalInventoryValue.toLocaleString()}\n- Total Stock Units: ${stats.totalStockUnits}\n========================\n\n`;
+  const hasBiz = hasSelectedBiz();
+  console.debug("[geminiService] sendToGemini: hasSelectedBiz=", hasBiz);
 
   const systemContext =
     "You are a helpful support assistant for Ulap Biz. " +
-    "PRIORITY REPORT: Stock Card — when users ask for Stock Card, report, or data visualization, use the STOCK CARD data above (products with balance, stock in, stock out). " +
-    "CRITICAL - STRICT PRODUCT MATCHING: Only respond with data for products whose name appears EXACTLY in the VALID PRODUCT NAMES list. " +
-    "Do NOT infer variations (e.g. 'Honda Wave' is NOT 'Wave'). If a product name is not in the list, respond that it was not found. " +
-    "When displaying charts, use ONLY product names from the list. " +
-    "Be concise, friendly, and accurate. Choose chartType: bar for comparisons, pie for proportions, line for trends." +
-    productContext;
+    "Depending on the user's question about stock card: " +
+    "Use getStockcardData when they ask about stock card contents, balance, movements, transactions, or want to discuss the report—then use the returned summary to answer in your own words. " +
+    "Use displayStockcardGraph when they want to see a graph or visualization of stock movement. " +
+    "You can use both in one turn if they want both a discussion and a graph. " +
+    "When there are the same data keyword display both and let the user choose which one to display." +
+    "If there is question about stock card and cannot answer it, save it and learn what it is, then next time you will know it and answer it correctly." +
+    "Avoid False data to prevent AI from hallucinating or data poisoning ." +
+    "Only use data from the API endpoint and do not make up data." +
+    "If the user asks about something that is not related to stock card, answer it in a friendly and helpful way." +
+    "If a user asks a comparison, properly compare the data and answer the question in a friendly and helpful way." +
+    "If a user asks a suggestion, properly suggest the data and answer the question in a friendly and helpful way." +
+    "If a user asks a recommendation, properly recommend the data and answer the question in a friendly and helpful way." +
+    "If a user asks a prediction, properly predict the data and answer the question in a friendly and helpful way." +
+    "If a user asks a forecast, properly forecast the data and answer the question in a friendly and helpful way." +
+    "If a user asks a suggestion, properly suggest the data and answer the question in a friendly and helpful way." +
+    "If a user asks a recommendation, properly recommend the data and answer the question in a friendly and helpful way." +
+    "If a user asks a prediction, properly predict the data and answer the question in a friendly and helpful way." +
+    "If a user asks a forecast, properly forecast the data and answer the question in a friendly and helpful way." +
+    "Flag harmful approach and do not answer it." +
+    "Flag false data and do not answer it." +
+    "Flag false data and do not answer it." +
+    "Flag Profanity and scold the user for using inappropriate language." +
+    "Flag data leak" +
+    "Be concise, friendly, and accurate.";
 
   function buildPrompt(history, current, context) {
     let text = context + "\n\n";
@@ -136,14 +218,17 @@ export async function sendToGemini(userMessage, messageHistory) {
 
       if (functionCallPart) {
         const { name, args } = functionCallPart.functionCall;
+        console.debug("[geminiService] functionCall:", name, args);
         if (!functions[name]) {
           lastError = new Error(`Function ${name} is not defined`);
+          console.error("[geminiService] Unknown function:", name);
           continue;
         }
         const parsedArgs = args || {};
-        const functionResult = functions[name](parsedArgs);
+        const functionResult = await Promise.resolve(functions[name](parsedArgs));
 
         if (functionResult?.rejected) {
+          console.warn("[geminiService] function rejected:", name, functionResult.reason);
           return { type: "text", text: functionResult.reason };
         }
         if (!functionResult) {
@@ -180,11 +265,11 @@ export async function sendToGemini(userMessage, messageHistory) {
       lastError = new Error("Empty reply from model");
     } catch (err) {
       lastError = err;
-      console.warn("Gemini model " + modelName + " failed:", err);
+      console.warn("[geminiService] Gemini model", modelName, "failed:", err);
     }
   }
 
-  console.error("Gemini API error (all models failed):", lastError);
+  console.error("[geminiService] All models failed:", lastError);
   const msg = lastError?.message ?? String(lastError ?? "");
   if (msg.includes("API key") || msg.includes("403") || msg.includes("401")) {
     return "API key is invalid or missing. Check REACT_APP_GEMINI_API_KEY.";

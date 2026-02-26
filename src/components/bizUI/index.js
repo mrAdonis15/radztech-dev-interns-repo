@@ -10,16 +10,58 @@ import LoginToolbar from "../../Login/LoginToolbar";
 import BizCard from "./BizCard";
 import "./BizUI.css";
 
+function getBizDisplayName(biz) {
+  const raw =
+    (biz && biz.name) ||
+    (biz && biz.sBiz) ||
+    (biz && biz.businessName) ||
+    (biz && biz.business && biz.business.name) ||
+    "";
+  return typeof raw === "string" ? raw.trim() : "";
+}
+
 function parseBizList(text) {
   if (!text || !text.trim()) return [];
   try {
     const parsed = JSON.parse(text);
     if (Array.isArray(parsed)) return parsed;
-    if (parsed?.businesses && Array.isArray(parsed.businesses)) return parsed.businesses;
-    if (parsed?.data && Array.isArray(parsed.data)) return parsed.data;
+    if (parsed && parsed.businesses && Array.isArray(parsed.businesses)) return parsed.businesses;
+    if (parsed && parsed.data && Array.isArray(parsed.data)) return parsed.data;
     if (parsed != null && typeof parsed === "object") return [parsed];
   } catch (_) {}
   return [];
+}
+
+function BizListContent({ bizList, selectingId, onSelectBiz, onContinue }) {
+  const isSelecting = selectingId != null;
+  return (
+    <React.Fragment>
+      <Grid container spacing={3} style={{ maxWidth: 900, justifyContent: "center" }}>
+        {bizList.map(function (biz) {
+          const id =
+            (biz && biz.ixBiz) ||
+            (biz && biz.id) ||
+            (biz && biz.businessId) ||
+            (biz && biz.business && biz.business.id) ||
+            (biz && biz.data && biz.data.id);
+          return (
+            <Grid item xs={12} sm={6} md={4} key={id != null ? id : Math.random()} className="biz-ui-grid-item">
+              <BizCard biz={biz} onSelect={onSelectBiz} disabled={isSelecting} />
+            </Grid>
+          );
+        })}
+      </Grid>
+      <Button
+        variant="outlined"
+        color="primary"
+        onClick={onContinue}
+        className="biz-ui-continue-btn"
+        disabled={isSelecting}
+      >
+        Continue with current selection
+      </Button>
+    </React.Fragment>
+  );
 }
 
 export default function BizUI() {
@@ -28,86 +70,155 @@ export default function BizUI() {
   const [loading, setLoading] = useState(true);
   const [selectingId, setSelectingId] = useState(null);
   const [error, setError] = useState(null);
-
   const token = localStorage.getItem("authToken");
 
-  useEffect(() => {
-    if (!token) return;
-    setLoading(true);
-    setError(null);
-    request(API_URLS.selectBiz, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "x-access-tokens": token,
-      },
-    })
-      .then(({ text }) => parseBizList(text))
-      .then(setBizList)
-      .catch(() => setError("Failed to load businesses"))
-      .finally(() => setLoading(false));
-  }, [token]);
+  useEffect(
+    function () {
+      if (!token) return;
+      setLoading(true);
+      setError(null);
+      request(API_URLS.selectBiz, {
+        method: "GET",
+        headers: { "Content-Type": "application/json", "x-access-tokens": token },
+      })
+        .then(function (_ref) {
+          var text = _ref.text;
+          return parseBizList(text);
+        })
+        .then(setBizList)
+        .catch(function () {
+          return setError("Failed to load businesses");
+        })
+        .finally(function () {
+          return setLoading(false);
+        });
+    },
+    [token]
+  );
 
-  const handleSelectBiz = (biz) => {
+  const handleSelectBiz = function (biz) {
     if (!token) return;
-    // Code is always from the selected biz (API/list); never hardcoded — it changes daily
     const code =
-      biz?.ixBiz ??
-      biz?.biz_uuid ??
-      biz?.id ??
-      biz?.businessId ??
-      biz?.business?.id ??
-      biz?.business?.ixBiz ??
-      biz?.data?.id ??
-      biz?.data?.ixBiz ??
+      (biz && biz.ixBiz) ||
+      (biz && biz.biz_uuid) ||
+      (biz && biz.id) ||
+      (biz && biz.businessId) ||
+      (biz && biz.business && biz.business.id) ||
+      (biz && biz.business && biz.business.ixBiz) ||
+      (biz && biz.data && biz.data.id) ||
+      (biz && biz.data && biz.data.ixBiz) ||
       null;
     if (code == null) return;
 
     setSelectingId(code);
-    const url = `${API_URLS.setBiz}/${encodeURIComponent(code)}`;
-    request(url, {
+    request(API_URLS.setBiz + "/" + encodeURIComponent(code), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-access-tokens": token,
-      },
-      body: JSON.stringify({ code }),
+      headers: { "Content-Type": "application/json", "x-access-tokens": token },
+      body: JSON.stringify({ code: code }),
     })
-      .then(({ text }) => {
-        if (text && text.trim()) {
+      .then(function (response) {
+        const responseText = response.text;
+        if (responseText && responseText.trim()) {
           try {
-            const data = JSON.parse(text);
-            if (data != null && typeof data === "object") {
-              const toStore = data.biz ? data : { biz: data };
+            const parsedData = JSON.parse(responseText);
+            if (parsedData != null && typeof parsedData === "object") {
+              const toStore = parsedData.biz ? { ...parsedData } : { biz: parsedData };
+              const biz = toStore.biz || toStore;
+              // Token from set-biz response - used for stockcard, products, graph
+              const token =
+                parsedData.token ??
+                parsedData.dataAccessToken ??
+                parsedData.accessToken ??
+                parsedData.access_token ??
+                parsedData.bizToken ??
+                parsedData.data?.token ??
+                parsedData.biz?.token ??
+                (typeof biz === "object" ? biz.token ?? biz.dataAccessToken : null);
+              if (token && typeof biz === "object") {
+                biz.token = token;
+              }
+              if (token) {
+                toStore.token = token;
+              }
               localStorage.setItem("selectedBiz", JSON.stringify(toStore));
             }
           } catch (_) {}
         } else {
           const name =
-            biz?.name ?? biz?.sBiz ?? biz?.businessName ?? biz?.business?.name ?? "";
+            (biz && biz.name) ||
+            (biz && biz.sBiz) ||
+            (biz && biz.businessName) ||
+            (biz && biz.business && biz.business.name) ||
+            "";
           const logo =
-            biz?.image ?? biz?.logo ?? biz?.logoUrl ?? biz?.business?.logo ?? null;
+            (biz && biz.image) ||
+            (biz && biz.logo) ||
+            (biz && biz.logoUrl) ||
+            (biz && biz.business && biz.business.logo) ||
+            null;
           localStorage.setItem(
             "selectedBiz",
-            JSON.stringify({ biz: { name, ixBiz: code, image: logo } })
+            JSON.stringify({ biz: { name: name, ixBiz: code, image: logo } })
           );
         }
         navigate("/Chatbox", { replace: true });
       })
-      .catch(() => setError("Failed to select business"))
-      .finally(() => setSelectingId(null));
+      .catch(function () {
+        return setError("Failed to select business");
+      })
+      .finally(function () {
+        return setSelectingId(null);
+      });
   };
 
-  const handleContinue = () => {
-    navigate("/Chatbox", { replace: true });
+  const handleContinue = function () {
+    return navigate("/Chatbox", { replace: true });
   };
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
+  if (!token) return <Navigate to="/login" replace />;
+
+  const rootStyle = { minHeight: "100vh", display: "flex", flexDirection: "column" };
+  let content;
+  if (loading) {
+    content = (
+      <Box py={4}>
+        <CircularProgress />
+      </Box>
+    );
+  } else if (error) {
+    content = (
+      <Box py={2}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  } else if (bizList.length === 0) {
+    content = (
+      <Box py={2} textAlign="center">
+        <Typography color="textSecondary">No businesses found.</Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleContinue}
+          className="biz-ui-continue-btn"
+          style={{ marginTop: 16 }}
+        >
+          Continue anyway
+        </Button>
+      </Box>
+    );
+  } else {
+    content = (
+      <BizListContent
+        bizList={bizList}
+        selectingId={selectingId}
+        onSelectBiz={handleSelectBiz}
+        onContinue={handleContinue}
+      />
+    );
   }
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    <div style={rootStyle}>
       <LoginToolbar />
       <Box className="biz-ui-root" flex={1} style={{ overflow: "auto", paddingTop: 80 }}>
         <Typography variant="h4" gutterBottom color="textPrimary">
@@ -116,69 +227,7 @@ export default function BizUI() {
         <Typography variant="body1" color="textSecondary" style={{ marginBottom: 24 }}>
           Choose a business to continue
         </Typography>
-
-        {loading ? (
-          <Box py={4}>
-            <CircularProgress />
-          </Box>
-        ) : error ? (
-          <Box py={2}>
-            <Typography color="error">{error}</Typography>
-          </Box>
-        ) : bizList.length === 0 ? (
-          <Box py={2} textAlign="center">
-            <Typography color="textSecondary">No businesses found.</Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleContinue}
-              className="biz-ui-continue-btn"
-              style={{ marginTop: 16 }}
-            >
-              Continue anyway
-            </Button>
-          </Box>
-        ) : (
-          <>
-            <Grid container spacing={3} justify="center" style={{ maxWidth: 900 }}>
-              {bizList.map((biz) => {
-                const id =
-                  biz?.ixBiz ??
-                  biz?.id ??
-                  biz?.businessId ??
-                  biz?.business?.id ??
-                  biz?.data?.id;
-                return (
-                  <Grid
-                    item
-                    xs={12}
-                    sm={6}
-                    md={4}
-                    key={id ?? Math.random()}
-                    className="biz-ui-grid-item"
-                  >
-                    <BizCard
-                      biz={biz}
-                      onSelect={handleSelectBiz}
-                      disabled={selectingId !== null}
-                    />
-                  </Grid>
-                );
-              })}
-            </Grid>
-            {bizList.length > 0 && (
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={handleContinue}
-                className="biz-ui-continue-btn"
-                disabled={selectingId !== null}
-              >
-                Continue with current selection
-              </Button>
-            )}
-          </>
-        )}
+        {content}
       </Box>
     </div>
   );

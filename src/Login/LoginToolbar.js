@@ -33,7 +33,25 @@ class LoginToolbar extends Component {
         })
         .then((data) => {
           if (data != null && typeof data === "object") {
-            localStorage.setItem("selectedBiz", JSON.stringify(data));
+            const existing = (() => {
+              try {
+                const raw = localStorage.getItem("selectedBiz");
+                return raw ? JSON.parse(raw) : null;
+              } catch {
+                return null;
+              }
+            })();
+            const existingToken =
+              existing?.token ?? existing?.biz?.token ?? existing?.dataAccessToken ?? existing?.biz?.dataAccessToken;
+            const toStore = { ...data };
+            const biz = toStore.biz ?? toStore;
+            if (typeof biz === "object" && !biz.token && existingToken) {
+              biz.token = existingToken;
+            }
+            if (!toStore.token && existingToken) {
+              toStore.token = existingToken;
+            }
+            localStorage.setItem("selectedBiz", JSON.stringify(toStore));
           }
         })
         .catch(() => {});

@@ -229,12 +229,86 @@ function getProductMetric(product, datasetLabel) {
   return product.currentStock ?? 0;
 }
 
+/** Month abbreviation from YrMo (e.g. 2026-02 -> Feb) */
+function yrmoToMonthAbbr(yrmo) {
+  if (!yrmo || typeof yrmo !== "string") return yrmo;
+  const parts = yrmo.split("-");
+  const monthNum = parseInt(parts[1], 10);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return Number.isFinite(monthNum) && monthNum >= 1 && monthNum <= 12
+    ? months[monthNum - 1]
+    : yrmo;
+}
+
+/** Extract year from first label (e.g. 2026-02 -> 2026) for title */
+function yearFromLabels(labels) {
+  const first = labels[0];
+  if (!first || typeof first !== "string") return new Date().getFullYear();
+  const y = first.split("-")[0];
+  const year = parseInt(y, 10);
+  return Number.isFinite(year) ? year : new Date().getFullYear();
+}
+
+/**
+ * Build a chart config from stockcard API graph response.
+ * Design: IN (light blue bars), OUT (red bars), Running Balance (green line); title "YEAR YYYY".
+ */
+export function buildChartFromStockcardApi(apiData) {
+  if (!apiData || !apiData.items || !Array.isArray(apiData.items)) return null;
+  const validItems = apiData.items.filter(
+    (i) => i && (i.YrWk != null || i.YrMo != null || i.tIN != null || i.tOUT != null || i.runBal != null)
+  );
+  if (!validItems.length) return null;
+
+  const rawLabels = validItems.map((i) => i.YrWk || i.YrMo || "Period");
+  const labels = rawLabels.map((l) => (l.length === 7 && l.match(/^\d{4}-\d{2}$/) ? yrmoToMonthAbbr(l) : l));
+  const year = yearFromLabels(rawLabels);
+  const runBal = validItems.map((i) => Number(i.runBal) || 0);
+  const tIN = validItems.map((i) => Number(i.tIN) || 0);
+  const tOUT = validItems.map((i) => Number(i.tOUT) || 0);
+
+  return buildChartFromSpec(
+    {
+      chartType: "line",
+      title: `YEAR ${year}`,
+      labels,
+      datasets: [
+        {
+          label: "IN",
+          data: tIN,
+          borderColor: "rgb(110, 198, 255)",
+          backgroundColor: "rgba(110, 198, 255, 0.6)",
+          fill: true,
+        },
+        {
+          label: "OUT",
+          data: tOUT,
+          borderColor: "rgb(244, 67, 54)",
+          backgroundColor: "rgba(244, 67, 54, 0.6)",
+          fill: true,
+        },
+        {
+          label: "Running Balance",
+          data: runBal,
+          borderColor: "rgb(76, 175, 80)",
+          backgroundColor: "rgba(76, 175, 80, 0.2)",
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+        },
+      ],
+    },
+    true
+  );
+}
+
 /**
  * Build a chart config from a flexible spec (AI-provided or arbitrary data).
  * @param {Object} spec - { chartType, title?, labels, datasets }
+ * @param {boolean} [skipProductValidation=false] - if true, skip product name validation (for API/time-series data)
  * @returns {Object|null|{rejected:true, reason:string}} Chart config, null if invalid, or rejection
  */
-export function buildChartFromSpec(spec) {
+export function buildChartFromSpec(spec, skipProductValidation = false) {
   if (!spec || !spec.labels || !spec.datasets) return null;
 
   let labels = spec.labels;
@@ -258,7 +332,7 @@ export function buildChartFromSpec(spec) {
   }
   if (!Array.isArray(datasets) || datasets.length === 0) return null;
 
-  const validation = validateProductLabels(labels);
+  const validation = skipProductValidation ? { valid: true, invalid: [], products: [], isProductChart: false } : validateProductLabels(labels);
   if (!validation.valid && validation.invalid.length > 0) {
     return {
       rejected: true,
@@ -327,9 +401,10 @@ export function buildChartFromSpec(spec) {
         borderColor: ds.borderColor || color,
         backgroundColor:
           ds.backgroundColor || color.replace("rgb", "rgba").replace(")", ",0.5)"),
-        tension: chartType === "line" ? 0.3 : 0,
-        fill: chartType === "line" ? false : true,
+        tension: ds.tension != null ? ds.tension : (chartType === "line" ? 0.3 : 0),
+        fill: ds.fill != null ? ds.fill : (chartType === "line" ? false : true),
         borderWidth: 1,
+        pointRadius: ds.pointRadius,
       };
     });
   }

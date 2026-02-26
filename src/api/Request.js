@@ -8,6 +8,10 @@ export const API_URLS = {
   selectBiz: `${API_BASE}/api/select-biz`,
   setBiz: `${API_BASE}/api/set-biz`,
   businesses: `${API_BASE}/api/businesses`,
+  stockcard: `${API_BASE}/api/reports/inv/sc`,
+  stockcardGraph: `${API_BASE}/api/reports/inv/sc/graph`,
+  warehouse: `${API_BASE}/api/trans/get/wh`,
+  product: `${API_BASE}/api/lib/prod`,
 };
 
 
