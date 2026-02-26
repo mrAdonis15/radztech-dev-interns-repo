@@ -1,6 +1,6 @@
   import React from 'react';
   import wholeAdvance from './configs/wholeAdvance..js';
-  import {  Paper, Typography, Button, ListItem, ListItemText, IconButton, TextField, Table, TableBody, TableCell, TableHead, TableRow, Snackbar, Dialog, DialogTitle, DialogContent, DialogActions } from '@material-ui/core';
+  import {  Paper, Typography, Button, ListItem, IconButton, TextField, Table, TableBody, TableCell, TableHead, TableRow, Snackbar, Dialog, DialogTitle, DialogContent, DialogActions } from '@material-ui/core';
   import EditIcon from '@material-ui/icons/Edit';
   import DeleteIcon from '@material-ui/icons/Delete';
   import CloseIcon from '@material-ui/icons/Close';
@@ -188,7 +188,6 @@
     render(){
       const data = this.state.data;
       const jsonText = this.state.jsonText;
-      const showRaw = this.state.showRaw;
       const editingMap = this.state.editingMap;
       const editValues = this.state.editValues;
       const snackbar = this.state.snackbar;
@@ -201,7 +200,7 @@
         React.createElement('div', { className: 'jd-left', style: { width:320 } },
           React.createElement(Paper, { className: 'jd-card' },
             React.createElement('div', { className: 'jd-header', style: { background:'#f58220', color:'#fff', padding:'12px 16px', fontWeight:600 } }, ' Advance Settings'),
-            React.createElement('div', { className: 'jd-section-list' }, (wholeAdvance.config && wholeAdvance.config.items||[]).map(function(item){
+            React.createElement('div', { className: 'jd-section-list' }, ((wholeAdvance.config && wholeAdvance.config.items) || []).map(function(item){
               function findItem(items, key) { if (!items) return null; for (let i=0;i<items.length;i++){ if (items[i].key===key) return items[i]; const r = findItem(items[i].children, key); if (r) return r; } return null; }
               const jsonItem = findItem(data.items||[], item.key) || null;
 
@@ -212,7 +211,7 @@
                 );
               }
 
-              const displayValue = (jsonItem && jsonItem.value !== undefined) ? (Array.isArray(jsonItem.value)? JSON.stringify(jsonItem.value) : String(jsonItem.value)) : (jsonItem && jsonItem.type ? jsonItem.type : (item.type||''));
+              const displayValue = (jsonItem && jsonItem.value !== undefined) ? (Array.isArray(jsonItem.value) ? JSON.stringify(jsonItem.value) : String(jsonItem.value)) : ((jsonItem && jsonItem.type) ? jsonItem.type : (item.type || ''));
               const main = React.createElement(ListItem, { key: item.key, style: { display:'flex', justifyContent:'space-between', background:'#fffaf0', marginBottom:8, borderRadius:4 } },
                 React.createElement('div', null, React.createElement('span', { style: { fontWeight:500 } }, item.key), React.createElement('span', { style: { marginLeft:8, color:'#6b6b6b' } }, ': ' + displayValue)),
                 React.createElement('div', null, React.createElement(IconButton, { size:'small', onClick: function(){ return self.openEditDialog(item); }, style: { color: '#f58220' } }, React.createElement(EditIcon, null)), React.createElement(IconButton, { size:'small', onClick: function(){ return self.handlePoolDelete(item); }, style: { color: '#9e5a00' } }, React.createElement(DeleteIcon, null)))

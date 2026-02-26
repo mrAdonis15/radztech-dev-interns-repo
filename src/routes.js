@@ -1,5 +1,8 @@
 
 import DefaultLayout from "./layouts/DefaultLayout";
+import ChatboxLayout from "./layouts/ChatboxLayout";
+import Login from "./Login/Login";
+import BizUI from "./components/bizUI";
 import Ulap from "./components/Ulap/Ulap";
 import DisplayPage from "./components/Kurt/pages/DisplayPage";
 import Graphs from "./components/HistoricalGraph/pages/graphs";
@@ -17,9 +20,26 @@ import UlapChatBot from "./components/Marth/UlapChatbot";
 import Chatbox from "./Chatbox/chatbox";
 import MenuDisplay from "./components/Merlvin/MenuDisplay";
 import ImageCompressor from "./ImageCompress/ImageCompressor";
+import SqlFormatter from "./components/SQL Formatter/SqlFormatter";
+import Timelogstest from "./components/Adam/components/timelogstest";
+
+const ChatboxPage = () => <Chatbox defaultOpen />;
 
 
 const routes = [
+  {
+    path: "/login",
+    element: Login,
+  },
+  {
+    path: "/select-biz",
+    element: BizUI,
+  },
+  {
+    path: "/Chatbox",
+    element: ChatboxLayout,
+    children: [{ index: true, element: ChatboxPage }],
+  },
   {
     path: "/",
     element: DefaultLayout,
@@ -48,10 +68,6 @@ const routes = [
         path: "/BrayanJSON",
         element: JsonData,
       },
-      { 
-        path: "/Chatbox",
-        element: Chatbox, 
-      },
       {
         path: "/ChatboxGC",
         element: ChatboxGC,
@@ -67,6 +83,14 @@ const routes = [
       {
         path: "/ImageCompressor",
         element: ImageCompressor,
+      },
+      {
+        path: "/SqlFormatter",
+        element: SqlFormatter,
+      },
+      {
+        path: "/TimeLogs",
+        element: Timelogstest,
       },
     ],
   },
