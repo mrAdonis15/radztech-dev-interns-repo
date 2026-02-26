@@ -220,7 +220,7 @@ export default function BizUI() {
   return (
     <div style={rootStyle}>
       <LoginToolbar />
-      <Box className="biz-ui-root" flex={1}>
+      <Box className="biz-ui-root" flex={1} style={{ overflow: "auto", paddingTop: 80 }}>
         <Typography variant="h4" gutterBottom color="textPrimary">
           Select a business
         </Typography>
