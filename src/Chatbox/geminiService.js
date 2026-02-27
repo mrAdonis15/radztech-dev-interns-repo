@@ -1,5 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { getProductsContext, getProductStats, getValidProductNames, loadProducts } from "./productService.js";
+import {
+  getProductsContext,
+  getProductStats,
+  getValidProductNames,
+  loadProducts,
+} from "./productService.js";
 import { buildChartFromSpec } from "./chatboxUtils.js";
 
 const apiKey = process.env.REACT_APP_GEMINI_API_KEY || "";
@@ -34,7 +39,8 @@ const tools = [
             },
             labels: {
               type: "STRING",
-              description: "JSON array of category names, e.g. [\"Product A\", \"Product B\"]",
+              description:
+                'JSON array of category names, e.g. ["Product A", "Product B"]',
             },
             datasets: {
               type: "STRING",
@@ -131,7 +137,7 @@ export async function sendToGemini(userMessage, messageHistory) {
       }
 
       const functionCallPart = response.candidates?.[0]?.content?.parts?.find(
-        (p) => p.functionCall
+        (p) => p.functionCall,
       );
 
       if (functionCallPart) {
@@ -147,9 +153,13 @@ export async function sendToGemini(userMessage, messageHistory) {
           return { type: "text", text: functionResult.reason };
         }
         if (!functionResult) {
-          const textPart = response.candidates?.[0]?.content?.parts?.find((p) => p.text);
+          const textPart = response.candidates?.[0]?.content?.parts?.find(
+            (p) => p.text,
+          );
           const t = textPart?.text;
-          const fallbackText = (typeof t === "function" ? t() : t) || "No data available for that chart.";
+          const fallbackText =
+            (typeof t === "function" ? t() : t) ||
+            "No data available for that chart.";
           return { type: "text", text: fallbackText };
         }
 
@@ -163,16 +173,25 @@ export async function sendToGemini(userMessage, messageHistory) {
         ]);
 
         const followT = followUp.response.text;
-        const followUpText = typeof followT === "function" ? followT() : followT ?? "";
-        const replyText = String(followUpText || "").trim() || "Here's the chart you requested.";
+        const followUpText =
+          typeof followT === "function" ? followT() : (followT ?? "");
+        const replyText =
+          String(followUpText || "").trim() ||
+          "Here's the chart you requested.";
 
-        if (functionResult.chartType && functionResult.labels && functionResult.datasets) {
+        if (
+          functionResult.chartType &&
+          functionResult.labels &&
+          functionResult.datasets
+        ) {
           return { type: "chart", data: functionResult, text: replyText };
         }
         return { type: "text", text: replyText };
       }
 
-      const textPart = response.candidates?.[0]?.content?.parts?.find((p) => p.text);
+      const textPart = response.candidates?.[0]?.content?.parts?.find(
+        (p) => p.text,
+      );
       const textVal = textPart?.text ?? response?.text;
       const rawText = typeof textVal === "function" ? textVal() : textVal;
       const text = rawText != null ? String(rawText).trim() : "";
