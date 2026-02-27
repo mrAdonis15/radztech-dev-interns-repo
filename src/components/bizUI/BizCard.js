@@ -7,27 +7,27 @@ import Box from "@material-ui/core/Box";
 
 function getBizDisplayName(biz) {
   return (
-    biz?.name ??
-    biz?.sBiz ??
-    biz?.business?.name ??
-    biz?.business?.businessName ??
-    biz?.data?.name ??
-    biz?.data?.businessName ??
-    biz?.businessName ??
-    biz?.companyName ??
+    (biz && biz.name) ||
+    (biz && biz.sBiz) ||
+    (biz && biz.business && biz.business.name) ||
+    (biz && biz.business && biz.business.businessName) ||
+    (biz && biz.data && biz.data.name) ||
+    (biz && biz.data && biz.data.businessName) ||
+    (biz && biz.businessName) ||
+    (biz && biz.companyName) ||
     "Business"
   );
 }
 
 function getBizLogo(biz) {
   return (
-    biz?.image ??
-    biz?.business?.logo ??
-    biz?.business?.logoUrl ??
-    biz?.data?.logo ??
-    biz?.data?.logoUrl ??
-    biz?.logo ??
-    biz?.logoUrl ??
+    (biz && biz.image) ||
+    (biz && biz.business && biz.business.logo) ||
+    (biz && biz.business && biz.business.logoUrl) ||
+    (biz && biz.data && biz.data.logo) ||
+    (biz && biz.data && biz.data.logoUrl) ||
+    (biz && biz.logo) ||
+    (biz && biz.logoUrl) ||
     null
   );
 }
