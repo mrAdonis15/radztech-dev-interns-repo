@@ -28,6 +28,10 @@ export const endpoints = {
   library: {
     product: path("api", "lib", "prod"),
   },
+  gemini: {
+
+    product: path("api", "ai", "gemini"),
+  },
 };
 
 /** Flattened map for legacy API_URLS compatibility */

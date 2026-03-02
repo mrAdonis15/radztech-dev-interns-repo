@@ -41,6 +41,7 @@ export async function request(url, options = {}) {
     method,
     headers: mergedHeaders,
     body: body != null ? (typeof body === "string" ? body : JSON.stringify(body)) : undefined,
+    credentials: "include",
     ...rest,
   });
 

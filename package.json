@@ -41,7 +41,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "proxy": "https://staging.ulap.biz/",
+  "proxy": "https://clone.ulap.biz/",
   "eslintConfig": {
     "extends": [
       "react-app",
