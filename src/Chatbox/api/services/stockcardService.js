@@ -4,8 +4,8 @@
  * Use the biz token (not authToken) for stockcard, warehouse, and graph calls.
  */
 
-import { request, API_URLS } from "../api/Request";
-import { getSelectedBiz, getBizToken } from "../api/selectedBiz";
+import { request, API_URLS } from "../Request";
+import { getSelectedBiz, getBizToken } from "../selectedBiz";
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
