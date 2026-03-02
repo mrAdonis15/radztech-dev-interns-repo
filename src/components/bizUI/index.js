@@ -5,8 +5,8 @@ import Typography from "@material-ui/core/Typography";
 import Grid from "@material-ui/core/Grid";
 import Button from "@material-ui/core/Button";
 import CircularProgress from "@material-ui/core/CircularProgress";
-import { request, API_URLS } from "../../api/Request";
-import LoginToolbar from "../../Login/LoginToolbar";
+import { businessService } from "../../Chatbox/api";
+import LoginToolbar from "../../Chatbox/Login/LoginToolbar";
 import BizCard from "./BizCard";
 import "./BizUI.css";
 
@@ -20,16 +20,31 @@ function getBizDisplayName(biz) {
   return typeof raw === "string" ? raw.trim() : "";
 }
 
-function parseBizList(text) {
-  if (!text || !text.trim()) return [];
+function parseBizList(payload) {
+  const raw = typeof payload === "string" ? payload : payload != null && typeof payload === "object" ? JSON.stringify(payload) : "";
+  if (!raw || !raw.trim()) return [];
   try {
-    const parsed = JSON.parse(text);
+    const parsed = typeof payload === "object" ? payload : JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed;
-    if (parsed && parsed.businesses && Array.isArray(parsed.businesses)) return parsed.businesses;
-    if (parsed && parsed.data && Array.isArray(parsed.data)) return parsed.data;
+    if (parsed?.businesses && Array.isArray(parsed.businesses)) return parsed.businesses;
+    if (parsed?.data && Array.isArray(parsed.data)) return parsed.data;
     if (parsed != null && typeof parsed === "object") return [parsed];
   } catch (_) {}
   return [];
+}
+
+function getBizCode(biz) {
+  return (
+    biz?.ixBiz ??
+    biz?.biz_uuid ??
+    biz?.id ??
+    biz?.businessId ??
+    biz?.business?.id ??
+    biz?.business?.ixBiz ??
+    biz?.data?.id ??
+    biz?.data?.ixBiz ??
+    null
+  );
 }
 
 function BizListContent({ bizList, selectingId, onSelectBiz, onContinue }) {
@@ -38,14 +53,9 @@ function BizListContent({ bizList, selectingId, onSelectBiz, onContinue }) {
     <React.Fragment>
       <Grid container spacing={3} style={{ maxWidth: 900, justifyContent: "center" }}>
         {bizList.map(function (biz) {
-          const id =
-            (biz && biz.ixBiz) ||
-            (biz && biz.id) ||
-            (biz && biz.businessId) ||
-            (biz && biz.business && biz.business.id) ||
-            (biz && biz.data && biz.data.id);
+          const id = getBizCode(biz) ?? Math.random();
           return (
-            <Grid item xs={12} sm={6} md={4} key={id != null ? id : Math.random()} className="biz-ui-grid-item">
+            <Grid item xs={12} sm={6} md={4} key={id} className="biz-ui-grid-item">
               <BizCard biz={biz} onSelect={onSelectBiz} disabled={isSelecting} />
             </Grid>
           );
@@ -77,98 +87,55 @@ export default function BizUI() {
       if (!token) return;
       setLoading(true);
       setError(null);
-      request(API_URLS.selectBiz, {
-        method: "GET",
-        headers: { "Content-Type": "application/json", "x-access-tokens": token },
-      })
-        .then(function (_ref) {
-          var text = _ref.text;
-          return parseBizList(text);
-        })
+      businessService
+        .selectBiz(token)
+        .then((res) => parseBizList(res.data != null ? res.data : res.text))
         .then(setBizList)
-        .catch(function () {
-          return setError("Failed to load businesses");
-        })
-        .finally(function () {
-          return setLoading(false);
-        });
+        .catch(() => setError("Failed to load businesses"))
+        .finally(() => setLoading(false));
     },
     [token]
   );
 
   const handleSelectBiz = function (biz) {
-    if (!token) return;
-    const code =
-      (biz && biz.ixBiz) ||
-      (biz && biz.biz_uuid) ||
-      (biz && biz.id) ||
-      (biz && biz.businessId) ||
-      (biz && biz.business && biz.business.id) ||
-      (biz && biz.business && biz.business.ixBiz) ||
-      (biz && biz.data && biz.data.id) ||
-      (biz && biz.data && biz.data.ixBiz) ||
-      null;
-    if (code == null) return;
-
+    const code = getBizCode(biz);
+    if (!token || code == null) return;
     setSelectingId(code);
-    request(API_URLS.setBiz + "/" + encodeURIComponent(code), {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-access-tokens": token },
-      body: JSON.stringify({ code: code }),
-    })
+    businessService
+      .setBiz(token, code)
       .then(function (response) {
-        const responseText = response.text;
-        if (responseText && responseText.trim()) {
+        let parsedData = response.data;
+        if (parsedData == null && response.text?.trim()) {
           try {
-            const parsedData = JSON.parse(responseText);
-            if (parsedData != null && typeof parsedData === "object") {
-              const toStore = parsedData.biz ? { ...parsedData } : { biz: parsedData };
-              const biz = toStore.biz || toStore;
-              // Token from set-biz response - used for stockcard, products, graph
-              const token =
-                parsedData.token ??
-                parsedData.dataAccessToken ??
-                parsedData.accessToken ??
-                parsedData.access_token ??
-                parsedData.bizToken ??
-                parsedData.data?.token ??
-                parsedData.biz?.token ??
-                (typeof biz === "object" ? biz.token ?? biz.dataAccessToken : null);
-              if (token && typeof biz === "object") {
-                biz.token = token;
-              }
-              if (token) {
-                toStore.token = token;
-              }
-              localStorage.setItem("selectedBiz", JSON.stringify(toStore));
-            }
-          } catch (_) {}
+            parsedData = JSON.parse(response.text);
+          } catch (_) {
+            parsedData = null;
+          }
+        }
+        if (parsedData != null && typeof parsedData === "object") {
+          const toStore = parsedData.biz ? { ...parsedData } : { biz: parsedData };
+          const bizObj = toStore.biz || toStore;
+          const dataToken =
+            parsedData.token ??
+            parsedData.dataAccessToken ??
+            parsedData.accessToken ??
+            parsedData.access_token ??
+            parsedData.bizToken ??
+            parsedData.data?.token ??
+            parsedData.biz?.token ??
+            (typeof bizObj === "object" ? bizObj.token ?? bizObj.dataAccessToken : null);
+          if (dataToken && typeof bizObj === "object") bizObj.token = dataToken;
+          if (dataToken) toStore.token = dataToken;
+          localStorage.setItem("selectedBiz", JSON.stringify(toStore));
         } else {
-          const name =
-            (biz && biz.name) ||
-            (biz && biz.sBiz) ||
-            (biz && biz.businessName) ||
-            (biz && biz.business && biz.business.name) ||
-            "";
-          const logo =
-            (biz && biz.image) ||
-            (biz && biz.logo) ||
-            (biz && biz.logoUrl) ||
-            (biz && biz.business && biz.business.logo) ||
-            null;
-          localStorage.setItem(
-            "selectedBiz",
-            JSON.stringify({ biz: { name: name, ixBiz: code, image: logo } })
-          );
+          const name = getBizDisplayName(biz);
+          const logo = biz?.image ?? biz?.logo ?? biz?.logoUrl ?? biz?.business?.logo ?? null;
+          localStorage.setItem("selectedBiz", JSON.stringify({ biz: { name, ixBiz: code, image: logo } }));
         }
         navigate("/Chatbox", { replace: true });
       })
-      .catch(function () {
-        return setError("Failed to select business");
-      })
-      .finally(function () {
-        return setSelectingId(null);
-      });
+      .catch(() => setError("Failed to select business"))
+      .finally(() => setSelectingId(null));
   };
 
   const handleContinue = function () {

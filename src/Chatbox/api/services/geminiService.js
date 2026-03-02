@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { buildChartFromStockcardApi } from "./chatboxUtils.js";
+import { buildChartFromStockcardApi } from "../../chatboxUtils.js";
 import {
   hasSelectedBiz,
   getWarehouse,

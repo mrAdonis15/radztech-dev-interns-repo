@@ -4,7 +4,7 @@ import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import ChatIcon from "@material-ui/icons/Chat";
 
-import { sendToGemini } from "./geminiService.js";
+import { sendToGemini } from "./api/services/geminiService.js";
 import {
   getInitialMessages,
   getDefaultPanelPosition,
