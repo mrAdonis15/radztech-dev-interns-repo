@@ -1,5 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { buildChartFromStockcardApi } from "./chatboxUtils.js";
+import { buildUrl, request } from "../client/apiClient.js";
+import { endpoints, getAiGeminiUrl, getGeminiApiKey } from "../config/endpoints.js";
+import { getBizIxBiz } from "../selectedBiz.js";
+import { setBiz } from "./businessService.js";
+import { buildChartFromStockcardApi } from "../../chatboxUtils.js";
 import {
   hasSelectedBiz,
   getWarehouse,
@@ -33,11 +37,12 @@ function pickIxProd(productData, productName) {
   return arr[0]?.ixProd ?? arr[0]?.id;
 }
 
-const apiKey = process.env.REACT_APP_GEMINI_API_KEY || "";
+const apiKey = getGeminiApiKey();
+// Primary: gemini-2.5-flash-lite. Fallback (dating model) kapag api/ai/gemini hindi nag-work: gemini-2.5-flash, gemini-2.0-flash.
 const modelNames = [
+  "gemini-2.5-flash-lite",
   "gemini-2.5-flash",
   "gemini-2.0-flash",
-  "gemini-2.5-flash-lite",
 ];
 
 const functions = {
@@ -147,8 +152,76 @@ const tools = [
  * @returns {Promise<string|{ type: 'text', text: string }|{ type: 'chart', data: object, text: string }>}
  */
 export async function sendToGemini(userMessage, messageHistory) {
+  const baseUrl = getAiGeminiUrl() || buildUrl(endpoints.gemini.product);
+  const authToken = typeof localStorage !== "undefined" ? localStorage.getItem("authToken") : null;
+  const headers = { "Content-Type": "application/json" };
+  if (authToken) headers["x-access-tokens"] = authToken;
+
+  
+  const ccode = getBizIxBiz();
+  if (ccode != null && authToken) {
+    try {
+      const setBizRes = await setBiz(authToken, String(ccode));
+      if (setBizRes.status < 200 || setBizRes.status >= 300) {
+        console.warn("[geminiService] set-biz before Gemini failed:", setBizRes.status, setBizRes.data);
+      }
+    } catch (err) {
+      console.warn("[geminiService] set-biz before Gemini failed:", err);
+    }
+  }
+
+  // Call /api/ai/gemini (backend now has biz context if set-biz succeeded).
+  // Payload format that works with api/ai/gemini (matches Postman): { contents: [{ role, parts }] }
+  try {
+    const payload = {
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: userMessage }],
+        },
+      ],
+    };
+    const { status, data } = await request(baseUrl, {
+      method: "POST",
+      headers,
+      body: payload,
+    });
+    if (status >= 200 && status < 300 && data != null) {
+      // Support both simple shapes and Gemini API shape: candidates[0].content.parts[0].text
+      const fromCandidates =
+        data?.candidates?.[0]?.content?.parts?.find((p) => p?.text)?.text;
+      const text =
+        typeof data === "string"
+          ? data
+          : fromCandidates ??
+            data?.text ??
+            data?.reply ??
+            data?.message ??
+            data?.data?.text ??
+            data?.data?.reply;
+      if (text != null && String(text).trim() !== "") {
+        const trimmed = String(text).trim();
+        const isNotConfigured = /not\s+configured/i.test(trimmed);
+        if (isNotConfigured) {
+          console.warn("[geminiService] /api/ai/gemini returned 'not configured' – backend may need setup");
+        } else {
+          return { type: "text", text: trimmed };
+        }
+      }
+    }
+    if (status === 400) {
+      console.warn("[geminiService] /api/ai/gemini 400 Bad Request – check backend expected body (e.g. prompt, message, query). Response:", data);
+    }
+  } catch (err) {
+    console.warn("[geminiService] /api/ai/gemini failed, falling back to Gemini SDK:", err);
+  }
+
+  // Fallback: direct Gemini API (huwag alisin)
   if (!apiKey) {
-    return "Gemini is not configured. Please set REACT_APP_GEMINI_API_KEY in your .env file.";
+    return {
+      type: "text",
+      text: "Not configured.",
+    };
   }
 
   const hasBiz = hasSelectedBiz();

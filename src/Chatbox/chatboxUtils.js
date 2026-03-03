@@ -18,7 +18,7 @@ import {
   getProductById,
   getProductByName,
   getValidProductNames,
-} from "./productService.js";
+} from "./api/services/productService.js";
 
 // --- chatboxUtils (existing) ---
 
