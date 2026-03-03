@@ -1,11 +1,12 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getGeminiApiKey } from "../../Chatbox/api/config/endpoints.js";
 import stockCard from "./stockCard.json";
 import dummyProducts from "./dummyProducts.json";
 import ledger from "./ledger.json";
 import stockCardGraph from "./stockCardGraph.json";
 import { getStockCardData } from "./chartUtils.js";
 
-const apiKey = process.env.REACT_APP_GEMINI_API_KEY || "";
+const apiKey = getGeminiApiKey();
 
 const modelNames = [
   "gemini-2.5-flash",

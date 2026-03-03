@@ -29,7 +29,7 @@ export function getApiBase() {
 
 /**
  * Execute HTTP request. Parses JSON when response Content-Type is application/json.
- * @param {string} url - Full URL (use buildUrl with endpoints for dynamic paths)
+ * @param {string} url 
  * @param {RequestInit & { parseJson?: boolean }} [options] - fetch options; parseJson defaults true for JSON responses
  * @returns {Promise<{ status: number, data?: any, text: string }>}
  */
