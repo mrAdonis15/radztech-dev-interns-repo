@@ -1,8 +1,3 @@
-/**
- * Stockcard API service - fetches stockcard and warehouse data from staging.ulap.biz.
- * Flow: User logs in → select a biz → biz has a separate token for data access.
- * Use the biz token (not authToken) for stockcard, warehouse, and graph calls.
- */
 
 import { request, API_URLS } from "../Request";
 import { getSelectedBiz, getBizToken } from "../selectedBiz";
