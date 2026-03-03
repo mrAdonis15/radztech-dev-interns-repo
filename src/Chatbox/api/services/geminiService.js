@@ -171,10 +171,12 @@ export async function sendToGemini(userMessage, messageHistory) {
   }
 
   // Call /api/ai/gemini (backend now has biz context if set-biz succeeded).
+  // Payload format that works with api/ai/gemini (matches Postman): { contents: [{ role, parts }] }
   try {
     const payload = {
       contents: [
         {
+          role: "user",
           parts: [{ text: userMessage }],
         },
       ],
@@ -185,10 +187,18 @@ export async function sendToGemini(userMessage, messageHistory) {
       body: payload,
     });
     if (status >= 200 && status < 300 && data != null) {
+      // Support both simple shapes and Gemini API shape: candidates[0].content.parts[0].text
+      const fromCandidates =
+        data?.candidates?.[0]?.content?.parts?.find((p) => p?.text)?.text;
       const text =
         typeof data === "string"
           ? data
-          : data?.text ?? data?.reply ?? data?.message ?? data?.data?.text ?? data?.data?.reply;
+          : fromCandidates ??
+            data?.text ??
+            data?.reply ??
+            data?.message ??
+            data?.data?.text ??
+            data?.data?.reply;
       if (text != null && String(text).trim() !== "") {
         const trimmed = String(text).trim();
         const isNotConfigured = /not\s+configured/i.test(trimmed);
