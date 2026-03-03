@@ -1,4 +1,4 @@
-import fallbackData from "./Data/dummyProductsCopy.json";
+import fallbackData from "../../Data/dummyProductsCopy.json";
 import { hasSelectedBiz, getProduct } from "./stockcardService.js";
 
 const PRODUCTS_URL = `${process.env.PUBLIC_URL || ""}/Data/dummyProductsCopy.json`;

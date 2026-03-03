@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, Navigate } from "react-router-dom";
-import LoginToolbar from "../../Login/LoginToolbar";
+import LoginToolbar from "../../Chatbox/Login/LoginToolbar";
 
 const ChatboxLayout = () => {
   const isLoggedIn = !!localStorage.getItem("authToken");

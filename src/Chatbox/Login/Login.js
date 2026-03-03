@@ -44,7 +44,10 @@ export default function Login() {
           "x-access-tokens": existingToken,
           Authorization: getBasicAuthHeader(Username.trim(), Password),
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          username: Username.trim(),
+          password: Password,
+        }),
       });
 
       let data = {};
