@@ -1,7 +1,4 @@
-/**
- * Low-level fetch-based API client.
- * Use services (e.g. businessService) for domain-specific calls.
- */
+
 
 const defaultHeaders = {
   "Content-Type": "application/json",
@@ -28,9 +25,9 @@ export function getApiBase() {
 }
 
 /**
- * Execute HTTP request. Parses JSON when response Content-Type is application/json.
+
  * @param {string} url 
- * @param {RequestInit & { parseJson?: boolean }} [options] - fetch options; parseJson defaults true for JSON responses
+ * @param {RequestInit & { parseJson?: boolean }} [options] 
  * @returns {Promise<{ status: number, data?: any, text: string }>}
  */
 export async function request(url, options = {}) {
@@ -51,7 +48,7 @@ export async function request(url, options = {}) {
     try {
       data = text.trim() ? JSON.parse(text) : null;
     } catch (_) {
-      // leave data as text on parse error
+      
     }
   }
 

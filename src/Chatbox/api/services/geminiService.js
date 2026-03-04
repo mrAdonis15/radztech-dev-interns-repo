@@ -45,6 +45,11 @@ const modelNames = [
   "gemini-2.0-flash",
 ];
 
+/** 
+ * Tools the AI uses to fetch from backend endpoints and show data in chat.
+ * Each tool calls the corresponding API (products, stockcard, warehouse, graph);
+ * when you add new endpoints, add a new function here and a functionDeclaration in tools[].
+ */
 const functions = {
   getStockcardData: async (opts) => {
     const productName = opts?.item || opts?.product || opts?.productName || "";
@@ -58,7 +63,7 @@ const functions = {
         reason: "Please select a business first to view products.",
       };
     }
-    const productData = await getProduct();
+    const productData = await getProduct(); // fetches from /api/lib/prod via stockcardService
     const formatted = formatProductAsText(productData);
     if (!formatted || formatted.trim() === "PRODUCTS:\n" || formatted.includes("- No products")) {
       return {
@@ -107,7 +112,7 @@ const tools = [
       {
         name: "getProducts",
         description:
-          "Fetch the full product list from the products API. Use when the user asks to list products, show all products, what products we have, display products, or similar. Returns a formatted list of all products (name, code, category, price) for the selected business.",
+          "Fetch the product list from /api/lib/prod. Use when the user asks to list products, show products, or asks about a product's cost, price, or how much something is. Returns data including sProd (name), ProdCd (code), cCost (cost), cPrice1–cPrice5 (prices), sCat, unit, etc. Use this data to answer cost/price questions with the actual cCost or cPrice values from the list.",
         parameters: { type: "OBJECT", properties: {}, required: [] },
       },
       {
@@ -147,12 +152,46 @@ const tools = [
 ];
 
 /**
+ * Detect if the user message is asking for product list or product details (cost, price, etc.)
+ * so we fetch from /api/lib/prod before calling AI.
+ */
+function isProductRequest(message) {
+  if (!message || typeof message !== "string") return false;
+  const lower = message.trim().toLowerCase();
+  const productKeywords = [
+    "product", "products", "list products", "show products", "display products",
+    "all products", "what products", "product list", "see products", "get products",
+    "show me products", "list all products", "view products",
+    "cost of", "price of", "how much is", "how much does", "what is the cost", "what is the price",
+    "what's the cost", "what's the price", "product cost", "product price", "cost for", "price for",
+  ];
+  return productKeywords.some((kw) => lower.includes(kw));
+}
+
+/**
+ * Fetch product data from /api/lib/prod and return formatted text for the AI context.
+ * Returns null if not available or no biz selected.
+ */
+async function fetchProductsForAiContext() {
+  if (!hasSelectedBiz()) return null;
+  try {
+    const productData = await getProduct();
+    const formatted = formatProductAsText(productData);
+    if (!formatted || formatted.includes("- No products")) return null;
+    return formatted;
+  } catch (err) {
+    console.warn("[geminiService] fetchProductsForAiContext failed:", err);
+    return null;
+  }
+}
+
+/**
  * @param {string} userMessage
  * @param {Array<{ sender: string, text: string }>} [messageHistory]
  * @returns {Promise<string|{ type: 'text', text: string }|{ type: 'chart', data: object, text: string }>}
  */
 export async function sendToGemini(userMessage, messageHistory) {
-  const baseUrl = getAiGeminiUrl() || buildUrl(endpoints.gemini.product);
+  const baseUrl = getAiGeminiUrl() || buildUrl(endpoints.gemini.chat);
   const authToken = typeof localStorage !== "undefined" ? localStorage.getItem("authToken") : null;
   const headers = { "Content-Type": "application/json" };
   if (authToken) headers["x-access-tokens"] = authToken;
@@ -171,13 +210,29 @@ export async function sendToGemini(userMessage, messageHistory) {
   }
 
   // Call /api/ai/gemini (backend now has biz context if set-biz succeeded).
-  // Payload format that works with api/ai/gemini (matches Postman): { contents: [{ role, parts }] }
+  // When user asks for products: fetch from /api/lib/prod first, then send that data in the request
+  // so the AI can display it in chat. Same pattern can be used for other endpoints later.
   try {
+    let userText = userMessage;
+    if (isProductRequest(userMessage)) {
+      const productsFromApi = await fetchProductsForAiContext();
+      if (productsFromApi) {
+        userText =
+          userMessage +
+          "\n\n[Data fetched from /api/lib/prod for the selected business. Each product includes sProd (name), ProdCd (code), cCost (cost), cPrice1–cPrice5 (prices), sCat, unit, etc. Use this data to answer the user. For cost or price questions, find the product and state the cCost or cPrice value clearly.]\n\n" +
+          productsFromApi +
+          "\n\nPlease use the above product list to answer the user. If they asked about cost or price of a product, give the exact cCost and/or cPrice1 value from the data.";
+      } else {
+        userText +=
+          "\n\n[Note: The product list could not be loaded from /api/lib/prod (e.g. server error or no business selected). " +
+          "Ask the user to try again, ensure a business is selected, or check the connection.]";
+      }
+    }
     const payload = {
       contents: [
         {
           role: "user",
-          parts: [{ text: userMessage }],
+          parts: [{ text: userText }],
         },
       ],
     };
@@ -204,6 +259,7 @@ export async function sendToGemini(userMessage, messageHistory) {
         const isNotConfigured = /not\s+configured/i.test(trimmed);
         if (isNotConfigured) {
           console.warn("[geminiService] /api/ai/gemini returned 'not configured' – backend may need setup");
+          return { type: "text", text: "I don't have data on that, or no data available for that." };
         } else {
           return { type: "text", text: trimmed };
         }
@@ -220,7 +276,7 @@ export async function sendToGemini(userMessage, messageHistory) {
   if (!apiKey) {
     return {
       type: "text",
-      text: "Not configured.",
+      text: "I don't have data on that, or no data available for that.",
     };
   }
 
@@ -229,15 +285,13 @@ export async function sendToGemini(userMessage, messageHistory) {
 
   const systemContext =
     "You are a helpful support assistant for Ulap Biz. " +
-    "Use getProducts when the user asks to list products, show products, what products we have, display all products, or each product—then show the returned list in your reply. " +
-    "Depending on the user's question about stock card: " +
-    "Use getStockcardData when they ask about stock card contents, balance, movements, transactions, or want to discuss the report—then use the returned summary to answer in your own words. " +
-    "Use displayStockcardGraph when they want to see a graph or visualization of stock movement. " +
-    "You can use both in one turn if they want both a discussion and a graph. " +
-    "When there are the same data keyword display both and let the user choose which one to display." +
-    "If there is question about stock card and cannot answer it, save it and learn what it is, then next time you will know it and answer it correctly." +
-    "Avoid False data to prevent AI from hallucinating or data poisoning ." +
-    "Only use data from the API endpoint and do not make up data." +
+    "When the user asks to see products, list products, or display products: use getProducts to fetch from the products API, then show the returned list in your reply. " +
+    "When the user asks about the cost or price of a product (e.g. 'what is the cost of X?', 'how much is X?'): use getProducts to fetch product data, find the product by name (sProd) or code (ProdCd), and answer with the exact cCost (cost) and/or cPrice1 (price) from the data. Always give a direct answer with the number (e.g. 'The cost is ₱X' or 'cPrice1 is ₱X'). " +
+    "When they ask about stock card contents, balance, movements, or transactions: use getStockcardData to fetch from the stockcard report API, then use the returned summary to answer. " +
+    "When they want a graph or visualization of stock movement: use displayStockcardGraph to fetch from the stockcard graph API and show the chart. " +
+    "You can use multiple tools in one turn if the user wants both a discussion and a graph. " +
+    "For any other data or reports that have a corresponding tool, call that tool to fetch from the right endpoint and display the result in chat. " +
+    "Only use data from the API endpoints; do not make up data. " +
     "If the user asks about something that is not related to stock card, answer it in a friendly and helpful way." +
     "If a user asks a comparison, properly compare the data and answer the question in a friendly and helpful way." +
     "If a user asks a suggestion, properly suggest the data and answer the question in a friendly and helpful way." +
