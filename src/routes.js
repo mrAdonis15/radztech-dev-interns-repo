@@ -1,6 +1,6 @@
 import DefaultLayout from "./layouts/DefaultLayout";
 import ChatboxLayout from "./layouts/ChatboxLayout";
-import Login from "./Chatbox/Login/Login";
+import Login from "./Login/Login";
 import BizUI from "./components/bizUI";
 import Ulap from "./components/Ulap/Ulap";
 import DisplayPage from "./components/Kurt/pages/DisplayPage";

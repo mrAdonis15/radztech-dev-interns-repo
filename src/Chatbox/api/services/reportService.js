@@ -39,9 +39,10 @@ export async function fetchStockcardGraph(body) {
   });
 }
 
-export default {
+const reportService = {
   fetchWarehouse,
   fetchProduct,
   fetchStockcard,
   fetchStockcardGraph,
 };
+export default reportService;

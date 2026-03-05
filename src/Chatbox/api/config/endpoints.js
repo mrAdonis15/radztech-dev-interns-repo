@@ -1,4 +1,5 @@
 
+/** Optional override for Gemini API base URL. Set to a non-empty string to use instead of env. */
 export const AI_GEMINI_URL = "";
 
 function path(...segments) {
@@ -18,13 +19,16 @@ export const endpoints = {
   reports: {
     stockcard: path("api", "reports", "inv", "sc"),
     stockcardGraph: path("api", "reports", "inv", "sc", "graph"),
+    fs: path("api", "reports", "fs"),
+    fsTrialBalance: path("api", "reports", "fs", "tb"),
+    fsBalanceSheet: path("api", "report", "fs"),
   },
   inventory: {
     warehouse: path("api", "trans", "get", "wh"),
   },
   library: {
-    /** Products list: /api/lib/prod — AI fetches from here when user asks to see products and displays the result in chat. */
     product: path("api", "lib", "prod"),
+    branches: path("api", "lib", "brch"),
   },
   gemini: {
     chat: path("api", "ai", "gemini"),
@@ -46,7 +50,6 @@ export function getAiGeminiUrl() {
 export function getGeminiApiKey() {
   return (typeof process !== "undefined" && process.env?.REACT_APP_GEMINI_API_KEY) || "";
 }
-
 
 export function getLegacyUrls() {
   const base = process.env.REACT_APP_API_BASE || "";

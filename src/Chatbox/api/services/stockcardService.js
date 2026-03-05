@@ -1,6 +1,10 @@
+import { request, buildUrl } from "../client/apiClient.js";
+import { endpoints } from "../config/endpoints.js";
+import { getSelectedBiz, getBizToken } from "../selectedBiz.js";
 
-import { request, API_URLS } from "../Request";
-import { getSelectedBiz, getBizToken } from "../selectedBiz";
+const inv = endpoints.inventory;
+const lib = endpoints.library;
+const reports = endpoints.reports;
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -49,16 +53,14 @@ export async function fetchWarehouse() {
   }
 
   try {
-    const { status, text } = await request(API_URLS.warehouse, {
+    const url = buildUrl(inv.warehouse);
+    const { status, data } = await request(url, {
       method: "GET",
       headers: getDataAccessHeaders(),
     });
-    if (status !== 200 || !text?.trim()) {
-      console.warn("[stockcardService] fetchWarehouse failed:", status, text?.slice(0, 200));
-      return null;
-    }
-    const data = JSON.parse(text);
-    return data;
+    if (status >= 200 && status < 300 && data != null) return data;
+    if (status !== 200) console.warn("[stockcardService] fetchWarehouse failed:", status);
+    return null;
   } catch (err) {
     console.error("[stockcardService] fetchWarehouse error:", err);
     return null;
@@ -87,17 +89,15 @@ export async function fetchProduct() {
   }
 
   try {
-    const { status, text } = await request(API_URLS.product, {
+    const url = buildUrl(lib.product);
+    const { status, data } = await request(url, {
       method: "POST",
       headers: getDataAccessHeaders(),
-      body: JSON.stringify({ prod_cat_filter: [] }),
+      body: { prod_cat_filter: [] },
     });
-    if (status !== 200 || !text?.trim()) {
-      console.warn("[stockcardService] fetchProduct failed:", status, text?.slice(0, 200));
-      return null;
-    }
-    const data = JSON.parse(text);
-    return data;
+    if (status >= 200 && status < 300 && data != null) return data;
+    if (status !== 200) console.warn("[stockcardService] fetchProduct failed:", status);
+    return null;
   } catch (err) {
     console.error("[stockcardService] fetchProduct error:", err);
     return null;
@@ -156,17 +156,15 @@ export async function fetchStockcardOverview(params = {}) {
   }
 
   try {
-    const { status, text } = await request(API_URLS.stockcard, {
+    const url = buildUrl(reports.stockcard);
+    const { status, data } = await request(url, {
       method: "POST",
       headers: getDataAccessHeaders(),
-      body: JSON.stringify(body),
+      body: body,
     });
-    if (status !== 200 || !text?.trim()) {
-      console.warn("[stockcardService] fetchStockcardOverview failed:", status, text?.slice(0, 200));
-      return null;
-    }
-    const data = JSON.parse(text);
-    return data;
+    if (status >= 200 && status < 300 && data != null) return data;
+    if (status !== 200) console.warn("[stockcardService] fetchStockcardOverview failed:", status);
+    return null;
   } catch (err) {
     console.error("[stockcardService] fetchStockcardOverview error:", err);
     return null;
@@ -206,20 +204,16 @@ export async function fetchStockcardGraph(params = {}) {
     return null;
   }
 
-  console.debug("[stockcardService] fetchStockcardGraph:", API_URLS.stockcardGraph, body);
-
   try {
-    const { status, text } = await request(API_URLS.stockcardGraph, {
+    const url = buildUrl(reports.stockcardGraph);
+    const { status, data } = await request(url, {
       method: "POST",
       headers: getDataAccessHeaders(),
-      body: JSON.stringify(body),
+      body: body,
     });
-    if (status !== 200 || !text?.trim()) {
-      console.warn("[stockcardService] fetchStockcardGraph failed:", status, text?.slice(0, 200));
-      return null;
-    }
-    const data = JSON.parse(text);
-    return data;
+    if (status >= 200 && status < 300 && data != null) return data;
+    if (status !== 200) console.warn("[stockcardService] fetchStockcardGraph failed:", status);
+    return null;
   } catch (err) {
     console.error("[stockcardService] fetchStockcardGraph error:", err);
     return null;
