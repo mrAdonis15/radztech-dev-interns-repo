@@ -1,6 +1,5 @@
 /**
  * AI gateway: thin client for /api/ai/gemini only. No domain calls, no normalization.
- * Dependency: transport (apiClient + endpoints) only.
  */
 
 import { buildUrl, request } from "../client/apiClient.js";
