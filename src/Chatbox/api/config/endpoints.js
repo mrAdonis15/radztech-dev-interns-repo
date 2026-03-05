@@ -1,10 +1,5 @@
-/**
- * API endpoint path templates by domain.
- * Paths are path-only (no BASE); buildUrl in apiClient prepends REACT_APP_API_BASE.
- * Use :paramName for dynamic segments; substitute via buildUrl(path, { paramName: value }).
- */
 
-/** Edit this to use your own AI Gemini endpoint. Example: "https://your-api.com/ai/gemini". Leave empty to use REACT_APP_API_BASE + /api/ai/gemini. */
+/** Optional override for Gemini API base URL. Set to a non-empty string to use instead of env. */
 export const AI_GEMINI_URL = "";
 
 function path(...segments) {
@@ -24,22 +19,23 @@ export const endpoints = {
   reports: {
     stockcard: path("api", "reports", "inv", "sc"),
     stockcardGraph: path("api", "reports", "inv", "sc", "graph"),
+    fs: path("api", "reports", "fs"),
+    fsTrialBalance: path("api", "reports", "fs", "tb"),
+    fsBalanceSheet: path("api", "report", "fs"),
   },
   inventory: {
     warehouse: path("api", "trans", "get", "wh"),
   },
   library: {
     product: path("api", "lib", "prod"),
+    branches: path("api", "lib", "brch"),
   },
   gemini: {
-    product: path("api", "ai", "gemini"),
+    chat: path("api", "ai", "gemini"),
   },
 };
 
-/**
- * Full URL for the AI Gemini endpoint.
- * Uses AI_GEMINI_URL (edit above) first, then REACT_APP_AI_GEMINI_URL, else null so caller uses buildUrl(gemini.product).
- */
+
 export function getAiGeminiUrl() {
   const fromConstant =
     typeof AI_GEMINI_URL === "string" && AI_GEMINI_URL.trim() !== "" ? AI_GEMINI_URL.trim() : "";
@@ -51,14 +47,10 @@ export function getAiGeminiUrl() {
   return fromEnv || null;
 }
 
-/**
- * Gemini API key for SDK usage (e.g. Google Generative AI). Uses REACT_APP_GEMINI_API_KEY from env.
- */
 export function getGeminiApiKey() {
   return (typeof process !== "undefined" && process.env?.REACT_APP_GEMINI_API_KEY) || "";
 }
 
-/** Flattened map for legacy API_URLS compatibility */
 export function getLegacyUrls() {
   const base = process.env.REACT_APP_API_BASE || "";
   const flat = {

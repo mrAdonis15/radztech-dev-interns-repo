@@ -4,7 +4,7 @@ import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import ChatIcon from "@material-ui/icons/Chat";
 
-import { sendToGemini } from "./api/services/geminiService.js";
+import { sendMessage } from "./api/chatService/chatFlow.js";
 import {
   getInitialMessages,
   getDefaultPanelPosition,
@@ -167,10 +167,10 @@ export default function Chatbox({ defaultOpen = false }) {
 
     const messageForAi = text || "Hello";
 
-    sendToGemini(messageForAi, messages)
+    sendMessage(messageForAi, messages)
       .then((reply) => {
-        const isChart = reply && typeof reply === "object" && reply.type === "chart";
-        const text = typeof reply === "string" ? reply : (reply?.text ?? "");
+        const isChart = reply && reply.type === "chart";
+        const text = reply?.text ?? "";
         if (isChart) setIsExpanded(true);
         setMessages((prev) =>
           prev.map((msg) =>
