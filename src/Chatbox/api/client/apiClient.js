@@ -7,9 +7,9 @@ const defaultHeaders = {
 /**
  * Build full URL from path template and params.
  * Template uses :paramName (e.g. "/api/set-biz/:ccode" with { ccode: "x" } -> "/api/set-biz/x").
- * @param {string} pathTemplate - Path with optional :param segments
- * @param {Record<string, string|number>} [params] - Values to substitute
- * @returns {string} Full URL (base + path with params replaced)
+ * @param {string} pathTemplate 
+ * @param {Record<string, string|number>} [params] 
+ * @returns {string}
  */
 export function buildUrl(pathTemplate, params = {}) {
   const base = getApiBase();
