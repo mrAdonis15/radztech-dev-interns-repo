@@ -6,7 +6,7 @@ import Grid from "@material-ui/core/Grid";
 import Button from "@material-ui/core/Button";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import { businessService } from "../../Chatbox/api";
-import LoginToolbar from "../../Chatbox/Login/LoginToolbar";
+import LoginToolbar from "../../Login/LoginToolbar";
 import BizCard from "./BizCard";
 import "./BizUI.css";
 

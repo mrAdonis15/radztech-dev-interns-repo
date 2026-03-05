@@ -1,6 +1,10 @@
+import { request, buildUrl } from "../client/apiClient.js";
+import { endpoints } from "../config/endpoints.js";
+import { getSelectedBiz, getBizToken } from "../selectedBiz.js";
 
-import { request, API_URLS } from "../Request";
-import { getSelectedBiz, getBizToken } from "../selectedBiz";
+const inv = endpoints.inventory;
+const lib = endpoints.library;
+const reports = endpoints.reports;
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -11,17 +15,17 @@ let warehouseCacheTime = 0;
 let productCache = null;
 let productCacheTime = 0;
 
-/**
- * Headers for data-access APIs (stockcard, products, warehouse, graph).
- * Only use the token of the selected biz (x-access-tokens) - no authToken fallback.
- */
+
 function getDataAccessHeaders() {
   const token = getBizToken();
+  const authToken =
+    typeof localStorage !== "undefined" ? localStorage.getItem("authToken") : null;
+  const effectiveToken = token || authToken;
   const headers = { "Content-Type": "application/json" };
-  if (token) {
-    headers["x-access-tokens"] = token;
+  if (effectiveToken) {
+    headers["x-access-tokens"] = effectiveToken;
   } else {
-    console.warn("[stockcardService] No biz token in selectedBiz - data APIs will return 401");
+    console.warn("[stockcardService] No biz or auth token - data APIs may return 401/500");
   }
   return headers;
 }
@@ -41,10 +45,7 @@ export function hasSelectedBiz() {
   return result;
 }
 
-/**
- * Fetch warehouse list from /api/trans/get/wh
- * Requires biz token for data access.
- */
+
 export async function fetchWarehouse() {
   if (!hasSelectedBiz()) {
     console.debug("[stockcardService] fetchWarehouse skipped: no biz selected");
@@ -52,25 +53,21 @@ export async function fetchWarehouse() {
   }
 
   try {
-    const { status, text } = await request(API_URLS.warehouse, {
+    const url = buildUrl(inv.warehouse);
+    const { status, data } = await request(url, {
       method: "GET",
       headers: getDataAccessHeaders(),
     });
-    if (status !== 200 || !text?.trim()) {
-      console.warn("[stockcardService] fetchWarehouse failed:", status, text?.slice(0, 200));
-      return null;
-    }
-    const data = JSON.parse(text);
-    return data;
+    if (status >= 200 && status < 300 && data != null) return data;
+    if (status !== 200) console.warn("[stockcardService] fetchWarehouse failed:", status);
+    return null;
   } catch (err) {
     console.error("[stockcardService] fetchWarehouse error:", err);
     return null;
   }
 }
 
-/**
- * Get warehouse list with short cache
- */
+
 export async function getWarehouse() {
   const now = Date.now();
   if (warehouseCache && now - warehouseCacheTime < CACHE_TTL_MS) {
@@ -84,10 +81,7 @@ export async function getWarehouse() {
   return data;
 }
 
-/**
- * Fetch product list from /api/lib/prod
- * Flow: warehouse -> product -> stockcard -> graph
- */
+
 export async function fetchProduct() {
   if (!hasSelectedBiz()) {
     console.debug("[stockcardService] fetchProduct skipped: no biz selected");
@@ -95,17 +89,15 @@ export async function fetchProduct() {
   }
 
   try {
-    const { status, text } = await request(API_URLS.product, {
+    const url = buildUrl(lib.product);
+    const { status, data } = await request(url, {
       method: "POST",
       headers: getDataAccessHeaders(),
-      body: JSON.stringify({ prod_cat_filter: [] }),
+      body: { prod_cat_filter: [] },
     });
-    if (status !== 200 || !text?.trim()) {
-      console.warn("[stockcardService] fetchProduct failed:", status, text?.slice(0, 200));
-      return null;
-    }
-    const data = JSON.parse(text);
-    return data;
+    if (status >= 200 && status < 300 && data != null) return data;
+    if (status !== 200) console.warn("[stockcardService] fetchProduct failed:", status);
+    return null;
   } catch (err) {
     console.error("[stockcardService] fetchProduct error:", err);
     return null;
@@ -164,17 +156,15 @@ export async function fetchStockcardOverview(params = {}) {
   }
 
   try {
-    const { status, text } = await request(API_URLS.stockcard, {
+    const url = buildUrl(reports.stockcard);
+    const { status, data } = await request(url, {
       method: "POST",
       headers: getDataAccessHeaders(),
-      body: JSON.stringify(body),
+      body: body,
     });
-    if (status !== 200 || !text?.trim()) {
-      console.warn("[stockcardService] fetchStockcardOverview failed:", status, text?.slice(0, 200));
-      return null;
-    }
-    const data = JSON.parse(text);
-    return data;
+    if (status >= 200 && status < 300 && data != null) return data;
+    if (status !== 200) console.warn("[stockcardService] fetchStockcardOverview failed:", status);
+    return null;
   } catch (err) {
     console.error("[stockcardService] fetchStockcardOverview error:", err);
     return null;
@@ -214,20 +204,16 @@ export async function fetchStockcardGraph(params = {}) {
     return null;
   }
 
-  console.debug("[stockcardService] fetchStockcardGraph:", API_URLS.stockcardGraph, body);
-
   try {
-    const { status, text } = await request(API_URLS.stockcardGraph, {
+    const url = buildUrl(reports.stockcardGraph);
+    const { status, data } = await request(url, {
       method: "POST",
       headers: getDataAccessHeaders(),
-      body: JSON.stringify(body),
+      body: body,
     });
-    if (status !== 200 || !text?.trim()) {
-      console.warn("[stockcardService] fetchStockcardGraph failed:", status, text?.slice(0, 200));
-      return null;
-    }
-    const data = JSON.parse(text);
-    return data;
+    if (status >= 200 && status < 300 && data != null) return data;
+    if (status !== 200) console.warn("[stockcardService] fetchStockcardGraph failed:", status);
+    return null;
   } catch (err) {
     console.error("[stockcardService] fetchStockcardGraph error:", err);
     return null;
@@ -288,7 +274,8 @@ export function formatWarehouseAsText(warehouseData) {
 
 /**
  * Format product API data as text for AI context.
- * Expected structure: { count, flds, items: Array<{ sProd, ProdCd, ixProd, sCat, sCatSub, cPrice1, ... }>, prod_cat_filter }
+ * Uses product schema: ProdCd, sProd, sCat, sCatSub, unit, cPrice1-5, cCost, ixProd, etc.
+ * @param {{ count?: number, items?: Array, data?: Array, products?: Array }} productData
  */
 export function formatProductAsText(productData) {
   if (!productData) return "";
@@ -299,11 +286,42 @@ export function formatProductAsText(productData) {
     return text + "- No products\n";
   }
   arr.forEach((p, idx) => {
-    const name = p?.sProd ?? p?.name ?? p?.product ?? p?.label ?? `Product ${idx + 1}`;
-    const code = p?.ProdCd ?? p?.productCode ?? p?.code ?? "";
-    const cat = p?.sCat ?? p?.category ?? "";
-    const price = p?.cPrice1 != null ? ` ₱${Number(p.cPrice1).toLocaleString()}` : "";
-    text += `  - ${name}${code ? ` (Code: ${code})` : ""}${cat ? ` [${cat}]` : ""}${price}\n`;
+    const ProdCd = p?.ProdCd ?? p?.productCode ?? p?.code ?? "";
+    const sProd = (p?.sProd ?? p?.name ?? p?.product ?? p?.label ?? `Product ${idx + 1}`).trim();
+    const sCat = p?.sCat ?? p?.sProdCat ?? p?.category ?? "";
+    const sCatSub = p?.sCatSub ?? "";
+    const unit = p?.unit ?? "";
+    const cPrice1 = p?.cPrice1 != null ? Number(p.cPrice1) : null;
+    const cPrice2 = p?.cPrice2 != null ? Number(p.cPrice2) : null;
+    const cPrice3 = p?.cPrice3 != null ? Number(p.cPrice3) : null;
+    const cPrice4 = p?.cPrice4 != null ? Number(p.cPrice4) : null;
+    const cPrice5 = p?.cPrice5 != null ? Number(p.cPrice5) : null;
+    const cCost = p?.cCost != null ? Number(p.cCost) : null;
+    const ixProd = p?.ixProd ?? p?.id ?? "";
+    const sProdSubLink1 = p?.sProdSubLink1 ?? "";
+    const sProdSubLink2 = p?.sProdSubLink2 ?? "";
+    const prodStatus = p?.prodStatus;
+    const qtyCS = p?.qtyCS != null ? Number(p.qtyCS) : null;
+    const qtySC = p?.qtySC != null ? Number(p.qtySC) : null;
+
+    text += `  [${idx + 1}] sProd: "${sProd}"`;
+    if (ProdCd) text += ` | ProdCd: ${ProdCd}`;
+    if (ixProd) text += ` | ixProd: ${ixProd}`;
+    if (sCat) text += ` | sCat: ${sCat}`;
+    if (sCatSub) text += ` | sCatSub: ${sCatSub}`;
+    if (unit) text += ` | unit: ${unit}`;
+    if (cPrice1 != null && cPrice1 !== 0) text += ` | cPrice1: ₱${cPrice1.toLocaleString()}`;
+    if (cPrice2 != null && cPrice2 !== 0) text += ` | cPrice2: ₱${cPrice2.toLocaleString()}`;
+    if (cPrice3 != null && cPrice3 !== 0) text += ` | cPrice3: ₱${cPrice3.toLocaleString()}`;
+    if (cPrice4 != null && cPrice4 !== 0) text += ` | cPrice4: ₱${cPrice4.toLocaleString()}`;
+    if (cPrice5 != null && cPrice5 !== 0) text += ` | cPrice5: ₱${cPrice5.toLocaleString()}`;
+    if (cCost != null) text += ` | cCost: ₱${cCost.toLocaleString()}`;
+    if (sProdSubLink1) text += ` | sProdSubLink1: ${sProdSubLink1}`;
+    if (sProdSubLink2) text += ` | sProdSubLink2: ${sProdSubLink2}`;
+    if (prodStatus != null) text += ` | prodStatus: ${prodStatus}`;
+    if (qtyCS != null) text += ` | qtyCS: ${qtyCS}`;
+    if (qtySC != null) text += ` | qtySC: ${qtySC}`;
+    text += "\n";
   });
   return text;
 }

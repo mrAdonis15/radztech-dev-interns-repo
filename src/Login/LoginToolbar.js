@@ -4,7 +4,7 @@ import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Button from "@material-ui/core/Button";
 import ExitToAppIcon from "@material-ui/icons/ExitToApp";
-import { request, API_URLS } from "../api/Request";
+import { request, API_URLS } from "../Chatbox/api/Request";
 import "./LoginToolbar.css";
 
 class LoginToolbar extends Component {
