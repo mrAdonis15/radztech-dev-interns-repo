@@ -9,7 +9,9 @@ import { sendToGemini } from "./geminiService.js";
 const FALLBACK_MESSAGE = "Sorry, something went wrong. Please try again.";
 
 function getAuthToken() {
-  return typeof localStorage !== "undefined" ? localStorage.getItem("authToken") : null;
+  return typeof localStorage !== "undefined"
+    ? localStorage.getItem("authToken")
+    : null;
 }
 
 /**
@@ -29,7 +31,7 @@ export async function sendMessage(userMessage, messageHistory = []) {
   }
 
   try {
-    const result = await sendToGemini(userMessage);
+    const result = await sendToGemini(userMessage, messageHistory);
     if (result && (result.text != null || result.type != null)) {
       return {
         type: result.type || "text",

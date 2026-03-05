@@ -6,218 +6,8 @@ const BASE_URL = "http://localhost:3000/api";
 const FALL_BACK_MSG =
   "Sorry, I'm having trouble processing your request. Please try again.";
 
-let currentEndpoints = {};
-
-function getEndpoint(id) {
-  const endpoint = currentEndpoints.find((e) => e.id === id);
-
-  console.log("selected-endpoint", endpoint);
-
-  if (typeof endpoint.keyword === "string") {
-    endpoint.keyword = JSON.parse(endpoint.keyword);
-  }
-
-  if (typeof endpoint.parameters === "string") {
-    endpoint.parameters = JSON.parse(endpoint.parameters);
-  }
-
-  return endpoint;
-}
-
-// TOOLS
-const functions = {
-  fetchEndpoints: async () => {
-    currentEndpoints = {};
-    const token = getBizToken();
-
-    const headers = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "x-access-tokens": token,
-    };
-
-    const payload = { keys: "ChatAI_Endpoint" };
-    try {
-      const url = `${BASE_URL}/setup/biz/kvs/items`;
-
-      const response = await axios.post(
-        url,
-        {
-          payload,
-        },
-        {
-          headers,
-        },
-      );
-
-      const endpoints = response.data[1].value;
-      currentEndpoints = endpoints;
-
-      // console.log("endpoints", endpoints);
-
-      if (response.data.length === 0) {
-        return {
-          type: "text",
-          text: "Sorry, I currently don't have access to the access to the data.",
-        };
-      }
-
-      return {
-        status: "success",
-        data: endpoints,
-      };
-    } catch (err) {
-      return {
-        status: "error",
-        message: err.response?.data || err.message,
-      };
-    }
-  },
-
-  callEndpoint: async (args) => {
-    const endpoint = getEndpoint(args.id);
-
-    console.log("formatted-endpoint", endpoint);
-
-    if (!endpoint) {
-      return { status: "error", message: "Endpoint not found" };
-    }
-
-    const method = endpoint.method?.toUpperCase();
-
-    const requiredParams = endpoint.parameters || [];
-
-    const finalParams = {
-      ...(args.parameters || {}),
-    };
-
-    const missing = requiredParams.filter((p) => !(p in finalParams));
-
-    if (missing.length > 0) {
-      return {
-        status: "missing_params",
-        requiredParams: missing,
-      };
-    }
-
-    const token = getBizToken();
-
-    const headers = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "x-access-tokens": token,
-    };
-
-    try {
-      const fullUrl = `${BASE_URL}${endpoint.endpoints}`;
-      let response;
-
-      if (method === "GET") {
-        response = await axios.get(fullUrl, {
-          headers,
-          params: finalParams,
-        });
-      } else if (method === "POST") {
-        response = await axios.post(fullUrl, finalParams, {
-          headers,
-        });
-      } else if (method === "PUT") {
-        response = await axios.put(fullUrl, finalParams, {
-          headers,
-        });
-      } else {
-        throw new Error("Unsupported method");
-      }
-
-      console.log("http-response", response.data);
-
-      return {
-        status: "success",
-        data: response.data,
-      };
-    } catch (err) {
-      return {
-        status: "error",
-        message: err.response?.data || err.message,
-      };
-    }
-  },
-
-  getDateRange: (args) => {
-    const pad = (n) => (n ?? 0).toString().padStart(2, "0");
-
-    const formatPH = (year, month, day, hour = 0, min = 0, sec = 0) =>
-      `${year}-${pad(month)}-${pad(day)}T${pad(hour)}:${pad(min)}:${pad(sec)}+08:00`;
-
-    const parseDate = (dateStr) => {
-      if (!dateStr) return {};
-
-      const [month, day, year] = dateStr.split("-").map(Number);
-
-      return { year, month, day };
-    };
-
-    const start = parseDate(args?.startDate);
-    const end = parseDate(args?.endDate);
-
-    const dt1 = formatPH(start.year, start.month, start.day);
-    const dt2 = formatPH(end.year, end.month, end.day);
-
-    return { dt1, dt2 };
-  },
-};
-
-const tools = [
-  {
-    functionDeclarations: [
-      {
-        name: "fetchEndpoints",
-        description:
-          "Return all available endpoints including description, keywords and required parameters.",
-        parameters: {
-          type: "object",
-          properties: {},
-        },
-      },
-      {
-        name: "callEndpoint",
-        description:
-          "Execute a selected endpoint using its URL and required parameters.",
-        parameters: {
-          type: "object",
-          properties: {
-            url: { type: "string" },
-            params: { type: "object" },
-          },
-          required: ["url", "params"],
-        },
-      },
-      {
-        name: "getDateRange",
-        description:
-          "Use this to format the required dt1 and dt2 parameters on reports.",
-        parameters: {
-          type: "object",
-        },
-      },
-      {
-        name: "search_product",
-        description: "Use this to search for specific products.",
-        parameters: {
-          type: "object",
-          properties: {
-            q: { type: "string" },
-          },
-          required: ["q"],
-        },
-      },
-    ],
-  },
-];
-
-//  MAIN FUNCTION
-export async function sendToGemini(userMessage) {
-  const token = localStorage.getItem("authToken");
+function getHeaders() {
+  const token = getBizToken();
 
   const headers = {
     "Content-Type": "application/json",
@@ -225,87 +15,230 @@ export async function sendToGemini(userMessage) {
     "x-access-tokens": token,
   };
 
-  let payload = {
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: userMessage }],
-      },
-    ],
-    tools,
+  return headers;
+}
+
+function checkItems(data) {
+  if (data.length > 10) {
+    return {
+      status: "error",
+      error: "too many exist",
+      data: data.slice(0, 10),
+    };
+  }
+  if (data.length > 1) {
+    return {
+      status: "success",
+      error: "multiple_exist",
+      data: data,
+    };
+  }
+
+  if (data.length === 0) {
+    return {
+      status: "error",
+      error: "not_found",
+      text: "Sorry, I couldn't find the item,",
+    };
+  }
+  return {
+    status: "success",
+    data: data,
   };
+}
 
-  let messages = [...payload.contents];
+// TOOLS
+const functions = {
+  search_prod: async (args) => {
+    console.log(args.q);
+    const headers = getHeaders();
 
-  try {
-    let finalData = {};
+    try {
+      const url = `${BASE_URL}/lib/prod`;
 
-    let response = await axios.post(
-      `${BASE_URL}/ai/gemini`,
-      { contents: messages, tools },
-      { headers },
-    );
+      const response = await axios.post(url, args, {
+        headers,
+      });
+      const items = response.data.items || {};
 
-    while (true) {
-      const candidate = response.data.candidates?.[0];
-      if (!candidate) {
-        console.log("no candidate break");
-        break;
-      }
+      const products = checkItems(items);
 
-      const parts = candidate.content?.parts || [];
+      console.log(products);
 
-      const functionCall = parts.find((p) => p.functionCall);
+      return products;
+    } catch (err) {
+      return {
+        status: "error",
+        message: err.response?.data || err.message,
+      };
+    }
+  },
+  get_prod_bal: async (args) => {
+    console.log(args);
+    const headers = getHeaders();
 
-      if (!functionCall) {
-        console.log("no functionCall break");
-        break;
-      }
+    try {
+      const url = `${BASE_URL}/trans/search/prod/inv-bal`;
 
-      const { name, args } = functionCall.functionCall;
-
-      if (!functions[name]) {
-        throw new Error(`Function ${name} not defined`);
-      }
-
-      messages.push({
-        role: "model",
-        parts: parts,
+      const response = await axios.get(url, {
+        headers: headers,
+        params: args,
       });
 
+      const bal = response.data;
+
+      return bal;
+    } catch (err) {
+      return {
+        status: "error",
+        message: err.response?.data || err.message,
+      };
+    }
+  },
+};
+
+const tools = [
+  {
+    functionDeclarations: [
+      {
+        name: "search_prod",
+        description: "Use this to search for specific products.",
+        parameters: {
+          type: "object",
+          properties: {
+            q: {
+              type: "string",
+              description: "The name or category of the product",
+            },
+          },
+          required: ["q"],
+        },
+      },
+      {
+        name: "get_prod_bal",
+        description:
+          "Get the balance of a certain product. Only use this if the user specifically needs the balance of a certain product.",
+        parameters: {
+          type: "object",
+          properties: {
+            ixProd: {
+              type: "integer",
+              description: "The id of the product",
+            },
+            ixWH: {
+              type: "integer",
+              description: "Use 4282 as ixWH",
+            },
+          },
+          required: ["ixProd"],
+        },
+      },
+    ],
+  },
+];
+
+//  MAIN FUNCTION
+export async function sendToGemini(userMessage, messageHistory = []) {
+  const token = localStorage.getItem("authToken");
+  const headers = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    "x-access-tokens": token,
+  };
+
+  if (!token) {
+    return { type: "text", text: "Sorry, I'm not configured properly." };
+  }
+
+  const isChart = /graph|chart|plot|visual/i.test(userMessage);
+
+  // Initialize the conversation
+  const messages = [
+    ...messageHistory.slice(-10).map((m) => ({
+      role: m.sender === "me" ? "user" : "assistant",
+      parts: [{ text: m.text }],
+    })),
+    { role: "user", parts: [{ text: userMessage }] },
+  ];
+
+  let finalData = {};
+
+  try {
+    let geminiResponse;
+
+    while (true) {
+      // Send current conversation to Gemini
+      const payload = { contents: messages, tools };
+      const response = await axios.post(`${BASE_URL}/ai/gemini`, payload, {
+        headers,
+      });
+      geminiResponse = response.data;
+
+      const candidates = geminiResponse.candidates;
+      // if (!candidates) break;
+
+      // Check for functionCall
+      const functionCallPart =
+        geminiResponse?.candidates?.[0]?.content?.parts?.find(
+          (p) => p.functionCall,
+        );
+
+      if (!functionCallPart) break; // no more tools to call
+
+      const { name, args } = functionCallPart.functionCall;
+
+      if (!functions[name]) throw new Error(`Function ${name} not defined`);
+
+      // Execute tool locally
       const result = await functions[name](args || {});
       finalData = result;
 
-      messages.push({
-        role: "tool",
-        parts: [
-          {
-            functionResponse: {
-              name,
-              response: result,
-            },
-          },
-        ],
-      });
+      // Append the tool result as assistant message
+      console.log(result.error || "");
 
-      response = await axios.post(
-        `${BASE_URL}/ai/gemini`,
-        { contents: messages, tools },
-        { headers },
-      );
+      if (result.status === "error" || typeof result === "string") {
+        messages.push({
+          role: "model",
+          parts: [
+            {
+              text:
+                result.status === "error"
+                  ? result.text
+                  : JSON.stringify(result),
+            },
+          ],
+        });
+      } else {
+        messages.push({
+          role: "tool",
+          parts: [
+            {
+              functionResponse: {
+                name,
+                response: result,
+              },
+            },
+          ],
+        });
+      }
     }
 
+    // Build final response text
     const finalText =
-      response.data.candidates?.[0]?.content?.parts
+      geminiResponse?.candidates?.[0]?.content?.parts
         ?.map((p) => p.text)
         ?.join("") || FALL_BACK_MSG;
 
+    if (isChart) {
+      return { type: "chart", data: finalData, text: finalText };
+    }
+
+    return { type: "text", text: finalText };
+  } catch (err) {
+    console.error("Gemini error:", err);
     return {
       type: "text",
-      text: finalText,
-      data: finalData,
+      text: "Sorry, I'm having trouble processing your request.",
     };
-  } catch (err) {
-    console.error(err);
   }
 }
