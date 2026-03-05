@@ -4,7 +4,7 @@ import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Button from "@material-ui/core/Button";
 import ExitToAppIcon from "@material-ui/icons/ExitToApp";
-import { request, API_URLS } from "../api/Request";
+import { request, API_URLS } from "../Chatbox/api/Request";
 import "./LoginToolbar.css";
 
 class LoginToolbar extends Component {
@@ -33,7 +33,25 @@ class LoginToolbar extends Component {
         })
         .then((data) => {
           if (data != null && typeof data === "object") {
-            localStorage.setItem("selectedBiz", JSON.stringify(data));
+            const existing = (() => {
+              try {
+                const raw = localStorage.getItem("selectedBiz");
+                return raw ? JSON.parse(raw) : null;
+              } catch {
+                return null;
+              }
+            })();
+            const existingToken =
+              existing?.token ?? existing?.biz?.token ?? existing?.dataAccessToken ?? existing?.biz?.dataAccessToken;
+            const toStore = { ...data };
+            const biz = toStore.biz ?? toStore;
+            if (typeof biz === "object" && !biz.token && existingToken) {
+              biz.token = existingToken;
+            }
+            if (!toStore.token && existingToken) {
+              toStore.token = existingToken;
+            }
+            localStorage.setItem("selectedBiz", JSON.stringify(toStore));
           }
         })
         .catch(() => {});
@@ -75,7 +93,7 @@ class LoginToolbar extends Component {
     const { loggingOut } = this.state;
 
     return (
-      <AppBar position="static" className="login-toolbar-appbar">
+      <AppBar position="fixed" className="login-toolbar-appbar">
         <Toolbar className="login-toolbar" disableGutters>
           <div className="login-toolbar-logo">
             <img src="/favicon.ico" alt="UlapBiz" className="login-toolbar-icon" />
