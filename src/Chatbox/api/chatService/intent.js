@@ -1,6 +1,4 @@
-/**
- *  classify user message for context loading.
- */
+
 
 const PRODUCT_KEYWORDS = [
   "product",
@@ -50,13 +48,6 @@ const WAREHOUSE_KEYWORDS = [
 const FINANCIAL_KEYWORDS = [
   "trial balance",
   "trialbalance",
-  "income statement",
-  "balance sheet",
-  "financial report",
-  "financial statement",
-  "financial statements",
-  "fs report",
-  "reports/fs",
   "give me a trial balance",
   "show trial balance",
   "get trial balance",
