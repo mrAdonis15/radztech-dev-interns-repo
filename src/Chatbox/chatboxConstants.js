@@ -21,5 +21,5 @@ export function getDefaultPanelPosition() {
   return {
     x: window.innerWidth - PANEL_WIDTH - PANEL_PADDING,
     y: window.innerHeight - PANEL_HEIGHT - DEFAULT_BOTTOM,
-  };
+  };t
 }

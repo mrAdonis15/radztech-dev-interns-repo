@@ -239,11 +239,10 @@ export async function sendToGemini(userMessage) {
 
   try {
     let finalData = {};
-    let max_loops = 2;
 
     let response = await axios.post(
       `${BASE_URL}/ai/gemini`,
-      { contents: messages },
+      { contents: messages, tools },
       { headers },
     );
 
@@ -291,7 +290,7 @@ export async function sendToGemini(userMessage) {
 
       response = await axios.post(
         `${BASE_URL}/ai/gemini`,
-        { contents: messages },
+        { contents: messages, tools },
         { headers },
       );
     }

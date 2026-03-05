@@ -1,6 +1,6 @@
-/**
- * fetch /api/lib/prod and format for context. 
- */
+
+ // fetch /api/lib/prod and format for context. 
+ 
 
 import { request, buildUrl } from "../client/apiClient.js";
 import { endpoints } from "../config/endpoints.js";

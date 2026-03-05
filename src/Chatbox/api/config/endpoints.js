@@ -28,7 +28,6 @@ export const endpoints = {
   },
   library: {
     product: path("api", "lib", "prod"),
-    branches: path("api", "lib", "brch"),
   },
   gemini: {
     chat: path("api", "ai", "gemini"),
