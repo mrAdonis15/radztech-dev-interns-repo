@@ -1,6 +1,5 @@
 /**
  * @deprecated Import from "./index" instead.
- * Re-exports for backward compatibility.
  */
 
 export {
@@ -12,5 +11,4 @@ export {
   getLegacyUrls,
   authService,
   businessService,
-  reportService,
 } from "./index";

@@ -16,20 +16,6 @@ export const endpoints = {
     setBiz: path("api", "set-biz", ":ccode"),
     businesses: path("api", "businesses"),
   },
-  reports: {
-    stockcard: path("api", "reports", "inv", "sc"),
-    stockcardGraph: path("api", "reports", "inv", "sc", "graph"),
-    fs: path("api", "reports", "fs"),
-    fsTrialBalance: path("api", "reports", "fs", "tb"),
-    fsBalanceSheet: path("api", "report", "fs"),
-  },
-  inventory: {
-    warehouse: path("api", "trans", "get", "wh"),
-  },
-  library: {
-    product: path("api", "lib", "prod"),
-    branches: path("api", "lib", "brch"),
-  },
   gemini: {
     chat: path("api", "ai", "gemini"),
   },
@@ -59,10 +45,6 @@ export function getLegacyUrls() {
     selectBiz: base + path("api", "select-biz"),
     setBiz: base + path("api", "set-biz"),
     businesses: base + path("api", "businesses"),
-    stockcard: base + path("api", "reports", "inv", "sc"),
-    stockcardGraph: base + path("api", "reports", "inv", "sc", "graph"),
-    warehouse: base + path("api", "trans", "get", "wh"),
-    product: base + path("api", "lib", "prod"),
   };
   return flat;
 }

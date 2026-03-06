@@ -4,7 +4,7 @@ import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import ChatIcon from "@material-ui/icons/Chat";
 
-import { sendMessage } from "./api/chatService/chatFlow.js";
+import { sendMessage } from "./api/services/chatService.js";
 import {
   getInitialMessages,
   getDefaultPanelPosition,
