@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import UlapBizLogo from "src/images/ulapbiz.png";
 import MenuIcon from '@material-ui/icons/Menu';
@@ -84,6 +84,27 @@ const Navbar = () => {
 
   const [open, setOpen] = useState(false);
   const isXs = useMediaQuery(theme.breakpoints.down("xs"));
+  const [isAuthed, setIsAuthed] = useState(Boolean(localStorage.getItem("authToken")));
+
+  useEffect(() => {
+    const sync = () => setIsAuthed(Boolean(localStorage.getItem("authToken")));
+    window.addEventListener("storage", sync);
+    // Sync once on mount
+    sync();
+    return () => window.removeEventListener("storage", sync);
+  }, []);
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("user");
+      localStorage.removeItem("selectedBiz");
+      sessionStorage.removeItem("logoutUsername");
+      sessionStorage.removeItem("logoutPassword");
+    } catch (_) {}
+    setIsAuthed(false);
+    window.location.href = "/login";
+  };
 
   return (
     <AppBar elevation={2} color="inherit">
@@ -153,35 +174,62 @@ const Navbar = () => {
                     </Link>
                   ))}
                 </Box>
-                {!isXs &&
-                  <Box sx={{
-                    display: "flex",
-                    gap: "1rem",
-                  }}>
-                    <Link
-                      key="signin"
-                      component={RouterLink}
-                      variant="h6"
-                      to='test'
-                      underline="none"
-                      color="textPrimary"
-                      className={classes.signin}
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      key="signup"
-                      component={RouterLink}
-                      variant="h6"
-                      to='test'
-                      underline="none"
-                      color="textPrimary"
-                      className={classes.signup}
-                    >
-                      Sign Up
-                    </Link>
+                {!isXs && (
+                  <Box sx={{ display: "flex", gap: "1rem" }}>
+                    {isAuthed ? (
+                      <>
+                        <Link
+                          key="selectbiz"
+                          component={RouterLink}
+                          variant="h6"
+                          to='/select-biz'
+                          underline="none"
+                          color="textPrimary"
+                          className={classes.signin}
+                        >
+                          Select Biz
+                        </Link>
+                        <Link
+                          key="logout"
+                          component="button"
+                          variant="h6"
+                          underline="none"
+                          color="textPrimary"
+                          onClick={handleLogout}
+                          className={classes.signup}
+                          style={{ cursor: "pointer" }}
+                        >
+                          Logout
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          key="signin"
+                          component={RouterLink}
+                          variant="h6"
+                          to='/login'
+                          underline="none"
+                          color="textPrimary"
+                          className={classes.signin}
+                        >
+                          Sign In
+                        </Link>
+                        <Link
+                          key="signup"
+                          component={RouterLink}
+                          variant="h6"
+                          to='/signup'
+                          underline="none"
+                          color="textPrimary"
+                          className={classes.signup}
+                        >
+                          Sign Up
+                        </Link>
+                      </>
+                    )}
                   </Box>
-                }
+                )}
               </Box>
             }
           </Box>
@@ -210,58 +258,111 @@ const Navbar = () => {
                 </Link>
 
               ))}
-              <Link
-                key="signin"
-                component={RouterLink}
-                variant="h6"
-                to='test'
-                underline="none"
-                color="textPrimary"
-                style={{
-                  color: theme.palette.primary.main,
-                }}
-              >
-                Sign In
-              </Link>
-              <Link
-                key="signup"
-                component={RouterLink}
-                variant="h6"
-                to='test'
-                underline="none"
-                color="textPrimary"
-                style={{
-                  color: theme.palette.primary.main,
-                }}
-              >
-                Sign Up
-              </Link>
+              {isAuthed ? (
+                <>
+                  <Link
+                    key="selectbiz-xs"
+                    component={RouterLink}
+                    variant="h6"
+                    to='/select-biz'
+                    underline="none"
+                    color="textPrimary"
+                    style={{ color: theme.palette.primary.main }}
+                  >
+                    Select Biz
+                  </Link>
+                  <Link
+                    key="logout-xs"
+                    component="button"
+                    variant="h6"
+                    underline="none"
+                    color="textPrimary"
+                    onClick={handleLogout}
+                    style={{ color: theme.palette.primary.main, cursor: "pointer" }}
+                  >
+                    Logout
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    key="signin"
+                    component={RouterLink}
+                    variant="h6"
+                    to='/login'
+                    underline="none"
+                    color="textPrimary"
+                    style={{ color: theme.palette.primary.main }}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    key="signup"
+                    component={RouterLink}
+                    variant="h6"
+                    to='/signup'
+                    underline="none"
+                    color="textPrimary"
+                    style={{ color: theme.palette.primary.main }}
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </Box>
           }
           {isXs &&
             <>
-              <Link
-                key="signin"
-                component={RouterLink}
-                variant="h6"
-                to='test'
-                underline="none"
-                color="textPrimary"
-              // className={classes.signin}
-              >
-                Sign In
-              </Link>
-              <Link
-                key="signup"
-                component={RouterLink}
-                variant="h6"
-                to='test'
-                underline="none"
-                color="textPrimary"
-              // className={classes.signup}
-              >
-                Sign Up
-              </Link>
+              {isAuthed ? (
+                <>
+                  <Link
+                    key="selectbiz-xs2"
+                    component={RouterLink}
+                    variant="h6"
+                    to='/select-biz'
+                    underline="none"
+                    color="textPrimary"
+                  >
+                    Select Biz
+                  </Link>
+                  <Link
+                    key="logout-xs2"
+                    component="button"
+                    variant="h6"
+                    underline="none"
+                    color="textPrimary"
+                    onClick={handleLogout}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Logout
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    key="signin"
+                    component={RouterLink}
+                    variant="h6"
+                    to='/login'
+                    underline="none"
+                    color="textPrimary"
+                  // className={classes.signin}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    key="signup"
+                    component={RouterLink}
+                    variant="h6"
+                    to='/signup'
+                    underline="none"
+                    color="textPrimary"
+                  // className={classes.signup}
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </>
           }
         </Collapse>
