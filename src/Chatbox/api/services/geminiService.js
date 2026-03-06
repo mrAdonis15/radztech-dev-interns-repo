@@ -50,7 +50,7 @@ function checkItems(data) {
 // TOOLS
 const functions = {
   search_prod: async (args) => {
-    console.log(args.q);
+    // console.log(args.q);
     const headers = getHeaders();
 
     try {
@@ -63,7 +63,7 @@ const functions = {
 
       const products = checkItems(items);
 
-      console.log(products);
+      // console.log(products);
 
       return products;
     } catch (err) {
@@ -74,7 +74,7 @@ const functions = {
     }
   },
   get_prod_bal: async (args) => {
-    console.log(args);
+    // console.log(args);
     const headers = getHeaders();
 
     try {
@@ -85,9 +85,13 @@ const functions = {
         params: args,
       });
 
-      const bal = response.data;
+      const bal = response.data.qtyBAL;
+      console.log(bal);
 
-      return bal;
+      return {
+        status: "success",
+        data: bal,
+      };
     } catch (err) {
       return {
         status: "error",
@@ -146,70 +150,49 @@ export async function sendToGemini(userMessage, messageHistory = []) {
     "x-access-tokens": token,
   };
 
-  if (!token) {
-    return { type: "text", text: "Sorry, I'm not configured properly." };
-  }
-
   const isChart = /graph|chart|plot|visual/i.test(userMessage);
-
-  // Initialize the conversation
-  const messages = [
-    ...messageHistory.slice(-10).map((m) => ({
-      role: m.sender === "me" ? "user" : "assistant",
-      parts: [{ text: m.text }],
-    })),
-    { role: "user", parts: [{ text: userMessage }] },
-  ];
 
   let finalData = {};
 
   try {
-    let geminiResponse;
-
-    while (true) {
-      // Send current conversation to Gemini
-      const payload = { contents: messages, tools };
-      const response = await axios.post(`${BASE_URL}/ai/gemini`, payload, {
-        headers,
-      });
-      geminiResponse = response.data;
-
-      const candidates = geminiResponse.candidates;
-      // if (!candidates) break;
-
-      // Check for functionCall
-      const functionCallPart =
-        geminiResponse?.candidates?.[0]?.content?.parts?.find(
-          (p) => p.functionCall,
-        );
-
-      if (!functionCallPart) break; // no more tools to call
-
-      const { name, args } = functionCallPart.functionCall;
-
-      if (!functions[name]) throw new Error(`Function ${name} not defined`);
-
-      // Execute tool locally
-      const result = await functions[name](args || {});
-      finalData = result;
-
-      // Append the tool result as assistant message
-      console.log(result.error || "");
-
-      if (result.status === "error" || typeof result === "string") {
-        messages.push({
-          role: "model",
+    const payload = {
+      contents: [
+        {
+          role: "user",
           parts: [
             {
-              text:
-                result.status === "error"
-                  ? result.text
-                  : JSON.stringify(result),
+              text: userMessage,
             },
           ],
-        });
-      } else {
-        messages.push({
+        },
+      ],
+      tools,
+    };
+    // console.log("payload", payload);
+    let response;
+    response = await axios.post(`${BASE_URL}/ai/gemini`, payload, {
+      headers,
+    });
+
+    // console.log("initial", response);
+
+    while (true) {
+      let functionResponses = [];
+      const functionCalls =
+        response?.data?.candidates?.[0]?.content?.parts?.filter(
+          (p) => p.functionCall,
+        ) || [];
+
+      if (!functionCalls.length) break;
+
+      for (const func of functionCalls) {
+        const { name, args } = func.functionCall;
+
+        if (!functions[name]) throw new Error(`Function ${name} not defined`);
+
+        const result = await functions[name](args || {});
+
+        functionResponses.push({
           role: "tool",
           parts: [
             {
@@ -220,12 +203,29 @@ export async function sendToGemini(userMessage, messageHistory = []) {
             },
           ],
         });
+
+        // console.log("array", functionResponses);
       }
+
+      // console.log("funcRes", result);
+
+      const modelContent = response?.data?.candidates?.[0]?.content;
+
+      const toolPayload = {
+        contents: [...payload.contents, modelContent, ...functionResponses],
+        tools,
+      };
+      console.log("secondary", toolPayload);
+
+      response = await axios.post(`${BASE_URL}/ai/gemini`, toolPayload, {
+        headers,
+      });
+
+      // console.log("secondary", response);
     }
 
-    // Build final response text
     const finalText =
-      geminiResponse?.candidates?.[0]?.content?.parts
+      response?.data?.candidates?.[0]?.content?.parts
         ?.map((p) => p.text)
         ?.join("") || FALL_BACK_MSG;
 
