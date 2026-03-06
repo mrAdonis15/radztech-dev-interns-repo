@@ -1,0 +1,255 @@
+/* ChatBoxMerlvin Styles */
+
+.chatbox-merlvin-root {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+}
+
+/* Toggle Button */
+.chatbox-merlvin-toggle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.chatbox-merlvin-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.chatbox-merlvin-toggle:active {
+  transform: scale(0.95);
+}
+
+/* Chat Panel */
+.chatbox-merlvin-panel {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 400px;
+  height: 500px;
+  max-height: 80vh;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  box-shadow: 0 5px 40px rgba(0, 0, 0, 0.16);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 600px) {
+  .chatbox-merlvin-panel {
+    width: calc(100vw - 40px);
+    height: 60vh;
+    bottom: 80px;
+    right: 20px;
+    left: 20px;
+  }
+}
+
+/* Header */
+.chatbox-merlvin-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chatbox-merlvin-header h6 {
+  color: white;
+}
+
+.chatbox-merlvin-header .MuiIconButton-root {
+  color: white;
+}
+
+.chatbox-merlvin-header .MuiIconButton-root:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Messages Container */
+.chatbox-merlvin-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #f7f7f7;
+}
+
+.chatbox-merlvin-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chatbox-merlvin-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chatbox-merlvin-messages::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.chatbox-merlvin-messages::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Message */
+.chatbox-merlvin-message {
+  display: flex;
+  margin-bottom: 4px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chatbox-merlvin-message.user {
+  justify-content: flex-end;
+}
+
+.chatbox-merlvin-message.bot {
+  justify-content: flex-start;
+}
+
+/* Message Bubble */
+.chatbox-merlvin-bubble {
+  max-width: 75%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+.chatbox-merlvin-message.user .chatbox-merlvin-bubble {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom-right-radius: 2px;
+}
+
+.chatbox-merlvin-message.bot .chatbox-merlvin-bubble {
+  background: white;
+  color: #333;
+  border: 1px solid #e0e0e0;
+  border-bottom-left-radius: 2px;
+}
+
+/* Chart Placeholder */
+.chatbox-merlvin-chart-placeholder {
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Input Form */
+.chatbox-merlvin-input-form {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  background: white;
+  border-top: 1px solid #e0e0e0;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Input Field */
+.chatbox-merlvin-input {
+  flex: 1;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.chatbox-merlvin-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.chatbox-merlvin-input:disabled {
+  background: #f5f5f5;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Send Button */
+.chatbox-merlvin-send-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.chatbox-merlvin-send-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.chatbox-merlvin-send-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.chatbox-merlvin-send-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Loading Spinner */
+.chatbox-merlvin-message .MuiCircularProgress-root {
+  color: #667eea !important;
+}

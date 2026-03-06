@@ -6,7 +6,9 @@
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   width: 100%;
   height: 100%;
 }
@@ -68,9 +70,9 @@ html, body, #root {
 }
 
 .page-title-sub {
-  font-size: 1.40rem !important;
+  font-size: 1.4rem !important;
   font-weight: 500 !important;
-  color: #FF7704 !important;
+  color: #ff7704 !important;
   display: block;
   line-height: 1.2;
 }
@@ -97,7 +99,7 @@ html, body, #root {
 }
 
 .navbar-appbar {
-  background: #FF7704 !important;
+  background: #ff7704 !important;
   z-index: 1201 !important;
   height: 65px;
   box-shadow: none;
@@ -136,7 +138,7 @@ html, body, #root {
 }
 
 .navbar-biz-text {
-  color: #FFE5CC;
+  color: #ffe5cc;
   font-weight: 800;
 }
 
@@ -144,14 +146,14 @@ html, body, #root {
   display: flex;
   flex: 1;
   margin-top: 0;
-  height: calc(100vh - 70px);
+  height: calc(100vh - 65px);
   position: relative;
   overflow: visible;
   align-items: flex-start;
 }
 
 .navbar-drawer {
-  width: 230px;
+  width: 255px;
   flex-shrink: 0;
   height: 100%;
   position: relative;
@@ -205,7 +207,7 @@ html, body, #root {
 }
 
 .navbar-user-avatar {
-  background: linear-gradient(135deg, #FFB380 0%, #FF9500 100%) !important;
+  background: linear-gradient(135deg, #ffb380 0%, #ff9500 100%) !important;
   font-weight: 700;
   width: 40px !important;
   height: 40px !important;
@@ -254,12 +256,12 @@ html, body, #root {
 }
 
 .navbar-menu-item-active .MuiListItemText-primary {
-  color: #FF7704 !important;
+  color: #ff7704 !important;
   font-weight: 600 !important;
 }
 
 .navbar-menu-item-active .navbar-menu-icon {
-  color: #FF7704 !important;
+  color: #ff7704 !important;
 }
 
 .navbar-menu-icon {
@@ -291,7 +293,7 @@ html, body, #root {
   background-color: #e8e8e8 !important;
   padding-left: 64px !important;
   padding-right: 16px !important;
-  color: #FF7704 !important;
+  color: #ff7704 !important;
   font-weight: 500 !important;
   margin: 0 !important;
   width: 100% !important;
@@ -299,7 +301,7 @@ html, body, #root {
 }
 
 .navbar-submenu-item-active .MuiListItemText-primary {
-  color: #FF7704 !important;
+  color: #ff7704 !important;
   font-weight: 500 !important;
   margin: 0 !important;
 }

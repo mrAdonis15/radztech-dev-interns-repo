@@ -21,6 +21,8 @@ import MenuDisplay from "./components/Merlvin/MenuDisplay";
 import ImageCompressor from "./ImageCompress/ImageCompressor";
 import SqlFormatter from "./components/SQL Formatter/SqlFormatter";
 import Timelogstest from "./components/Adam/components/timelogstest";
+import PythonAIPage from "./components/Merlvin/PythonAI/PythonAIPage";
+import { ProtectedRoute } from "./helpers/ProtectedRoute";
 
 const ChatboxPage = () => <Chatbox defaultOpen />;
 
@@ -36,11 +38,13 @@ const routes = [
   {
     path: "/Chatbox",
     element: ChatboxLayout,
+    guard: ProtectedRoute,
     children: [{ index: true, element: ChatboxPage }],
   },
   {
     path: "/",
     element: DefaultLayout,
+    guard: ProtectedRoute,
     children: [
       {
         path: "/Ulap",
@@ -94,11 +98,16 @@ const routes = [
         path: "/TimeLogs",
         element: Timelogstest,
       },
+      {
+        path: "/PythonAIChat",
+        element: PythonAIPage,
+      },
     ],
   },
   {
     path: "/evaluation",
     element: EvaluationLayout,
+    guard: ProtectedRoute,
     children: [
       {
         path: "applicant",

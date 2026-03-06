@@ -1,17 +1,10 @@
-import { Box, Typography } from "@material-ui/core";
-import './Page.css';
+import PageShell from "./PageShell";
 
 function Applicant() {
-    return(
-        <Box className="page-container">
-            <Box className="page-header">
-                <Typography variant="h4" className="page-title-main">Setup</Typography>
-                <Typography variant="h5" className="page-title-sub">Applicant</Typography>
-            </Box>
-            <Box className="card-container">
-                {/* Content goes here */}
-            </Box>
-        </Box>
-    );
+  return (
+    <PageShell sectionTitle="Setup" pageTitle="Applicant">
+      {/* Content goes here */}
+    </PageShell>
+  );
 }
 export default Applicant;
