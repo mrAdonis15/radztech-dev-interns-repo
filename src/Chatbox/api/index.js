@@ -9,7 +9,6 @@ export { buildUrl, getApiBase } from "./client/apiClient";
 export { endpoints, getLegacyUrls } from "./config/endpoints";
 export { default as authService } from "./services/authService";
 export { default as businessService } from "./services/businessService";
-export { default as reportService } from "./services/reportService";
 
 export const API_URLS = getLegacyUrls();
 

@@ -1,5 +1,3 @@
-
-
 // Initial chat messages (empty - no default conversation)
 export function getInitialMessages() {
   return [];
