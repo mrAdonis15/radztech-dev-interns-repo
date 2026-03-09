@@ -21,12 +21,18 @@ function getBizDisplayName(biz) {
 }
 
 function parseBizList(payload) {
-  const raw = typeof payload === "string" ? payload : payload != null && typeof payload === "object" ? JSON.stringify(payload) : "";
+  const raw =
+    typeof payload === "string"
+      ? payload
+      : payload != null && typeof payload === "object"
+        ? JSON.stringify(payload)
+        : "";
   if (!raw || !raw.trim()) return [];
   try {
     const parsed = typeof payload === "object" ? payload : JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed;
-    if (parsed?.businesses && Array.isArray(parsed.businesses)) return parsed.businesses;
+    if (parsed?.businesses && Array.isArray(parsed.businesses))
+      return parsed.businesses;
     if (parsed?.data && Array.isArray(parsed.data)) return parsed.data;
     if (parsed != null && typeof parsed === "object") return [parsed];
   } catch (_) {}
@@ -51,12 +57,27 @@ function BizListContent({ bizList, selectingId, onSelectBiz, onContinue }) {
   const isSelecting = selectingId != null;
   return (
     <React.Fragment>
-      <Grid container spacing={3} style={{ maxWidth: 900, justifyContent: "center" }}>
+      <Grid
+        container
+        spacing={3}
+        style={{ maxWidth: 900, justifyContent: "center" }}
+      >
         {bizList.map(function (biz) {
           const id = getBizCode(biz) ?? Math.random();
           return (
-            <Grid item xs={12} sm={6} md={4} key={id} className="biz-ui-grid-item">
-              <BizCard biz={biz} onSelect={onSelectBiz} disabled={isSelecting} />
+            <Grid
+              item
+              xs={12}
+              sm={6}
+              md={4}
+              key={id}
+              className="biz-ui-grid-item"
+            >
+              <BizCard
+                biz={biz}
+                onSelect={onSelectBiz}
+                disabled={isSelecting}
+              />
             </Grid>
           );
         })}
@@ -94,7 +115,7 @@ export default function BizUI() {
         .catch(() => setError("Failed to load businesses"))
         .finally(() => setLoading(false));
     },
-    [token]
+    [token],
   );
 
   const handleSelectBiz = function (biz) {
@@ -113,7 +134,9 @@ export default function BizUI() {
           }
         }
         if (parsedData != null && typeof parsedData === "object") {
-          const toStore = parsedData.biz ? { ...parsedData } : { biz: parsedData };
+          const toStore = parsedData.biz
+            ? { ...parsedData }
+            : { biz: parsedData };
           const bizObj = toStore.biz || toStore;
           const dataToken =
             parsedData.token ??
@@ -123,28 +146,42 @@ export default function BizUI() {
             parsedData.bizToken ??
             parsedData.data?.token ??
             parsedData.biz?.token ??
-            (typeof bizObj === "object" ? bizObj.token ?? bizObj.dataAccessToken : null);
+            (typeof bizObj === "object"
+              ? (bizObj.token ?? bizObj.dataAccessToken)
+              : null);
           if (dataToken && typeof bizObj === "object") bizObj.token = dataToken;
           if (dataToken) toStore.token = dataToken;
           localStorage.setItem("selectedBiz", JSON.stringify(toStore));
         } else {
           const name = getBizDisplayName(biz);
-          const logo = biz?.image ?? biz?.logo ?? biz?.logoUrl ?? biz?.business?.logo ?? null;
-          localStorage.setItem("selectedBiz", JSON.stringify({ biz: { name, ixBiz: code, image: logo } }));
+          const logo =
+            biz?.image ??
+            biz?.logo ??
+            biz?.logoUrl ??
+            biz?.business?.logo ??
+            null;
+          localStorage.setItem(
+            "selectedBiz",
+            JSON.stringify({ biz: { name, ixBiz: code, image: logo } }),
+          );
         }
-        navigate("/Chatbox", { replace: true });
+        navigate("/select-chatbot", { replace: true });
       })
       .catch(() => setError("Failed to select business"))
       .finally(() => setSelectingId(null));
   };
 
   const handleContinue = function () {
-    return navigate("/Chatbox", { replace: true });
+    return navigate("/select-chatbot", { replace: true });
   };
 
   if (!token) return <Navigate to="/login" replace />;
 
-  const rootStyle = { minHeight: "100vh", display: "flex", flexDirection: "column" };
+  const rootStyle = {
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column",
+  };
   let content;
   if (loading) {
     content = (
@@ -187,11 +224,19 @@ export default function BizUI() {
   return (
     <div style={rootStyle}>
       <LoginToolbar />
-      <Box className="biz-ui-root" flex={1} style={{ overflow: "auto", paddingTop: 80 }}>
+      <Box
+        className="biz-ui-root"
+        flex={1}
+        style={{ overflow: "auto", paddingTop: 80 }}
+      >
         <Typography variant="h4" gutterBottom color="textPrimary">
           Select a business
         </Typography>
-        <Typography variant="body1" color="textSecondary" style={{ marginBottom: 24 }}>
+        <Typography
+          variant="body1"
+          color="textSecondary"
+          style={{ marginBottom: 24 }}
+        >
           Choose a business to continue
         </Typography>
         {content}

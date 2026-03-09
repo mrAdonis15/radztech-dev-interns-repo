@@ -11,7 +11,10 @@ import FullscreenExitIcon from "@material-ui/icons/FullscreenExit";
 import radzLogo from "./Assets/SHARED] Radztech Interns Logo - 32.png";
 
 import { sanitizeColor } from "./colotheme.js";
-import { CHAT_STORAGE_KEY, CHAT_HISTORY_STORAGE_KEY } from "./chatboxConstants.js";
+import {
+  CHAT_STORAGE_KEY,
+  CHAT_HISTORY_STORAGE_KEY,
+} from "./chatboxConstants.js";
 
 // Stubs after removing productService (no product/stock data)
 function getProducts() {
@@ -64,19 +67,19 @@ export function applyThemeToElement(el, theme) {
   if (!el || !theme) return;
   el.style.setProperty(
     "--bubble-left",
-    sanitizeColor(theme.bubbleLeft, "rgba(255,117,4,0.5)")
+    sanitizeColor(theme.bubbleLeft, "rgba(255,117,4,0.5)"),
   );
   el.style.setProperty(
     "--bubble-right",
-    sanitizeColor(theme.bubbleRight, "#ffffff")
+    sanitizeColor(theme.bubbleRight, "#ffffff"),
   );
   el.style.setProperty(
     "--border-color",
-    sanitizeColor(theme.borderColor, "#f57c00")
+    sanitizeColor(theme.borderColor, "#f57c00"),
   );
   el.style.setProperty(
     "--panel-accent",
-    sanitizeColor(theme.bubbleRight, "#fff3e0")
+    sanitizeColor(theme.bubbleRight, "#fff3e0"),
   );
 }
 
@@ -158,7 +161,7 @@ export function addToHistory(messages) {
     messages: [...messages],
     createdAt: Date.now(),
   };
-  const next = [item, ...history].slice(0, 50);   
+  const next = [item, ...history].slice(0, 50);
   saveHistory(next);
   return next;
 }
@@ -229,7 +232,8 @@ function validateProductLabels(labels) {
     if (VALID_PRODUCT_LABELS.has(lower)) continue;
     if (validSet.has(lower)) {
       products.push(
-        getProductByName(s) || getProducts().find((p) => p.name.toLowerCase() === lower)
+        getProductByName(s) ||
+          getProducts().find((p) => p.name.toLowerCase() === lower),
       );
     } else {
       invalid.push(s);
@@ -252,7 +256,20 @@ function yrmoToMonthAbbr(yrmo) {
   if (!yrmo || typeof yrmo !== "string") return yrmo;
   const parts = yrmo.split("-");
   const monthNum = parseInt(parts[1], 10);
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   return Number.isFinite(monthNum) && monthNum >= 1 && monthNum <= 12
     ? months[monthNum - 1]
     : yrmo;
@@ -275,12 +292,20 @@ function yearFromLabels(labels) {
 export function buildChartFromStockcardApi(apiData) {
   if (!apiData || !apiData.items || !Array.isArray(apiData.items)) return null;
   const validItems = apiData.items.filter(
-    (i) => i && (i.YrWk != null || i.YrMo != null || i.tIN != null || i.tOUT != null || i.runBal != null)
+    (i) =>
+      i &&
+      (i.YrWk != null ||
+        i.YrMo != null ||
+        i.tIN != null ||
+        i.tOUT != null ||
+        i.runBal != null),
   );
   if (!validItems.length) return null;
 
   const rawLabels = validItems.map((i) => i.YrWk || i.YrMo || "Period");
-  const labels = rawLabels.map((l) => (l.length === 7 && l.match(/^\d{4}-\d{2}$/) ? yrmoToMonthAbbr(l) : l));
+  const labels = rawLabels.map((l) =>
+    l.length === 7 && l.match(/^\d{4}-\d{2}$/) ? yrmoToMonthAbbr(l) : l,
+  );
   const year = yearFromLabels(rawLabels);
   const runBal = validItems.map((i) => Number(i.runBal) || 0);
   const tIN = validItems.map((i) => Number(i.tIN) || 0);
@@ -357,7 +382,9 @@ export function buildChartFromSpec(spec, skipProductValidation = false) {
   }
   if (!Array.isArray(datasets) || datasets.length === 0) return null;
 
-  const validation = skipProductValidation ? { valid: true, invalid: [], products: [], isProductChart: false } : validateProductLabels(labels);
+  const validation = skipProductValidation
+    ? { valid: true, invalid: [], products: [], isProductChart: false }
+    : validateProductLabels(labels);
   if (!validation.valid && validation.invalid.length > 0) {
     return {
       rejected: true,
@@ -365,14 +392,20 @@ export function buildChartFromSpec(spec, skipProductValidation = false) {
     };
   }
 
-  const chartType = ["line", "bar", "pie"].includes(spec.chartType) ? spec.chartType : "bar";
+  const chartType = ["line", "bar", "pie"].includes(spec.chartType)
+    ? spec.chartType
+    : "bar";
 
   let datasetsToUse = datasets;
-  if (validation.products.length > 0 && validation.products.length === labels.length) {
+  if (
+    validation.products.length > 0 &&
+    validation.products.length === labels.length
+  ) {
     datasetsToUse = datasets.map((ds) => ({
       ...ds,
       data: labels.map((lbl) => {
-        const p = getProductByName(lbl) || validation.products[labels.indexOf(lbl)];
+        const p =
+          getProductByName(lbl) || validation.products[labels.indexOf(lbl)];
         return p ? getProductMetric(p, ds.label) : 0;
       }),
     }));
@@ -400,8 +433,12 @@ export function buildChartFromSpec(spec, skipProductValidation = false) {
 
   if (chartType === "pie") {
     const ds = datasetsToUse[0] || {};
-    const data = Array.isArray(ds.data) ? ds.data.map((v) => Number(v) || 0) : [];
-    const n = Math.min(labels.length, data.length) || Math.max(labels.length, data.length);
+    const data = Array.isArray(ds.data)
+      ? ds.data.map((v) => Number(v) || 0)
+      : [];
+    const n =
+      Math.min(labels.length, data.length) ||
+      Math.max(labels.length, data.length);
     finalLabels = labels.slice(0, n);
     const pieData = data
       .slice(0, n)
@@ -417,7 +454,9 @@ export function buildChartFromSpec(spec, skipProductValidation = false) {
     ];
   } else {
     builtDatasets = datasetsToUse.map((ds, i) => {
-      const data = Array.isArray(ds.data) ? ds.data.map((v) => Number(v) || 0) : [];
+      const data = Array.isArray(ds.data)
+        ? ds.data.map((v) => Number(v) || 0)
+        : [];
       const label = ds.label != null ? String(ds.label) : `Series ${i + 1}`;
       const color = CHART_COLORS.lineBar[i % CHART_COLORS.lineBar.length];
       return {
@@ -425,9 +464,11 @@ export function buildChartFromSpec(spec, skipProductValidation = false) {
         data,
         borderColor: ds.borderColor || color,
         backgroundColor:
-          ds.backgroundColor || color.replace("rgb", "rgba").replace(")", ",0.5)"),
-        tension: ds.tension != null ? ds.tension : (chartType === "line" ? 0.3 : 0),
-        fill: ds.fill != null ? ds.fill : (chartType === "line" ? false : true),
+          ds.backgroundColor ||
+          color.replace("rgb", "rgba").replace(")", ",0.5)"),
+        tension:
+          ds.tension != null ? ds.tension : chartType === "line" ? 0.3 : 0,
+        fill: ds.fill != null ? ds.fill : chartType === "line" ? false : true,
         borderWidth: 1,
         pointRadius: ds.pointRadius,
       };
@@ -476,7 +517,7 @@ export function getStockByProductChart(opts = {}) {
     chartType: "bar",
     title: "Current Stock by Product",
     labels: products.map((p) =>
-      p.name.length > 20 ? p.name.slice(0, 20) + "…" : p.name
+      p.name.length > 20 ? p.name.slice(0, 20) + "…" : p.name,
     ),
     datasets: [
       {
@@ -500,7 +541,7 @@ export function getStockMovementChart(opts = {}) {
     product = getProductById(opts.productId);
   } else if (opts.productName) {
     product = getProducts().find((p) =>
-      p.name.toLowerCase().includes(String(opts.productName).toLowerCase())
+      p.name.toLowerCase().includes(String(opts.productName).toLowerCase()),
     );
   }
   if (!product || !product.transactions?.length) return null;
@@ -564,7 +605,7 @@ export function getInventoryValueChart(opts = {}) {
     chartType: "bar",
     title: "Inventory Value by Product (₱)",
     labels: products.map((p) =>
-      p.name.length > 18 ? p.name.slice(0, 18) + "…" : p.name
+      p.name.length > 18 ? p.name.slice(0, 18) + "…" : p.name,
     ),
     datasets: [
       {
@@ -669,14 +710,22 @@ export function ChatHeader({
             {maintenanceOpen ? (
               <span className="chat-header-statusLabel">
                 <span className="chat-statusDot" aria-hidden />
-                <Typography variant="caption" component="span" style={{ color: "#777" }}>
+                <Typography
+                  variant="caption"
+                  component="span"
+                  style={{ color: "#777" }}
+                >
                   Under maintenance
                 </Typography>
               </span>
             ) : (
               <span className="chat-header-statusLabel">
                 <span className="chat-onlineDot" aria-hidden />
-                <Typography variant="caption" component="span" style={{ color: "#777" }}>
+                <Typography
+                  variant="caption"
+                  component="span"
+                  style={{ color: "#777" }}
+                >
                   Online
                 </Typography>
               </span>
@@ -727,7 +776,11 @@ export function ChatHeader({
           </IconButton>
         )}
         {onNewChatClick && (
-          <IconButton size="small" onClick={onNewChatClick} aria-label="New chat">
+          <IconButton
+            size="small"
+            onClick={onNewChatClick}
+            aria-label="New chat"
+          >
             <AddCommentIcon fontSize="small" />
           </IconButton>
         )}

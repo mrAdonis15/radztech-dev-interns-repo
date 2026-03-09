@@ -18,6 +18,7 @@ import ListofApplicants from "./Evaluation/ListofApplicants";
 import UlapChatBot from "./components/Marth/UlapChatbot";
 import Chatbox from "./Chatbox/chatbox";
 import MenuDisplay from "./components/Merlvin/MenuDisplay";
+import ChatbotChoicePage from "./components/Merlvin/ChatbotChoicePage";
 import ImageCompressor from "./ImageCompress/ImageCompressor";
 import SqlFormatter from "./components/SQL Formatter/SqlFormatter";
 import Timelogstest from "./components/Adam/components/timelogstest";
@@ -34,6 +35,11 @@ const routes = [
   {
     path: "/select-biz",
     element: BizUI,
+  },
+  {
+    path: "/select-chatbot",
+    element: ChatbotChoicePage,
+    guard: ProtectedRoute,
   },
   {
     path: "/Chatbox",

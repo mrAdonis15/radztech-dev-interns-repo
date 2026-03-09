@@ -1,6 +1,35 @@
 import axios from "axios";
 import tokenManager from "./tokenManager";
 
+/**
+ * Get headers with JWT token and biz token for API requests
+ */
+export const getHeaders = async () => {
+  try {
+    const token = await tokenManager.getValidToken();
+    const bizToken = localStorage.getItem("authToken"); // Biz token from main app
+
+    const headers = {
+      "Content-Type": "application/json",
+    };
+
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    if (bizToken) {
+      headers["X-Biz-Token"] = bizToken;
+    }
+
+    return headers;
+  } catch (error) {
+    console.error("Failed to get headers:", error);
+    return {
+      "Content-Type": "application/json",
+    };
+  }
+};
+
 // Create axios instance for Python AI backend
 const pythonAIClient = axios.create({
   baseURL: "http://localhost:8000",
@@ -10,23 +39,20 @@ const pythonAIClient = axios.create({
   withCredentials: false,
 });
 
-// Request interceptor - Add JWT token to all requests
+// Request interceptor - Add JWT token and biz token to all requests
 pythonAIClient.interceptors.request.use(
   async (config) => {
     try {
-      // Get valid token (will refresh if needed)
-      const token = await tokenManager.getValidToken();
-
-      if (token) {
-        config.headers["Authorization"] = `Bearer ${token}`;
-      }
+      // Get headers with both JWT and biz tokens
+      const headers = await getHeaders();
+      config.headers = { ...config.headers, ...headers };
 
       // Add timestamps for cache busting
       config.params = { ...config.params, _t: Date.now() };
 
       return config;
     } catch (error) {
-      console.error("Failed to get valid token:", error);
+      console.error("Failed to set headers:", error);
       return Promise.reject(error);
     }
   },

@@ -10,6 +10,12 @@ export default function ChatMessage({ msg }) {
   const isTyping = msg.text === "...";
   const isChart = msg.type === "chart";
 
+  // Convert escape sequences to actual line breaks
+  const processText = (text) => {
+    if (typeof text !== "string") return text;
+    return text.replace(/\\n/g, "\n");
+  };
+
   if (isMe) {
     return (
       <div
@@ -67,7 +73,7 @@ export default function ChatMessage({ msg }) {
                     "bubble-text left" + (isTyping ? " chat-typing-text" : "")
                   }
                 >
-                  <ReactMarkdown>{msg.text}</ReactMarkdown>
+                  <ReactMarkdown>{processText(msg.text)}</ReactMarkdown>
                 </Typography>
               </div>
               <Typography
@@ -91,7 +97,7 @@ export default function ChatMessage({ msg }) {
                   "bubble-text left" + (isTyping ? " chat-typing-text" : "")
                 }
               >
-                <ReactMarkdown>{msg.text}</ReactMarkdown>
+                <ReactMarkdown>{processText(msg.text)}</ReactMarkdown>
               </Typography>
             </div>
             <Typography

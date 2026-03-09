@@ -1,9 +1,9 @@
 import React from "react";
-import FullPageChatBoxMerlvin from "./FullPageChatBoxMerlvin";
+import ChatBoxPythonAI from "./ChatBoxPythonAI";
 
 /**
- * PythonAIPage - Full page chatbox display
+ * PythonAIPage - Full page chatbox with UlapChat architecture
  */
 export default function PythonAIPage() {
-  return <FullPageChatBoxMerlvin />;
+  return <ChatBoxPythonAI />;
 }
