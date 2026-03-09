@@ -12,13 +12,31 @@ import radzLogo from "./Assets/SHARED] Radztech Interns Logo - 32.png";
 
 import { sanitizeColor } from "./colotheme.js";
 import { CHAT_STORAGE_KEY, CHAT_HISTORY_STORAGE_KEY } from "./chatboxConstants.js";
-import {
-  getProducts,
-  getProductStats,
-  getProductById,
-  getProductByName,
-  getValidProductNames,
-} from "./api/services/productService.js";
+
+// Stubs after removing productService (no product/stock data)
+function getProducts() {
+  return [];
+}
+function getProductStats() {
+  return {
+    totalProducts: 0,
+    categories: [],
+    totalInventoryValue: 0,
+    totalStockUnits: 0,
+    totalStockIn: 0,
+    totalStockOut: 0,
+    totalTransactions: 0,
+  };
+}
+function getProductById() {
+  return null;
+}
+function getProductByName() {
+  return null;
+}
+function getValidProductNames() {
+  return [];
+}
 
 // --- chatboxUtils (existing) ---
 
