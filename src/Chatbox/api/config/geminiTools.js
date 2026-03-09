@@ -12,7 +12,7 @@ export const tools = [
   {
     name: "callEndpoint",
     description:
-      "Execute a selected endpoint using its URL and required parameters.",
+      "Execute a selected endpoint using its URL and required parameters. Do not call the branches (brch) endpoint unless the user is asking for a financial statement report; for any other request, do not use brch.",
     parameters: {
       type: "object",
       properties: {

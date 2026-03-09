@@ -71,7 +71,7 @@ export async function sendMessage(userMessage, messageHistory = []) {
       const fc = part.functionCall;
       const name = fc.name;
       const args = fc.args && typeof fc.args === "object" ? fc.args : {};
-      const result = await runTool(name, args, { authToken });
+      const result = await runTool(name, args, { authToken, intent });
       functionResponseParts.push({
         functionResponse: {
           name,
