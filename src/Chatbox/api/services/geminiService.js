@@ -305,65 +305,14 @@ export async function sendToGemini(userMessage, messageHistory = []) {
 
   const isChart = /graph|chart|plot|visual/i.test(userMessage);
 
-<<<<<<< Updated upstream
   let finalData = {};
+  let lastToolName = null;
 
   try {
     const payload = {
       contents: [
         {
           role: "user",
-=======
-  // Initialize the conversation
-  const messages = [
-    ...messageHistory.slice(-10).map((m) => ({
-      role: m.sender === "me" ? "user" : "assistant",
-      parts: [{ text: m.text }],
-    })),
-    { role: "user", parts: [{ text: userMessage }] },
-  ];
-
-    let finalData = {};
-    let lastToolName = null;
-
-    try {
-      let geminiResponse;
-
-      while (true) {
-        // Send current conversation to Gemini
-        const payload = { contents: messages, tools };
-        const response = await axios.post(`${BASE_URL}/ai/gemini`, payload, {
-          headers,
-        });
-        geminiResponse = response.data;
-
-        const candidates = geminiResponse.candidates;
-        // if (!candidates) break;
-
-        // Check for functionCall
-        const functionCallPart =
-          geminiResponse?.candidates?.[0]?.content?.parts?.find(
-            (p) => p.functionCall,
-          );
-
-        if (!functionCallPart) break; // no more tools to call
-
-        const { name, args } = functionCallPart.functionCall;
-        lastToolName = name;
-
-        if (!functions[name]) throw new Error(`Function ${name} not defined`);
-
-        // Execute tool locally
-        const result = await functions[name](args || {});
-        finalData = result;
-
-      // Append the tool result as assistant message
-      console.log(result.error || "");
-
-      if (result.status === "error" || typeof result === "string") {
-        messages.push({
-          role: "model",
->>>>>>> Stashed changes
           parts: [
             {
               text: userMessage,
@@ -396,6 +345,10 @@ export async function sendToGemini(userMessage, messageHistory = []) {
         if (!functions[name]) throw new Error(`Function ${name} not defined`);
 
         const result = await functions[name](args || {});
+
+        lastToolName = name;
+        finalData = result;
+       
 
         functionResponses.push({
           role: "tool",

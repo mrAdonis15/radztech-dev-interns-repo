@@ -69,7 +69,7 @@ export default function ChatMessage({ msg }) {
       >
         <Avatar src={radzLogo} className="reply-icon" />
         {showChart ? (
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
             {chartConfig ? (
               <ChartWithControls chart={chartConfig} />
             ) : (
