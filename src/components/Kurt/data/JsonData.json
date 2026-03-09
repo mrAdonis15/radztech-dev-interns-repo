@@ -1,0 +1,18 @@
+{
+  "caption": "Advance Settings",
+  "node1": true,
+  "parent": "title",
+  "child1": {
+    "caption": "child number 1",
+    "key1": "testing key1",
+    "test": "test 1",
+    "array1": [
+      {
+        "object": true
+      },
+      {
+        "objevt2": false
+      }
+    ]
+  }
+}

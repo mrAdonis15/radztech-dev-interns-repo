@@ -1,0 +1,66 @@
+  @import url("../Chatbox/Chatbox.css");
+
+  /* Fix reply (left) message bubbles: less compressed, text wraps and responds to container */
+  .chat-root .left-message-wrapper {
+    max-width: 100%;
+    flex: 1;
+    min-width: 0;
+  }
+  .chat-root .message-content.left {
+    max-width: 100%;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .chat-root .chat-bubbleLeft {
+    max-width: 100%;
+    min-width: 0;
+    width: fit-content;
+    display: block;
+    box-sizing: border-box;
+  }
+  .chat-root .bubble-text.left {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    white-space: pre-wrap;
+    min-height: 1.35em;
+    line-height: 1.45;
+  }
+
+  .chat-root .chat-inputArea-emojiAnchor {
+    position: relative;
+  }
+
+  .chat-root .emoji-picker-dropdown {
+    position: absolute;
+    left: 0;
+    bottom: 100%;
+    margin-bottom: 4px;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    max-height: min(320px, 60vh);
+    max-width: 280px;
+    width: 280px;
+  }
+
+  .chat-root .emoji-picker-dropdown .epr-main {
+    max-height: inherit;
+  }
+
+  .chat-root .emoji-wrapper .MuiIconButton-root {
+    padding: 4px;
+  }
+
+  .chat-root .emoji-wrapper .MuiIconButton-root svg {
+    font-size: 20px;
+  }
+
+  .chat-root .chat-inputPaper .MuiIconButton-root {
+    padding: 4px;
+  }
+
+  .chat-root .chat-inputPaper .MuiIconButton-root svg {
+    font-size: 20px;
+  }

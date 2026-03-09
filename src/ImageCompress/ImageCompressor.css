@@ -1,0 +1,258 @@
+/* ImageCompressor - Design styles */
+
+.image-compress-root {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 24px 16px;
+  font-family: "Poppins", sans-serif;
+}
+
+.image-compress-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.image-compress-header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding-top: 50px;
+}
+
+.image-compress-header h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
+}
+
+.image-compress-header p {
+  font-size: 0.95rem;
+  color: #718096;
+  margin: 0;
+}
+
+/* Drop zone */
+.image-compress-dropzone {
+  border: 2px dashed #e2e8f0;
+  border-radius: 16px;
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.image-compress-dropzone:hover,
+.image-compress-dropzone.active {
+  border-color: #ff7504;
+  background: rgba(255, 117, 4, 0.04);
+}
+
+.image-compress-dropzone.has-file {
+  border-style: solid;
+  border-color: #c6f6d5;
+  background: rgba(198, 246, 213, 0.2);
+}
+
+.image-compress-dropzone-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.image-compress-dropzone.active .image-compress-dropzone-icon,
+.image-compress-dropzone:hover .image-compress-dropzone-icon {
+  opacity: 0.9;
+}
+
+.image-compress-dropzone-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #4a5568;
+  margin-bottom: 4px;
+}
+
+.image-compress-dropzone-hint {
+  font-size: 0.8rem;
+  color: #a0aec0;
+}
+
+/* Controls panel */
+.image-compress-controls {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  margin-top: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.image-compress-controls-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.image-compress-slider-row {
+  margin-bottom: 20px;
+}
+
+.image-compress-slider-row:last-child {
+  margin-bottom: 0;
+}
+
+.image-compress-slider-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+}
+
+.image-compress-slider-label span:first-child {
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.image-compress-slider-label span:last-child {
+  color: #718096;
+  font-size: 0.8rem;
+}
+
+/* MUI slider override */
+.image-compress-root .MuiSlider-root {
+  color: #ff7504;
+}
+
+.image-compress-root .MuiSlider-thumb:hover,
+.image-compress-root .MuiSlider-thumb.Mui-focusVisible {
+  box-shadow: 0 0 0 8px rgba(255, 117, 4, 0.16);
+}
+
+/* Preview section */
+.image-compress-preview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+@media (max-width: 768px) {
+  .image-compress-preview {
+    grid-template-columns: 1fr;
+  }
+}
+
+.image-compress-preview-card {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.image-compress-preview-card-header {
+  padding: 12px 16px;
+  background: #f7fafc;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a5568;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.image-compress-preview-card.original .image-compress-preview-card-header {
+  color: #718096;
+}
+
+.image-compress-preview-card.compressed .image-compress-preview-card-header {
+  color: #276749;
+}
+
+.image-compress-preview-image-wrap {
+  padding: 16px;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: repeating-conic-gradient(#f1f5f9 0% 25%, transparent 0% 50%) 50% / 16px 16px;
+}
+
+.image-compress-preview-image {
+  max-width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.image-compress-preview-meta {
+  padding: 12px 16px;
+  font-size: 0.8rem;
+  color: #718096;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Actions */
+.image-compress-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+  justify-content: center;
+}
+
+.image-compress-btn {
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: none;
+  transition: all 0.2s ease;
+}
+
+.image-compress-btn-primary {
+  background: linear-gradient(135deg, #ff7504 0%, #ff8a50 100%);
+  color: white;
+  box-shadow: 0 4px 14px rgba(255, 117, 4, 0.35);
+}
+
+.image-compress-btn-primary:hover {
+  background: linear-gradient(135deg, #e66a03 0%, #ff7504 100%);
+  box-shadow: 0 6px 20px rgba(255, 117, 4, 0.4);
+  transform: translateY(-1px);
+}
+
+.image-compress-btn-outline {
+  border: 2px solid #e2e8f0;
+  color: #4a5568;
+}
+
+.image-compress-btn-outline:hover {
+  border-color: #ff7504;
+  color: #ff7504;
+  background: rgba(255, 117, 4, 0.04);
+}
+
+/* Savings badge */
+.image-compress-savings {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(72, 187, 120, 0.15);
+  color: #276749;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.image-compress-savings.larger {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+}

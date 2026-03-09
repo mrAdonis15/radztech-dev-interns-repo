@@ -1,0 +1,219 @@
+[
+  {
+    "product": "Aerox v2",
+    "stockIn": "100",
+    "stockOut": "20",
+    "balance": 10000,
+    "productCode": "PROD-1001"
+  },
+  {
+    "product": "Aerox v3",
+    "stockIn": "100",
+    "stockOut": "20",
+    "balance": 200000,
+    "productCode": "PROD-10007"
+  },
+  {
+    "product": "NMax",
+    "stockIn": "120",
+    "stockOut": "35",
+    "balance": 8500,
+    "productCode": "PROD-1002"
+  },
+  {
+    "product": "Mio",
+    "stockIn": "90",
+    "stockOut": "40",
+    "balance": 5000,
+    "productCode": "PROD-1003"
+  },
+  {
+    "product": "Click",
+    "stockIn": "150",
+    "stockOut": "60",
+    "balance": 12000,
+    "productCode": "PROD-1004"
+  },
+  {
+    "product": "PCX",
+    "stockIn": "80",
+    "stockOut": "25",
+    "balance": 7000,
+    "productCode": "PROD-1005"
+  },
+  {
+    "product": "Raider",
+    "stockIn": "110",
+    "stockOut": "50",
+    "balance": 6000,
+    "productCode": "PROD-1006"
+  },
+  {
+    "product": "Sniper",
+    "stockIn": "130",
+    "stockOut": "70",
+    "balance": 9000,
+    "productCode": "PROD-1007"
+  },
+  {
+    "product": "Burgman",
+    "stockIn": "95",
+    "stockOut": "30",
+    "balance": 6500,
+    "productCode": "PROD-1008"
+  },
+  {
+    "product": "ADV",
+    "stockIn": "140",
+    "stockOut": "55",
+    "balance": 11000,
+    "productCode": "PROD-1009"
+  },
+  {
+    "product": "Beat",
+    "stockIn": "160",
+    "stockOut": "80",
+    "balance": 13000,
+    "productCode": "PROD-1010"
+  },
+  {
+    "product": "Wave",
+    "stockIn": "85",
+    "stockOut": "20",
+    "balance": 4800,
+    "productCode": "PROD-1011"
+  },
+  {
+    "product": "XRM",
+    "stockIn": "100",
+    "stockOut": "45",
+    "balance": 7500,
+    "productCode": "PROD-1012"
+  },
+  {
+    "product": "Barako",
+    "stockIn": "70",
+    "stockOut": "15",
+    "balance": 4200,
+    "productCode": "PROD-1013"
+  },
+  {
+    "product": "Dominar",
+    "stockIn": "60",
+    "stockOut": "18",
+    "balance": 3900,
+    "productCode": "PROD-1014"
+  },
+  {
+    "product": "MT15",
+    "stockIn": "115",
+    "stockOut": "50",
+    "balance": 8200,
+    "productCode": "PROD-1015"
+  },
+  {
+    "product": "CBR150",
+    "stockIn": "105",
+    "stockOut": "35",
+    "balance": 9100,
+    "productCode": "PROD-1016"
+  },
+  {
+    "product": "CRF150",
+    "stockIn": "75",
+    "stockOut": "22",
+    "balance": 5600,
+    "productCode": "PROD-1017"
+  },
+  {
+    "product": "Vespa S",
+    "stockIn": "55",
+    "stockOut": "10",
+    "balance": 3000,
+    "productCode": "PROD-1018"
+  },
+  {
+    "product": "Fazzio",
+    "stockIn": "145",
+    "stockOut": "65",
+    "balance": 10500,
+    "productCode": "PROD-1019"
+  },
+  {
+    "product": "Kymco Like",
+    "stockIn": "90",
+    "stockOut": "28",
+    "balance": 6700,
+    "productCode": "PROD-1020"
+  },
+  {
+    "product": "Rusi Titan",
+    "stockIn": "65",
+    "stockOut": "17",
+    "balance": 4100,
+    "productCode": "PROD-1021"
+  },
+  {
+    "product": "Motorstar Cafe",
+    "stockIn": "50",
+    "stockOut": "12",
+    "balance": 2900,
+    "productCode": "PROD-1022"
+  },
+  {
+    "product": "Skygo Boss",
+    "stockIn": "80",
+    "stockOut": "33",
+    "balance": 5400,
+    "productCode": "PROD-1023"
+  },
+  {
+    "product": "Euro Keeway",
+    "stockIn": "70",
+    "stockOut": "21",
+    "balance": 4600,
+    "productCode": "PROD-1024"
+  },
+  {
+    "product": "Honda TMX",
+    "stockIn": "125",
+    "stockOut": "58",
+    "balance": 8800,
+    "productCode": "PROD-1025"
+  },
+  {
+    "product": "Yamaha SZ",
+    "stockIn": "95",
+    "stockOut": "37",
+    "balance": 7200,
+    "productCode": "PROD-1026"
+  },
+  {
+    "product": "Suzuki Gixxer",
+    "stockIn": "85",
+    "stockOut": "29",
+    "balance": 6400,
+    "productCode": "PROD-1027"
+  },
+  {
+    "product": "Kawasaki Rouser",
+    "stockIn": "100",
+    "stockOut": "42",
+    "balance": 7600,
+    "productCode": "PROD-1028"
+  },
+  {
+    "product": "Honda RS125",
+    "stockIn": "110",
+    "stockOut": "47",
+    "balance": 8300,
+    "productCode": "PROD-1029"
+  },
+  {
+    "product": "Yamaha YTX",
+    "stockIn": "75",
+    "stockOut": "19",
+    "balance": 5200,
+    "productCode": "PROD-1030"
+  }
+]

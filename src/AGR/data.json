@@ -1,0 +1,644 @@
+{
+    "items": [
+        {
+            "data": [
+                {
+                    "Name": "Customer 1",
+                    "ar_4266": 4000,
+                    "ar_4267": 12000,
+                    "ar_4268": 64278,
+                    "ar_total": 80278,
+                    "balDetailed": 80278,
+                    "balDetailed_4266": 4000,
+                    "balDetailed_4267": 12000,
+                    "balDetailed_4268": 64278,
+                    "collCurrent": 4000.0,
+                    "dueDate": "2025-01-25T9:15:0",
+                    "dueTotal": 4000.0,
+                    "expected_output": {
+                        "_balDP": 0,
+                        "ar_total": 80278,
+                        "collCurrent": 4000,
+                        "dueCurrent": 4000,
+                        "eff_denominator": 4000,
+                        "eff_numerator": 4000,
+                        "sked_rebate": 300
+                    },
+                    "expected_output_gt": {
+                        "ar_total": 80178
+                    },
+                    "expected_output_lt": {
+                        "ar_total": 83178
+                    },
+                    "expected_output_startswith": {
+                        "sked_desc": "Down"
+                    },
+                    "jDate": "2025-01-25T9:15:0",
+                    "simDescription": "base test",
+                    "termsDays": 365,
+                    "sked_current_4266": 4000.0,
+                    "sked_percent_4266": 100.0,
+                    "sked_total_4266": 4000.0,
+                    "sked_current_4268": 0,
+                    "sked_percent_4268": 0,
+                    "sked_total_4268": 0,
+                    "sked_current_4267": 0,
+                    "sked_percent_4267": 0,
+                    "sked_total_4267": 0,
+                    "sked_desc": "Downpayment",
+                    "sked_date": "2025-01-25T00:00:00",
+                    "sked_total": 4000.0,
+                    "dueCurrentSked": 4000.0,
+                    "collPeriod": 4000.0,
+                    "sked_rebate": 300.0,
+                    "dueCurrent": 4000.0,
+                    "gac": false,
+                    "_balDP": 0,
+                    "pastDue": 0.0,
+                    "collPastDue": 0,
+                    "collAdvance": 0.0,
+                    "collRebateCurrent": 0,
+                    "collRebateAdvance": 0,
+                    "balEnding": 76278.0,
+                    "origCollValues": {
+                        "dueTotalOrig": 4000.0,
+                        "dueTotal": 4000.0,
+                        "collCurrent": 4000.0,
+                        "dueCurrent": 4000.0,
+                        "pastDue": 0.0,
+                        "collRebate": 0.0
+                    },
+                    "pastDue30": 0,
+                    "pastDue60": 0,
+                    "pastDue90": 0,
+                    "pastDue120": 0,
+                    "pastDueElse": 0.0,
+                    "totalCollection": 0.0,
+                    "eff_numerator": 4000.0,
+                    "eff_denominator": 4000.0,
+                    "eff_notes": [],
+                    "errors": {
+                        "not-equal": {},
+                        "gt": {},
+                        "gte": {},
+                        "lt": {},
+                        "lte": {},
+                        "startswith": {}
+                    },
+                    "warnings": [],
+                    "result": {
+                        "equal": {
+                            "_balDP": "ok",
+                            "ar_total": "ok",
+                            "collCurrent": "ok",
+                            "dueCurrent": "ok",
+                            "eff_denominator": "ok",
+                            "eff_numerator": "ok",
+                            "sked_rebate": "ok"
+                        },
+                        "gt": {
+                            "ar_total": "ok"
+                        },
+                        "gte": {},
+                        "lt": {
+                            "ar_total": "ok"
+                        },
+                        "lte": {},
+                        "startswith": {
+                            "sked_desc": "ok"
+                        }
+                    }
+                },
+                {
+                    "Name": "Customer 1",
+                    "ar_4266": 4000,
+                    "ar_4267": 12000,
+                    "ar_4268": 64278,
+                    "ar_total": 80278,
+                    "balDetailed": 80278,
+                    "balDetailed_4266": 4000,
+                    "balDetailed_4267": 12000,
+                    "balDetailed_4268": 64278,
+                    "collCurrent": 4000.0,
+                    "dueDate": "2025-01-25T9:15:0",
+                    "dueTotal": 4000.0,
+                    "expected_output": {
+                        "ar_total": 80278,
+                        "collAdvance": 500,
+                        "collCurrent": 4000,
+                        "dueCurrent": 4000,
+                        "sked_rebate": 300
+                    },
+                    "expected_output_gt": {
+                        "ar_total": 80178
+                    },
+                    "expected_output_lt": {
+                        "ar_total": 83178
+                    },
+                    "expected_output_startswith": {
+                        "sked_desc": "Down"
+                    },
+                    "jDate": "2025-01-25T9:15:0",
+                    "simDescription": "With Advanced Collection",
+                    "termsDays": 365,
+                    "sked_current_4266": 4000.0,
+                    "sked_percent_4266": 100.0,
+                    "sked_total_4266": 4000.0,
+                    "sked_current_4268": 0,
+                    "sked_percent_4268": 0,
+                    "sked_total_4268": 0,
+                    "sked_current_4267": 0,
+                    "sked_percent_4267": 0,
+                    "sked_total_4267": 0,
+                    "sked_desc": "Downpayment",
+                    "sked_date": "2025-01-25T00:00:00",
+                    "sked_total": 4000.0,
+                    "dueCurrentSked": 4000.0,
+                    "collPeriod": 4500.0,
+                    "sked_rebate": 300.0,
+                    "dueCurrent": 4000.0,
+                    "gac": false,
+                    "_balDP": 0,
+                    "pastDue": 0.0,
+                    "collPastDue": 0,
+                    "collAdvance": 500.0,
+                    "collRebateCurrent": 0,
+                    "collRebateAdvance": 0,
+                    "balEnding": 75778.0,
+                    "origCollValues": {
+                        "dueTotalOrig": 4000.0,
+                        "dueTotal": 4000.0,
+                        "collCurrent": 4500.0,
+                        "dueCurrent": 4000.0,
+                        "pastDue": 0.0,
+                        "collRebate": 0.0
+                    },
+                    "pastDue30": 0,
+                    "pastDue60": 0,
+                    "pastDue90": 0,
+                    "pastDue120": 0,
+                    "pastDueElse": 0.0,
+                    "totalCollection": 0.0,
+                    "eff_numerator": 4500.0,
+                    "eff_denominator": 4500.0,
+                    "eff_notes": [],
+                    "errors": {
+                        "not-equal": {},
+                        "gt": {},
+                        "gte": {},
+                        "lt": {},
+                        "lte": {},
+                        "startswith": {}
+                    },
+                    "warnings": [],
+                    "result": {
+                        "equal": {
+                            "ar_total": "ok",
+                            "collAdvance": "ok",
+                            "collCurrent": "ok",
+                            "dueCurrent": "ok",
+                            "sked_rebate": "ok"
+                        },
+                        "gt": {
+                            "ar_total": "ok"
+                        },
+                        "gte": {},
+                        "lt": {
+                            "ar_total": "ok"
+                        },
+                        "lte": {},
+                        "startswith": {
+                            "sked_desc": "ok"
+                        }
+                    }
+                },
+                {
+                    "Name": "Customer 2",
+                    "ar_4266": 4000,
+                    "ar_4267": 12000,
+                    "ar_4268": 64278,
+                    "ar_total": 80278,
+                    "balDetailed": 80278,
+                    "balDetailed_4266": 4000,
+                    "balDetailed_4267": 12000,
+                    "balDetailed_4268": 64278,
+                    "collCurrent": 0,
+                    "dueDate": "2025-01-25T9:15:0",
+                    "dueTotal": 6000.0,
+                    "expected_output": {
+                        "ar_total": 80278,
+                        "collAdvance": 0,
+                        "collCurrent": 0,
+                        "collPastDue": 3500,
+                        "dueCurrent": 2000,
+                        "dueCurrentSked": 6000,
+                        "pastDue": 4000,
+                        "sked_rebate": 300
+                    },
+                    "expected_output_gt": {
+                        "ar_total": 80178
+                    },
+                    "expected_output_lt": {
+                        "ar_total": 83178
+                    },
+                    "expected_output_startswith": {
+                        "sked_desc": "1st"
+                    },
+                    "jDate": "2025-01-25T9:15:0",
+                    "simDescription": "1st Installment no DP Paid - coll less than pastDue",
+                    "termsDays": 365,
+                    "sked_current_4266": 0,
+                    "sked_percent_4266": 0,
+                    "sked_total_4266": 0,
+                    "sked_current_4268": 0,
+                    "sked_percent_4268": 0,
+                    "sked_total_4268": 0,
+                    "sked_current_4267": 0,
+                    "sked_percent_4267": 0,
+                    "sked_total_4267": 0,
+                    "sked_desc": "1st Installment",
+                    "sked_date": "2025-01-25T00:00:00",
+                    "sked_total": 6000.0,
+                    "dueCurrentSked": 6000.0,
+                    "collPeriod": 3500.0,
+                    "sked_rebate": 300.0,
+                    "dueCurrent": 2000.0,
+                    "gac": false,
+                    "_balDP": 0,
+                    "pastDue": 4000.0,
+                    "collPastDue": 3500.0,
+                    "collAdvance": 0,
+                    "collRebateCurrent": 0,
+                    "collRebateAdvance": 0,
+                    "balEnding": 76778.0,
+                    "origCollValues": {
+                        "dueTotalOrig": 6000.0,
+                        "dueTotal": 6000.0,
+                        "collCurrent": 3500.0,
+                        "dueCurrent": 2000.0,
+                        "pastDue": 4000.0,
+                        "collRebate": 0.0
+                    },
+                    "pastDue30": 0,
+                    "pastDue60": 0,
+                    "pastDue90": 0,
+                    "pastDue120": 0,
+                    "pastDueElse": 4000.0,
+                    "totalCollection": 0.0,
+                    "eff_numerator": 3500.0,
+                    "eff_denominator": 6000.0,
+                    "eff_notes": [],
+                    "errors": {
+                        "not-equal": {},
+                        "gt": {},
+                        "gte": {},
+                        "lt": {},
+                        "lte": {},
+                        "startswith": {}
+                    },
+                    "warnings": [],
+                    "result": {
+                        "equal": {
+                            "ar_total": "ok",
+                            "collAdvance": "ok",
+                            "collCurrent": "ok",
+                            "collPastDue": "ok",
+                            "dueCurrent": "ok",
+                            "dueCurrentSked": "ok",
+                            "pastDue": "ok",
+                            "sked_rebate": "ok"
+                        },
+                        "gt": {
+                            "ar_total": "ok"
+                        },
+                        "gte": {},
+                        "lt": {
+                            "ar_total": "ok"
+                        },
+                        "lte": {},
+                        "startswith": {
+                            "sked_desc": "ok"
+                        }
+                    }
+                },
+                {
+                    "Name": "Customer 2",
+                    "ar_4266": 4000,
+                    "ar_4267": 12000,
+                    "ar_4268": 64278,
+                    "ar_total": 80278,
+                    "balDetailed": 80278,
+                    "balDetailed_4266": 4000,
+                    "balDetailed_4267": 12000,
+                    "balDetailed_4268": 64278,
+                    "collCurrent": 500.0,
+                    "dueDate": "2025-01-25T9:15:0",
+                    "dueTotal": 6000.0,
+                    "expected_output": {
+                        "ar_total": 80278,
+                        "collAdvance": 0,
+                        "collCurrent": 500,
+                        "collPastDue": 4000,
+                        "dueCurrent": 2000,
+                        "dueCurrentSked": 6000,
+                        "pastDue": 4000,
+                        "sked_rebate": 300
+                    },
+                    "expected_output_gt": {
+                        "ar_total": 80178
+                    },
+                    "expected_output_lt": {
+                        "ar_total": 83178
+                    },
+                    "expected_output_startswith": {
+                        "sked_desc": "1st"
+                    },
+                    "jDate": "2025-01-25T9:15:0",
+                    "simDescription": "1st Installment no DP Paid - coll slightly greater than pastDue",
+                    "termsDays": 365,
+                    "sked_current_4266": 0,
+                    "sked_percent_4266": 0,
+                    "sked_total_4266": 0,
+                    "sked_current_4268": 0,
+                    "sked_percent_4268": 0,
+                    "sked_total_4268": 0,
+                    "sked_current_4267": 0,
+                    "sked_percent_4267": 0,
+                    "sked_total_4267": 0,
+                    "sked_desc": "1st Installment",
+                    "sked_date": "2025-01-25T00:00:00",
+                    "sked_total": 6000.0,
+                    "dueCurrentSked": 6000.0,
+                    "collPeriod": 4500.0,
+                    "sked_rebate": 300.0,
+                    "dueCurrent": 2000.0,
+                    "gac": false,
+                    "_balDP": 0,
+                    "pastDue": 4000.0,
+                    "collPastDue": 4000.0,
+                    "collAdvance": 0,
+                    "collRebateCurrent": 0,
+                    "collRebateAdvance": 0,
+                    "balEnding": 75778.0,
+                    "origCollValues": {
+                        "dueTotalOrig": 6000.0,
+                        "dueTotal": 6000.0,
+                        "collCurrent": 4500.0,
+                        "dueCurrent": 2000.0,
+                        "pastDue": 4000.0,
+                        "collRebate": 0.0
+                    },
+                    "pastDue30": 0,
+                    "pastDue60": 0,
+                    "pastDue90": 0,
+                    "pastDue120": 0,
+                    "pastDueElse": 4000.0,
+                    "totalCollection": 0.0,
+                    "eff_numerator": 4500.0,
+                    "eff_denominator": 6000.0,
+                    "eff_notes": [],
+                    "errors": {
+                        "not-equal": {},
+                        "gt": {},
+                        "gte": {},
+                        "lt": {},
+                        "lte": {},
+                        "startswith": {}
+                    },
+                    "warnings": [],
+                    "result": {
+                        "equal": {
+                            "ar_total": "ok",
+                            "collAdvance": "ok",
+                            "collCurrent": "ok",
+                            "collPastDue": "ok",
+                            "dueCurrent": "ok",
+                            "dueCurrentSked": "ok",
+                            "pastDue": "ok",
+                            "sked_rebate": "ok"
+                        },
+                        "gt": {
+                            "ar_total": "ok"
+                        },
+                        "gte": {},
+                        "lt": {
+                            "ar_total": "ok"
+                        },
+                        "lte": {},
+                        "startswith": {
+                            "sked_desc": "ok"
+                        }
+                    }
+                },
+                {
+                    "Name": "Customer 2",
+                    "ar_4266": 4000,
+                    "ar_4267": 12000,
+                    "ar_4268": 64278,
+                    "ar_total": 80278,
+                    "balDetailed": 80278,
+                    "balDetailed_4266": 4000,
+                    "balDetailed_4267": 12000,
+                    "balDetailed_4268": 64278,
+                    "collCurrent": 2000.0,
+                    "dueDate": "2025-01-25T9:15:0",
+                    "dueTotal": 6000.0,
+                    "expected_output": {
+                        "ar_total": 80278,
+                        "collAdvance": 500,
+                        "collCurrent": 2000,
+                        "collPastDue": 4000,
+                        "dueCurrent": 2000,
+                        "dueCurrentSked": 6000,
+                        "pastDue": 4000,
+                        "sked_rebate": 300
+                    },
+                    "expected_output_gt": {
+                        "ar_total": 80178
+                    },
+                    "expected_output_lt": {
+                        "ar_total": 83178
+                    },
+                    "expected_output_startswith": {
+                        "sked_desc": "1st"
+                    },
+                    "jDate": "2025-01-25T9:15:0",
+                    "simDescription": "1st Installment no DP Paid - with advance coll",
+                    "termsDays": 365,
+                    "sked_current_4266": 0,
+                    "sked_percent_4266": 0,
+                    "sked_total_4266": 0,
+                    "sked_current_4268": 0,
+                    "sked_percent_4268": 0,
+                    "sked_total_4268": 0,
+                    "sked_current_4267": 0,
+                    "sked_percent_4267": 0,
+                    "sked_total_4267": 0,
+                    "sked_desc": "1st Installment",
+                    "sked_date": "2025-01-25T00:00:00",
+                    "sked_total": 6000.0,
+                    "dueCurrentSked": 6000.0,
+                    "collPeriod": 6500.0,
+                    "sked_rebate": 300.0,
+                    "dueCurrent": 2000.0,
+                    "gac": false,
+                    "_balDP": 0,
+                    "pastDue": 4000.0,
+                    "collPastDue": 4000.0,
+                    "collAdvance": 500.0,
+                    "collRebateCurrent": 0,
+                    "collRebateAdvance": 0,
+                    "balEnding": 73778.0,
+                    "origCollValues": {
+                        "dueTotalOrig": 6000.0,
+                        "dueTotal": 6000.0,
+                        "collCurrent": 6500.0,
+                        "dueCurrent": 2000.0,
+                        "pastDue": 4000.0,
+                        "collRebate": 0.0
+                    },
+                    "pastDue30": 0,
+                    "pastDue60": 0,
+                    "pastDue90": 0,
+                    "pastDue120": 0,
+                    "pastDueElse": 4000.0,
+                    "totalCollection": 0.0,
+                    "eff_numerator": 6500.0,
+                    "eff_denominator": 6500.0,
+                    "eff_notes": [],
+                    "errors": {
+                        "not-equal": {},
+                        "gt": {},
+                        "gte": {},
+                        "lt": {},
+                        "lte": {},
+                        "startswith": {}
+                    },
+                    "warnings": [],
+                    "result": {
+                        "equal": {
+                            "ar_total": "ok",
+                            "collAdvance": "ok",
+                            "collCurrent": "ok",
+                            "collPastDue": "ok",
+                            "dueCurrent": "ok",
+                            "dueCurrentSked": "ok",
+                            "pastDue": "ok",
+                            "sked_rebate": "ok"
+                        },
+                        "gt": {
+                            "ar_total": "ok"
+                        },
+                        "gte": {},
+                        "lt": {
+                            "ar_total": "ok"
+                        },
+                        "lte": {},
+                        "startswith": {
+                            "sked_desc": "ok"
+                        }
+                    }
+                },
+                {
+                    "Name": "Customer 2",
+                    "ar_4266": 4000,
+                    "ar_4267": 12000,
+                    "ar_4268": 64278,
+                    "ar_total": 80278,
+                    "balDetailed": 80278,
+                    "balDetailed_4266": 4000,
+                    "balDetailed_4267": 12000,
+                    "balDetailed_4268": 64278,
+                    "collCurrent": 6500.0,
+                    "dueDate": "2025-01-25T9:15:0",
+                    "dueTotal": 6000.0,
+                    "expected_output": {
+                        "collCurrent": 65000,
+                        "dueCurrent": 80278,
+                        "sked_desc": "No schedule"
+                    },
+                    "expected_output_gt": {},
+                    "expected_output_lt": {},
+                    "expected_output_startswith": {},
+                    "jDate": "2025-01-25T9:15:0",
+                    "simDescription": "No schedule - all is due, all is current",
+                    "skedCurrent": null,
+                    "skedValues": null,
+                    "termsDays": 365,
+                    "sked_current_4266": 0,
+                    "sked_percent_4266": 0,
+                    "sked_total_4266": 0,
+                    "sked_current_4268": 0,
+                    "sked_percent_4268": 0,
+                    "sked_total_4268": 0,
+                    "sked_current_4267": 0,
+                    "sked_percent_4267": 0,
+                    "sked_total_4267": 0,
+                    "sked_desc": "No schedule",
+                    "collPeriod": 6500.0,
+                    "dueCurrent": 80278.0,
+                    "gac": false,
+                    "_balDP": 0,
+                    "pastDue": 0.0,
+                    "collPastDue": 0,
+                    "collAdvance": 0,
+                    "collRebateCurrent": 0.0,
+                    "collRebateAdvance": 0,
+                    "balEnding": 73778.0,
+                    "origCollValues": {
+                        "dueTotalOrig": 6000.0,
+                        "dueTotal": 6000.0,
+                        "collCurrent": 6500.0,
+                        "dueCurrent": 80278.0,
+                        "pastDue": 0.0,
+                        "collRebate": 0.0
+                    },
+                    "pastDue30": 0,
+                    "pastDue60": 0,
+                    "pastDue90": 0,
+                    "pastDue120": 0,
+                    "pastDueElse": 0.0,
+                    "totalCollection": 0.0,
+                    "eff_numerator": 6500.0,
+                    "eff_denominator": 80278.0,
+                    "eff_notes": [
+                        "No Schedule all balance reflected as Current Due - 80278.0000 80278.0000.",
+                        "No Rebate schedule set - advanced rebate collection can not be computed."
+                    ],
+                    "errors": {
+                        "not-equal": {
+                            "collCurrent": [
+                                6500.0,
+                                65000
+                            ]
+                        },
+                        "gt": {},
+                        "gte": {},
+                        "lt": {},
+                        "lte": {},
+                        "startswith": {}
+                    },
+                    "warnings": [],
+                    "result": {
+                        "equal": {
+                            "dueCurrent": "ok",
+                            "sked_desc": "ok"
+                        },
+                        "gt": {},
+                        "gte": {},
+                        "lt": {},
+                        "lte": {},
+                        "startswith": {}
+                    }
+                }
+            ],
+            "dt1": "2025-1-01T00:00:00+08:00",
+            "dt2": "2025-1-31T23:59:59+08:00"
+        }
+    ],
+    "count": {
+        "ok": 53,
+        "error": 1,
+        "total": 54
+    }
+}

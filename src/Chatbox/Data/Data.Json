@@ -1,0 +1,46 @@
+{
+    "knowledge_base": [
+      {
+        "id": "salary_frontend",
+        "category": "salary",
+        "tags": ["frontend", "react", "web developer", "ui developer"],
+        "search_text": "frontend developer react web developer salary pay compensation monthly wage",
+        "data": {
+          "role": "Frontend Developer",
+          "level": "Junior-Mid",
+          "salary_min": 25000,
+          "salary_max": 45000,
+          "currency": "PHP",
+          "frequency": "monthly"
+        }
+      },
+      {
+        "id": "salary_backend",
+        "category": "salary",
+        "tags": ["backend", "api", "nodejs", "server developer"],
+        "search_text": "backend developer api nodejs server developer salary compensation monthly pay",
+        "data": {
+          "role": "Backend Developer",
+          "level": "Mid",
+          "salary_min": 30000,
+          "salary_max": 60000,
+          "currency": "PHP",
+          "frequency": "monthly"
+        }
+      },
+      {
+        "id": "salary_intern",
+        "category": "salary",
+        "tags": ["intern", "ojt", "trainee", "allowance"],
+        "search_text": "intern allowance ojt trainee salary pay internship compensation",
+        "data": {
+          "role": "Intern",
+          "salary": 5000,
+          "currency": "PHP",
+          "frequency": "monthly",
+          "type": "allowance"
+        }
+      }
+    ]
+  }
+  
