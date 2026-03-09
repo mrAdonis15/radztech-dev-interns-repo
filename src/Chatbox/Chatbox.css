@@ -586,21 +586,23 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 8px 0 12px;
-  margin-bottom: 4px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 6px 0 10px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 .chart-with-controls-stock .chart-renderer-wrap {
   background: #fff;
-  border-radius: 8px;
-  padding: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border-radius: 6px;
+  padding: 16px;
+  box-shadow: none;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 .chart-stock-title {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #333;
+  letter-spacing: 0.02em;
 }
 .chart-stock-controls {
   display: flex;

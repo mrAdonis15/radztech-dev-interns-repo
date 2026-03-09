@@ -34,8 +34,8 @@ const ChartRenderer = ({ chart }) => {
         legend: {
           display: true,
           position: "top",
-          align: "end",
-          fullWidth: false,
+          align: "center",
+          fullWidth: true,
           labels: {
             boxWidth: 14,
             padding: 16,
@@ -53,14 +53,14 @@ const ChartRenderer = ({ chart }) => {
             ? {
                 xAxes: [
                   {
-                    gridLines: { display: true, color: "rgba(0,0,0,0.08)", borderDash: [4, 4] },
+                    gridLines: { display: true, color: "rgba(0,0,0,0.06)", zeroLineColor: "rgba(0,0,0,0.1)" },
                     ticks: { fontColor: "#666", fontSize: 11, maxRotation: 45, minRotation: 0 },
                   },
                 ],
                 yAxes: [
                   {
-                    gridLines: { display: true, color: "rgba(0,0,0,0.08)", borderDash: [4, 4] },
-                    ticks: { fontColor: "#666", fontSize: 11, beginAtZero: true, stepSize: 0.5 },
+                    gridLines: { display: true, color: "rgba(0,0,0,0.06)", zeroLineColor: "rgba(0,0,0,0.12)" },
+                    ticks: { fontColor: "#666", fontSize: 11, beginAtZero: true, stepSize: 1 },
                   },
                 ],
               }
