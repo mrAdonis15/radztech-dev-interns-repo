@@ -8,6 +8,7 @@ import HistoryIcon from "@material-ui/icons/History";
 import AddCommentIcon from "@material-ui/icons/AddComment";
 import FullscreenIcon from "@material-ui/icons/Fullscreen";
 import FullscreenExitIcon from "@material-ui/icons/FullscreenExit";
+import MoreVertIcon from "@material-ui/icons/MoreVert";
 import radzLogo from "./Assets/SHARED] Radztech Interns Logo - 32.png";
 
 import { sanitizeColor } from "./colotheme.js";
@@ -134,17 +135,33 @@ function saveHistory(history) {
   } catch (_) {}
 }
 
+const MAX_TITLE_LEN = 42;
+
 /** @param {Array<{id,sender,text,time}>} messages */
-function getTitleFromMessages(messages) {
-  const firstUser = messages.find((m) => m.sender === "me");
+export function getTitleFromMessages(messages) {
+  if (!messages || messages.length === 0) return "New Chat";
+
+  const userMessages = messages.filter((m) => m.sender === "me" && m.text && m.text.trim());
+  const botMessages = messages.filter((m) => m.sender === "bot" && m.text && m.text.trim());
+
+  // Use first user message as title (including "hi", "hello", etc.)
+  const firstUser = userMessages[0];
   if (firstUser && firstUser.text) {
     let text = firstUser.text.trim();
-    if (!text) return "Chat";
     text = text.charAt(0).toUpperCase() + text.slice(1);
-    const maxLen = 40;
-    return text.length > maxLen ? text.slice(0, maxLen).trim() + "…" : text;
+    return text.length > MAX_TITLE_LEN ? text.slice(0, MAX_TITLE_LEN).trim() + "…" : text;
   }
-  return "Chat";
+
+  // Fallback: first bot reply
+  const firstBot = botMessages[0];
+  if (firstBot && firstBot.text) {
+    let text = firstBot.text.trim().replace(/\s+/g, " ");
+    if (text.length > 5) {
+      return text.length > MAX_TITLE_LEN ? text.slice(0, MAX_TITLE_LEN).trim() + "…" : text;
+    }
+  }
+
+  return "New Chat";
 }
 
 /**
@@ -755,6 +772,7 @@ export function ChatHeader({
         {onExpandToggle && (
           <IconButton
             size="small"
+            className="chat-expand-btn"
             onClick={onExpandToggle}
             aria-label={isExpanded ? "Exit expanded view" : "Expand chat"}
             title={isExpanded ? "Exit expanded view" : "Expand chat"}
@@ -789,5 +807,34 @@ export function ChatHeader({
         </IconButton>
       </div>
     </div>
+  );
+}
+
+// --- UlapAI Main Header (for two-panel expanded layout) ---
+export function UlapAIMainHeader({ onMinimize, onMore }) {
+  return (
+    <header className="chat-ulap-main-header">
+      <Typography variant="h6" className="chat-ulap-main-header-title">
+        UlapAI
+      </Typography>
+      <div className="chat-ulap-main-header-right">
+        {onMore && (
+          <IconButton size="small" onClick={onMore} aria-label="More options" className="chat-ulap-header-icon-btn">
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
+        )}
+        {onMinimize && (
+          <IconButton
+            size="small"
+            onClick={onMinimize}
+            aria-label="Minimize"
+            title="Minimize"
+            className="chat-ulap-header-icon-btn chat-expand-btn"
+          >
+            <FullscreenExitIcon fontSize="small" />
+          </IconButton>
+        )}
+      </div>
+    </header>
   );
 }

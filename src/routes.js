@@ -2,7 +2,6 @@ import DefaultLayout from "./layouts/DefaultLayout";
 import ChatboxLayout from "./layouts/ChatboxLayout";
 import Login from "./Login/Login";
 import BizUI from "./components/bizUI";
-import Ulap from "./components/Ulap/Ulap";
 import DisplayPage from "./components/Kurt/pages/DisplayPage";
 import Graphs from "./components/HistoricalGraph/pages/graphs";
 import Jayson from "./components/Adam/components/jsontask";
@@ -22,8 +21,7 @@ import ChatbotChoicePage from "./components/Merlvin/ChatbotChoicePage";
 import ImageCompressor from "./ImageCompress/ImageCompressor";
 import SqlFormatter from "./components/SQL Formatter/SqlFormatter";
 import Timelogstest from "./components/Adam/components/timelogstest";
-import PythonAIPage from "./components/Merlvin/PythonAI/PythonAIPage";
-import { ProtectedRoute } from "./helpers/ProtectedRoute";
+import AGR from "./AGR";
 
 const ChatboxPage = () => <Chatbox defaultOpen />;
 
@@ -52,10 +50,6 @@ const routes = [
     element: DefaultLayout,
     guard: ProtectedRoute,
     children: [
-      {
-        path: "/Ulap",
-        element: Ulap,
-      },
       {
         path: "/KurtJSON",
         element: DisplayPage,
@@ -136,6 +130,10 @@ const routes = [
         element: ListofApplicants,
       },
     ],
+  },
+  {
+    path: "/AGR",
+    element: AGR,
   },
 ];
 

@@ -4,6 +4,7 @@ import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Button from "@material-ui/core/Button";
 import ExitToAppIcon from "@material-ui/icons/ExitToApp";
+import BusinessCenterIcon from "@material-ui/icons/Business";
 import { request, API_URLS } from "../Chatbox/api/Request";
 import "./LoginToolbar.css";
 
@@ -95,24 +96,34 @@ class LoginToolbar extends Component {
     return (
       <AppBar position="fixed" className="login-toolbar-appbar">
         <Toolbar className="login-toolbar" disableGutters>
-          <div className="login-toolbar-logo">
-            <img src="/favicon.ico" alt="UlapBiz" className="login-toolbar-icon" />
-            <span className="login-toolbar-text">
-              <span className="login-toolbar-ulap">Ulap</span>
-              <span className="login-toolbar-biz">.Biz</span>
-            </span>
+          <div className="login-toolbar-container">
+            <div className="login-toolbar-logo">
+              <div className="login-toolbar-icon-wrap">
+                <img src="/favicon.ico" alt="UlapBiz" className="login-toolbar-icon" />
+              </div>
+              <span className="login-toolbar-text">
+                UlapBiz
+              </span>
+            </div>
+            <div className="login-toolbar-spacer" />
+            <Button
+              variant="text"
+              endIcon={<BusinessCenterIcon />}
+              onClick={() => this.props.navigate("/select-biz")}
+              className="login-toolbar-select-biz"
+            >
+              SELECT BIZ
+            </Button>
+            <Button
+              variant="text"
+              endIcon={<ExitToAppIcon />}
+              onClick={this.handleLogout}
+              disabled={loggingOut}
+              className="login-toolbar-logout"
+            >
+              {loggingOut ? "Logging out..." : "LOGOUT"}
+            </Button>
           </div>
-          <div className="login-toolbar-spacer" />
-          <Button
-            variant="outlined"
-            color="inherit"
-            startIcon={<ExitToAppIcon />}
-            onClick={this.handleLogout}
-            disabled={loggingOut}
-            className="login-toolbar-logout"
-          >
-            {loggingOut ? "Logging out..." : "Logout"}
-          </Button>
         </Toolbar>
       </AppBar>
     );

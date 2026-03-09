@@ -19,6 +19,7 @@ export default function ChatInputArea({
   onDragStart,
   themeProps,
   isExpanded = false,
+  placeholder = "Message",
 }) {
   const {
     showThemePicker,
@@ -34,15 +35,16 @@ export default function ChatInputArea({
   const [isHoveringTheme, setIsHoveringTheme] = useState(false);
 
   return (
-    <div
-      className={
-        "chat-inputArea chat-inputArea-emojiAnchor" +
-        (isExpanded ? "" : " chat-inputArea-draggable")
-      }
-      onMouseDown={isExpanded ? undefined : onDragStart}
-      aria-label={isExpanded ? "Message input" : "Drag to move chat window"}
-    >
-      <Paper className="chat-inputPaper" elevation={0}>
+    <div className="chat-input-container">
+      <div
+        className={
+          "chat-inputArea chat-inputArea-emojiAnchor" +
+          (isExpanded ? "" : " chat-inputArea-draggable")
+        }
+        onMouseDown={isExpanded ? undefined : onDragStart}
+        aria-label={isExpanded ? "Message input" : "Drag to move chat window"}
+      >
+        <Paper className="chat-inputPaper" elevation={0}>
         {/* Emoji Section: dropdown anchored to icon so it pops up on top of it */}
         <div className="emoji-wrapper" style={{ position: "relative" }}>
           {showEmoji && (
@@ -67,20 +69,23 @@ export default function ChatInputArea({
 
         <div
           className="slash-menu-wrapper"
-          style={{ position: "relative", flex: 1 }}
+          style={{ position: "relative", flex: 1, minHeight: 24 }}
         >
           <InputBase
             inputRef={inputRef}
-            className="chat-inputBase"
-            placeholder="Message"
+            className="chat-inputBase chat-inputBase-multiline"
+            placeholder={placeholder}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
+            multiline
+            minRows={1}
+            maxRows={8}
           />
         </div>
 
         {/* Theme Toggle */}
-        <div style={{ position: "relative" }}>
+        <div className="chat-input-theme-wrap" style={{ position: "relative" }}>
           <div
             style={{ position: "relative", display: "inline-block" }}
             onMouseEnter={() => setIsHoveringTheme(true)}
@@ -179,15 +184,16 @@ export default function ChatInputArea({
             </div>
           )}
         </div>
-      </Paper>
+        </Paper>
 
-      <IconButton
-        className="chat-sendButton"
-        style={{ marginLeft: 8 }}
-        onClick={onSend}
-      >
-        <SendIcon />
-      </IconButton>
+        <IconButton
+          className="chat-sendButton"
+          style={{ marginLeft: 8 }}
+          onClick={onSend}
+        >
+          <SendIcon />
+        </IconButton>
+      </div>
     </div>
   );
 }
