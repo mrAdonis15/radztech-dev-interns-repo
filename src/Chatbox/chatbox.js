@@ -549,8 +549,7 @@ export default function Chatbox({ defaultOpen = false }) {
                 (history.length === 0 ? (
                   <MenuItem disabled>
                     <ListItemText
-                      primary="No past chats"
-                      secondary="Start a new chat to see it here."
+                      primary="No chats yet"
                       primaryTypographyProps={{ variant: "body2" }}
                       secondaryTypographyProps={{ variant: "caption" }}
                     />
