@@ -275,163 +275,90 @@ export default function Chatbox({ defaultOpen = false }) {
       {isOpen &&
         (isExpanded ? (
           <div className="chat-expanded-wrap">
-            <Paper
-              ref={panelRef}
-              className={
-                "chat-panel chat-panel-popup chat-panel-expanded " +
-                (maintenanceOpen ? "maintenance" : "online")
-              }
-              elevation={8}
-            >
-              <ChatIcon fontSize="large" />
-            </button>
-
-            {isOpen && (
-              isExpanded ? (
-                <div className="chat-expanded-wrap">
-                  <div className="chat-ulap-layout">
-                    <ChatSidebar
-                      onNewChat={handleNewChat}
-                      history={history}
-                      onSelectChat={handleSelectHistoryChat}
-                      onDeleteChat={handleDeleteHistoryChat}
-                    />
-                    <div className="chat-ulap-main">
-                      <UlapAIMainHeader
-                        onMinimize={() => { setIsOpen(false); setIsExpanded(false); }}
-                      />
-                      {maintenanceOpen ? (
-                        <div className="chat-body chat-ulap-main-body">
-                          <div style={{ display: "flex", flexDirection: "column" }}>
-                            <div style={{ display: "flex", width: "100%", justifyContent: "flex-start" }}>
-                              <div style={{ display: "flex", flexDirection: "column", marginLeft: 16 }}>
-                                <div className="chat-bubbleLeft">
-                                  <Typography variant="body2" className="bubble-text left">
-                                    Service is currently under maintenance.
-                                  </Typography>
-                                </div>
-                                <Typography variant="caption" className="bubble-time left" style={{ marginTop: 6, marginLeft: 4 }}>
-                                  {new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}
-                                </Typography>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="chat-body chat-ulap-main-body" ref={bodyRef}>
-                            <div style={{ display: "flex", flexDirection: "column" }}>
-                              {messages.map((msg) => (
-                                <ChatMessage key={msg.id} msg={msg} />
-                              ))}
-                            </div>
-                          </div>
-                          <ChatInputArea
-                            input={input}
-                            setInput={setInput}
-                            inputRef={inputRef}
-                            showEmoji={showEmoji}
-                            setShowEmoji={setShowEmoji}
-                            onEmojiClick={handleEmojiClick}
-                            onSend={handleSend}
-                            onKeyDown={handleKeyDown}
-                            onDragStart={handleDragStart}
-                            themeProps={theme}
-                            isExpanded={true}
-                            placeholder="Ask UlapAI"
-                          />
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <Paper
-                  ref={panelRef}
-                  className={
-                    "chat-panel chat-panel-popup " +
-                    (maintenanceOpen ? "maintenance" : "online")
-                  }
-                  elevation={8}
-                  style={panelStyle}
-                >
-                <ChatHeader
-                  maintenanceOpen={maintenanceOpen}
-                  onMaintenanceChange={setMaintenanceOpen}
-                  onMinimize={() => { setIsOpen(false); setIsExpanded(false); }}
-                  onClose={() => { setIsOpen(false); setIsExpanded(false); }}
-                  onDragStart={handleDragStart}
-                  onHistoryClick={
-                    maintenanceOpen
-                      ? undefined
-                      : () => {
-                          setHistory(loadHistory());
-                          setShowHistoryOpen(true);
-                        }
-                  }
-                  onNewChatClick={maintenanceOpen ? undefined : handleNewChat}
-                  isExpanded={isExpanded}
-                  onExpandToggle={() => setIsExpanded((e) => !e)}
+            <div className="chat-ulap-layout">
+              <ChatSidebar
+                onNewChat={handleNewChat}
+                history={history}
+                onSelectChat={handleSelectHistoryChat}
+                onDeleteChat={handleDeleteHistoryChat}
+              />
+              <div className="chat-ulap-main">
+                <UlapAIMainHeader
+                  onMinimize={() => {
+                    setIsOpen(false);
+                    setIsExpanded(false);
+                  }}
                 />
-
                 {maintenanceOpen ? (
-                  <div className="chat-body">
+                  <div className="chat-body chat-ulap-main-body">
                     <div style={{ display: "flex", flexDirection: "column" }}>
                       <div
                         style={{
                           display: "flex",
-                          flexDirection: "column",
-                          marginLeft: 16,
+                          width: "100%",
+                          justifyContent: "flex-start",
                         }}
                       >
-                        <div className="chat-bubbleLeft">
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            marginLeft: 16,
+                          }}
+                        >
+                          <div className="chat-bubbleLeft">
+                            <Typography
+                              variant="body2"
+                              className="bubble-text left"
+                            >
+                              Service is currently under maintenance.
+                            </Typography>
+                          </div>
                           <Typography
-                            variant="body2"
-                            className="bubble-text left"
+                            variant="caption"
+                            className="bubble-time left"
+                            style={{ marginTop: 6, marginLeft: 4 }}
                           >
-                            Service is currently under maintenance.
+                            {new Date().toLocaleTimeString([], {
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true,
+                            })}
                           </Typography>
                         </div>
-                        <Typography
-                          variant="caption"
-                          className="bubble-time left"
-                          style={{ marginTop: 6, marginLeft: 4 }}
-                        >
-                          {new Date().toLocaleTimeString([], {
-                            hour: "numeric",
-                            minute: "2-digit",
-                            hour12: true,
-                          })}
-                        </Typography>
                       </div>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <>
-                  <div className="chat-body" ref={bodyRef}>
-                    <div style={{ display: "flex", flexDirection: "column" }}>
-                      {messages.map((msg) => (
-                        <ChatMessage key={msg.id} msg={msg} />
-                      ))}
+                ) : (
+                  <>
+                    <div
+                      className="chat-body chat-ulap-main-body"
+                      ref={bodyRef}
+                    >
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        {messages.map((msg) => (
+                          <ChatMessage key={msg.id} msg={msg} />
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <ChatInputArea
-                    input={input}
-                    setInput={setInput}
-                    inputRef={inputRef}
-                    showEmoji={showEmoji}
-                    setShowEmoji={setShowEmoji}
-                    onEmojiClick={handleEmojiClick}
-                    onSend={handleSend}
-                    onKeyDown={handleKeyDown}
-                    onDragStart={handleDragStart}
-                    themeProps={theme}
-                    isExpanded={true}
-                  />
-                </>
-              )}
-            </Paper>
+                    <ChatInputArea
+                      input={input}
+                      setInput={setInput}
+                      inputRef={inputRef}
+                      showEmoji={showEmoji}
+                      setShowEmoji={setShowEmoji}
+                      onEmojiClick={handleEmojiClick}
+                      onSend={handleSend}
+                      onKeyDown={handleKeyDown}
+                      onDragStart={handleDragStart}
+                      themeProps={theme}
+                      isExpanded={true}
+                      placeholder="Ask UlapAI"
+                    />
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         ) : (
           <Paper
@@ -474,49 +401,32 @@ export default function Chatbox({ defaultOpen = false }) {
                   <div
                     style={{
                       display: "flex",
-                      width: "100%",
-                      justifyContent: "flex-start",
+                      flexDirection: "column",
+                      marginLeft: 16,
                     }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        marginLeft: 16,
-                      }}
-                    >
-                      <div className="chat-bubbleLeft">
-                        <Typography
-                          variant="body2"
-                          className="bubble-text left"
-                        >
-                          Service is currently under maintenance.
-                        </Typography>
-                      </div>
-                      <Typography
-                        variant="caption"
-                        className="bubble-time left"
-                        style={{ marginTop: 6, marginLeft: 4 }}
-                      >
-                        {new Date().toLocaleTimeString([], {
-                          hour: "numeric",
-                          minute: "2-digit",
-                          hour12: true,
-                        })}
+                    <div className="chat-bubbleLeft">
+                      <Typography variant="body2" className="bubble-text left">
+                        Service is currently under maintenance.
                       </Typography>
                     </div>
+                    <Typography
+                      variant="caption"
+                      className="bubble-time left"
+                      style={{ marginTop: 6, marginLeft: 4 }}
+                    >
+                      {new Date().toLocaleTimeString([], {
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
+                      })}
+                    </Typography>
                   </div>
                 </div>
               </div>
             ) : (
               <>
-                <div
-                  className="chat-body chat-body-draggable"
-                  ref={bodyRef}
-                  onMouseDown={handleDragStart}
-                  role="button"
-                  aria-label="Drag to move chat window"
-                >
+                <div className="chat-body" ref={bodyRef}>
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     {messages.map((msg) => (
                       <ChatMessage key={msg.id} msg={msg} />
@@ -534,7 +444,7 @@ export default function Chatbox({ defaultOpen = false }) {
                   onKeyDown={handleKeyDown}
                   onDragStart={handleDragStart}
                   themeProps={theme}
-                  isExpanded={false}
+                  isExpanded={true}
                 />
               </>
             )}

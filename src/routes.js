@@ -22,6 +22,8 @@ import ImageCompressor from "./ImageCompress/ImageCompressor";
 import SqlFormatter from "./components/SQL Formatter/SqlFormatter";
 import Timelogstest from "./components/Adam/components/timelogstest";
 import AGR from "./AGR";
+import ProtectedRoute from "./helpers/ProtectedRoute";
+import PythonAIPage from "./components/Merlvin/PythonAI/PythonAIPage";
 
 const ChatboxPage = () => <Chatbox defaultOpen />;
 

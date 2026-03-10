@@ -42,61 +42,85 @@ const ChartRenderer = ({ chart }) => {
             console.warn("Invalid dataset:", ds);
             return null;
           }
+          return ds;
+        })
+        .filter((ds) => ds !== null);
 
-    chartInstance.current = new Chart(ctx, {
-      type: defaultType,
-      data: {
-        labels: chart.labels,
-        datasets,
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        backgroundColor: "#ffffff",
-        legend: {
-          display: true,
-          position: "top",
-          align: "center",
-          fullWidth: true,
-          labels: {
-            boxWidth: 14,
-            padding: 16,
-            usePointStyle: true,
-            fontColor: "#333",
-            fontSize: 12,
+      chartInstance.current = new Chart(ctx, {
+        type: defaultType,
+        data: {
+          labels: chart.labels,
+          datasets,
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          backgroundColor: "#ffffff",
+          legend: {
+            display: true,
+            position: "top",
+            align: "center",
+            fullWidth: true,
+            labels: {
+              boxWidth: 14,
+              padding: 16,
+              usePointStyle: true,
+              fontColor: "#333",
+              fontSize: 12,
+            },
+          },
+          title: {
+            display: false,
+            text: chart.title || "",
+          },
+          scales:
+            defaultType !== "pie"
+              ? {
+                  xAxes: [
+                    {
+                      gridLines: {
+                        display: true,
+                        color: "rgba(0,0,0,0.06)",
+                        zeroLineColor: "rgba(0,0,0,0.1)",
+                      },
+                      ticks: {
+                        fontColor: "#666",
+                        fontSize: 11,
+                        maxRotation: 45,
+                        minRotation: 0,
+                      },
+                    },
+                  ],
+                  yAxes: [
+                    {
+                      gridLines: {
+                        display: true,
+                        color: "rgba(0,0,0,0.06)",
+                        zeroLineColor: "rgba(0,0,0,0.12)",
+                      },
+                      ticks: {
+                        fontColor: "#666",
+                        fontSize: 11,
+                        beginAtZero: true,
+                        stepSize: 1,
+                      },
+                    },
+                  ],
+                }
+              : undefined,
+          tooltips: {
+            mode: "index",
+            intersect: false,
+          },
+          hover: {
+            mode: "nearest",
+            intersect: true,
           },
         },
-        title: {
-          display: false,
-          text: chart.title || "",
-        },
-        scales:
-          defaultType !== "pie"
-            ? {
-                xAxes: [
-                  {
-                    gridLines: { display: true, color: "rgba(0,0,0,0.06)", zeroLineColor: "rgba(0,0,0,0.1)" },
-                    ticks: { fontColor: "#666", fontSize: 11, maxRotation: 45, minRotation: 0 },
-                  },
-                ],
-                yAxes: [
-                  {
-                    gridLines: { display: true, color: "rgba(0,0,0,0.06)", zeroLineColor: "rgba(0,0,0,0.12)" },
-                    ticks: { fontColor: "#666", fontSize: 11, beginAtZero: true, stepSize: 1 },
-                  },
-                ],
-              }
-            : undefined,
-        tooltips: {
-          mode: "index",
-          intersect: false,
-        },
-        hover: {
-          mode: "nearest",
-          intersect: true,
-        },
-      },
-    });
+      });
+    } catch (error) {
+      console.error("Error rendering chart:", error);
+    }
 
     return () => {
       if (chartInstance.current) {
