@@ -18,7 +18,6 @@ import ExpandMore from '@material-ui/icons/ExpandMore';
 import TouchAppIcon from '@material-ui/icons/TouchApp';
 import AssignmentIcon from '@material-ui/icons/Assignment';
 import SettingsIcon from '@material-ui/icons/Settings';
-import UlapBizLogo from 'src/images/ulapbiz.png';
 import './Page.css';
 
 function Navbar() {
@@ -105,7 +104,7 @@ function Navbar() {
             <AppBar position="static" className="navbar-appbar">
                 <Toolbar className="navbar-toolbar">
                     <Box className="navbar-logo-section">
-                        <img src={UlapBizLogo} alt="Ulap Biz" className="navbar-logo" />
+                        <img src="/favicon.ico" alt="Ulap Biz" className="navbar-logo" />
                         <Box className="navbar-title">
                             Ulap<span className="navbar-biz-text">Biz</span>
                             <span className="navbar-version-text"> - Applicant Evaluation</span>

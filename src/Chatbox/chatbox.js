@@ -15,13 +15,14 @@ import {
 } from "./chatboxConstants.js";
 import {
   createMessage,
-  loadMessages,
   saveMessages,
   loadHistory,
   addToHistory,
   deleteHistoryItem,
   ChatHeader,
+  UlapAIMainHeader,
 } from "./chatboxUtils.js";
+import ChatSidebar from "./ChatSidebar.js";
 import { useChatboxTheme } from "./useChatboxTheme.js";
 import ChatMessage from "./ChatMessage.js";
 import ChatInputArea from "./ChatInputArea.js";
@@ -34,7 +35,7 @@ export default function Chatbox({ defaultOpen = false }) {
   const panelRef = useRef(null);
   const isSendingRef = useRef(false);
 
-  const [messages, setMessages] = useState(() => loadMessages() || getInitialMessages());
+  const [messages, setMessages] = useState(() => getInitialMessages());
   const [input, setInput] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
@@ -42,7 +43,8 @@ export default function Chatbox({ defaultOpen = false }) {
   const [panelPosition, setPanelPosition] = useState({ x: null, y: null });
   const [showHistoryOpen, setShowHistoryOpen] = useState(false);
   const [history, setHistory] = useState(loadHistory());
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [viewingHistoryId, setViewingHistoryId] = useState(null);
 
   const theme = useChatboxTheme(rootRef);
 
@@ -198,16 +200,19 @@ export default function Chatbox({ defaultOpen = false }) {
 
   const handleNewChat = () => {
     const hasUserMessage = messages.some((m) => m.sender === "me");
-    if (hasUserMessage && messages.length > 0) {
+    const isViewingSavedChat = viewingHistoryId != null;
+    if (hasUserMessage && messages.length > 0 && !isViewingSavedChat) {
       addToHistory(messages);
       setHistory(loadHistory());
     }
     setMessages(getInitialMessages());
+    setViewingHistoryId(null);
     setShowHistoryOpen(false);
   };
 
   const handleSelectHistoryChat = (item) => {
     setMessages(item.messages || []);
+    setViewingHistoryId(item.id);
     setShowHistoryOpen(false);
   };
 
@@ -252,74 +257,61 @@ export default function Chatbox({ defaultOpen = false }) {
             {isOpen && (
               isExpanded ? (
                 <div className="chat-expanded-wrap">
-                  <Paper
-                    ref={panelRef}
-                    className={
-                      "chat-panel chat-panel-popup chat-panel-expanded " +
-                      (maintenanceOpen ? "maintenance" : "online")
-                    }
-                    elevation={8}
-                  >
-                    <ChatHeader
-                  maintenanceOpen={maintenanceOpen}
-                  onMaintenanceChange={setMaintenanceOpen}
-                  onMinimize={() => { setIsOpen(false); setIsExpanded(false); }}
-                  onClose={() => { setIsOpen(false); setIsExpanded(false); }}
-                  onDragStart={handleDragStart}
-                  onHistoryClick={
-                    maintenanceOpen
-                      ? undefined
-                      : () => {
-                          setHistory(loadHistory());
-                          setShowHistoryOpen(true);
-                        }
-                  }
-                  onNewChatClick={maintenanceOpen ? undefined : handleNewChat}
-                  isExpanded={isExpanded}
-                  onExpandToggle={() => setIsExpanded((e) => !e)}
-                />
-                {maintenanceOpen ? (
-                  <div className="chat-body">
-                    <div style={{ display: "flex", flexDirection: "column" }}>
-                      <div style={{ display: "flex", width: "100%", justifyContent: "flex-start" }}>
-                        <div style={{ display: "flex", flexDirection: "column", marginLeft: 16 }}>
-                          <div className="chat-bubbleLeft">
-                            <Typography variant="body2" className="bubble-text left">
-                              Service is currently under maintenance.
-                            </Typography>
+                  <div className="chat-ulap-layout">
+                    <ChatSidebar
+                      onNewChat={handleNewChat}
+                      history={history}
+                      onSelectChat={handleSelectHistoryChat}
+                      onDeleteChat={handleDeleteHistoryChat}
+                    />
+                    <div className="chat-ulap-main">
+                      <UlapAIMainHeader
+                        onMinimize={() => { setIsOpen(false); setIsExpanded(false); }}
+                      />
+                      {maintenanceOpen ? (
+                        <div className="chat-body chat-ulap-main-body">
+                          <div style={{ display: "flex", flexDirection: "column" }}>
+                            <div style={{ display: "flex", width: "100%", justifyContent: "flex-start" }}>
+                              <div style={{ display: "flex", flexDirection: "column", marginLeft: 16 }}>
+                                <div className="chat-bubbleLeft">
+                                  <Typography variant="body2" className="bubble-text left">
+                                    Service is currently under maintenance.
+                                  </Typography>
+                                </div>
+                                <Typography variant="caption" className="bubble-time left" style={{ marginTop: 6, marginLeft: 4 }}>
+                                  {new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}
+                                </Typography>
+                              </div>
+                            </div>
                           </div>
-                          <Typography variant="caption" className="bubble-time left" style={{ marginTop: 6, marginLeft: 4 }}>
-                            {new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}
-                          </Typography>
                         </div>
-                      </div>
+                      ) : (
+                        <>
+                          <div className="chat-body chat-ulap-main-body" ref={bodyRef}>
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                              {messages.map((msg) => (
+                                <ChatMessage key={msg.id} msg={msg} />
+                              ))}
+                            </div>
+                          </div>
+                          <ChatInputArea
+                            input={input}
+                            setInput={setInput}
+                            inputRef={inputRef}
+                            showEmoji={showEmoji}
+                            setShowEmoji={setShowEmoji}
+                            onEmojiClick={handleEmojiClick}
+                            onSend={handleSend}
+                            onKeyDown={handleKeyDown}
+                            onDragStart={handleDragStart}
+                            themeProps={theme}
+                            isExpanded={true}
+                            placeholder="Ask UlapAI"
+                          />
+                        </>
+                      )}
                     </div>
                   </div>
-                ) : (
-                  <>
-                    <div className="chat-body" ref={bodyRef}>
-                      <div style={{ display: "flex", flexDirection: "column" }}>
-                        {messages.map((msg) => (
-                          <ChatMessage key={msg.id} msg={msg} />
-                        ))}
-                      </div>
-                    </div>
-                    <ChatInputArea
-                      input={input}
-                      setInput={setInput}
-                      inputRef={inputRef}
-                      showEmoji={showEmoji}
-                      setShowEmoji={setShowEmoji}
-                      onEmojiClick={handleEmojiClick}
-                      onSend={handleSend}
-                      onKeyDown={handleKeyDown}
-                      onDragStart={handleDragStart}
-                      themeProps={theme}
-                      isExpanded={true}
-                    />
-                  </>
-                )}
-                  </Paper>
                 </div>
               ) : (
                 <Paper

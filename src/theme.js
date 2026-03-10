@@ -98,7 +98,7 @@ const themeSettings = {
   palette: {
     type: "light",
     background: {
-      default: "#FAFAFA",
+      default: "#f5f5f5",
       paper: "#FFFFFF",
       navbar: "#FF7504",
       dark: "#f4f6f8",
