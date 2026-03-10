@@ -2,17 +2,17 @@ import React from "react";
 import Avatar from "@material-ui/core/Avatar";
 import IconButton from "@material-ui/core/IconButton";
 import Typography from "@material-ui/core/Typography";
-import Switch from "@material-ui/core/Switch";
 import CloseIcon from "@material-ui/icons/Close";
-import HistoryIcon from "@material-ui/icons/History";
-import AddCommentIcon from "@material-ui/icons/AddComment";
 import FullscreenIcon from "@material-ui/icons/Fullscreen";
 import FullscreenExitIcon from "@material-ui/icons/FullscreenExit";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
 import radzLogo from "./Assets/SHARED] Radztech Interns Logo - 32.png";
 
 import { sanitizeColor } from "./colotheme.js";
-import { CHAT_STORAGE_KEY, CHAT_HISTORY_STORAGE_KEY } from "./chatboxConstants.js";
+import {
+  CHAT_STORAGE_KEY,
+  CHAT_HISTORY_STORAGE_KEY,
+} from "./chatboxConstants.js";
 
 // Stubs after removing productService (no product/stock data)
 function getProducts() {
@@ -65,19 +65,19 @@ export function applyThemeToElement(el, theme) {
   if (!el || !theme) return;
   el.style.setProperty(
     "--bubble-left",
-    sanitizeColor(theme.bubbleLeft, "rgba(255,117,4,0.5)")
+    sanitizeColor(theme.bubbleLeft, "rgba(255,117,4,0.5)"),
   );
   el.style.setProperty(
     "--bubble-right",
-    sanitizeColor(theme.bubbleRight, "#ffffff")
+    sanitizeColor(theme.bubbleRight, "#ffffff"),
   );
   el.style.setProperty(
     "--border-color",
-    sanitizeColor(theme.borderColor, "#f57c00")
+    sanitizeColor(theme.borderColor, "#f57c00"),
   );
   el.style.setProperty(
     "--panel-accent",
-    sanitizeColor(theme.bubbleRight, "#fff3e0")
+    sanitizeColor(theme.bubbleRight, "#fff3e0"),
   );
 }
 
@@ -138,15 +138,21 @@ const MAX_TITLE_LEN = 42;
 export function getTitleFromMessages(messages) {
   if (!messages || messages.length === 0) return "New Chat";
 
-  const userMessages = messages.filter((m) => m.sender === "me" && m.text && m.text.trim());
-  const botMessages = messages.filter((m) => m.sender === "bot" && m.text && m.text.trim());
+  const userMessages = messages.filter(
+    (m) => m.sender === "me" && m.text && m.text.trim(),
+  );
+  const botMessages = messages.filter(
+    (m) => m.sender === "bot" && m.text && m.text.trim(),
+  );
 
   // Use first user message as title (including "hi", "hello", etc.)
   const firstUser = userMessages[0];
   if (firstUser && firstUser.text) {
     let text = firstUser.text.trim();
     text = text.charAt(0).toUpperCase() + text.slice(1);
-    return text.length > MAX_TITLE_LEN ? text.slice(0, MAX_TITLE_LEN).trim() + "…" : text;
+    return text.length > MAX_TITLE_LEN
+      ? text.slice(0, MAX_TITLE_LEN).trim() + "…"
+      : text;
   }
 
   // Fallback: first bot reply
@@ -154,7 +160,9 @@ export function getTitleFromMessages(messages) {
   if (firstBot && firstBot.text) {
     let text = firstBot.text.trim().replace(/\s+/g, " ");
     if (text.length > 5) {
-      return text.length > MAX_TITLE_LEN ? text.slice(0, MAX_TITLE_LEN).trim() + "…" : text;
+      return text.length > MAX_TITLE_LEN
+        ? text.slice(0, MAX_TITLE_LEN).trim() + "…"
+        : text;
     }
   }
 
@@ -175,7 +183,29 @@ export function addToHistory(messages) {
     messages: [...messages],
     createdAt: Date.now(),
   };
-  const next = [item, ...history].slice(0, 50);   
+  const next = [item, ...history].slice(0, 50);
+  saveHistory(next);
+  return next;
+}
+
+/**
+ * Update an existing history item's messages and title.
+ * @param {string} id - history item id
+ * @param {Array} messages
+ * @returns {Array} updated history
+ */
+export function updateHistoryItem(id, messages) {
+  if (!id || !messages || messages.length === 0) return loadHistory();
+  const history = loadHistory();
+  const idx = history.findIndex((h) => h.id === id);
+  if (idx === -1) return history;
+  const next = [...history];
+  next[idx] = {
+    ...next[idx],
+    title: getTitleFromMessages(messages),
+    messages: [...messages],
+    updatedAt: Date.now(),
+  };
   saveHistory(next);
   return next;
 }
@@ -246,7 +276,8 @@ function validateProductLabels(labels) {
     if (VALID_PRODUCT_LABELS.has(lower)) continue;
     if (validSet.has(lower)) {
       products.push(
-        getProductByName(s) || getProducts().find((p) => p.name.toLowerCase() === lower)
+        getProductByName(s) ||
+          getProducts().find((p) => p.name.toLowerCase() === lower),
       );
     } else {
       invalid.push(s);
@@ -269,7 +300,20 @@ function yrmoToMonthAbbr(yrmo) {
   if (!yrmo || typeof yrmo !== "string") return yrmo;
   const parts = yrmo.split("-");
   const monthNum = parseInt(parts[1], 10);
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   return Number.isFinite(monthNum) && monthNum >= 1 && monthNum <= 12
     ? months[monthNum - 1]
     : yrmo;
@@ -292,12 +336,20 @@ function yearFromLabels(labels) {
 export function buildChartFromStockcardApi(apiData) {
   if (!apiData || !apiData.items || !Array.isArray(apiData.items)) return null;
   const validItems = apiData.items.filter(
-    (i) => i && (i.YrWk != null || i.YrMo != null || i.tIN != null || i.tOUT != null || i.runBal != null)
+    (i) =>
+      i &&
+      (i.YrWk != null ||
+        i.YrMo != null ||
+        i.tIN != null ||
+        i.tOUT != null ||
+        i.runBal != null),
   );
   if (!validItems.length) return null;
 
   const rawLabels = validItems.map((i) => i.YrWk || i.YrMo || "Period");
-  const labels = rawLabels.map((l) => (l.length === 7 && l.match(/^\d{4}-\d{2}$/) ? yrmoToMonthAbbr(l) : l));
+  const labels = rawLabels.map((l) =>
+    l.length === 7 && l.match(/^\d{4}-\d{2}$/) ? yrmoToMonthAbbr(l) : l,
+  );
   const year = yearFromLabels(rawLabels);
   const runBal = validItems.map((i) => Number(i.runBal) || 0);
   const tIN = validItems.map((i) => Number(i.tIN) || 0);
@@ -374,7 +426,9 @@ export function buildChartFromSpec(spec, skipProductValidation = false) {
   }
   if (!Array.isArray(datasets) || datasets.length === 0) return null;
 
-  const validation = skipProductValidation ? { valid: true, invalid: [], products: [], isProductChart: false } : validateProductLabels(labels);
+  const validation = skipProductValidation
+    ? { valid: true, invalid: [], products: [], isProductChart: false }
+    : validateProductLabels(labels);
   if (!validation.valid && validation.invalid.length > 0) {
     return {
       rejected: true,
@@ -382,14 +436,20 @@ export function buildChartFromSpec(spec, skipProductValidation = false) {
     };
   }
 
-  const chartType = ["line", "bar", "pie"].includes(spec.chartType) ? spec.chartType : "bar";
+  const chartType = ["line", "bar", "pie"].includes(spec.chartType)
+    ? spec.chartType
+    : "bar";
 
   let datasetsToUse = datasets;
-  if (validation.products.length > 0 && validation.products.length === labels.length) {
+  if (
+    validation.products.length > 0 &&
+    validation.products.length === labels.length
+  ) {
     datasetsToUse = datasets.map((ds) => ({
       ...ds,
       data: labels.map((lbl) => {
-        const p = getProductByName(lbl) || validation.products[labels.indexOf(lbl)];
+        const p =
+          getProductByName(lbl) || validation.products[labels.indexOf(lbl)];
         return p ? getProductMetric(p, ds.label) : 0;
       }),
     }));
@@ -417,8 +477,12 @@ export function buildChartFromSpec(spec, skipProductValidation = false) {
 
   if (chartType === "pie") {
     const ds = datasetsToUse[0] || {};
-    const data = Array.isArray(ds.data) ? ds.data.map((v) => Number(v) || 0) : [];
-    const n = Math.min(labels.length, data.length) || Math.max(labels.length, data.length);
+    const data = Array.isArray(ds.data)
+      ? ds.data.map((v) => Number(v) || 0)
+      : [];
+    const n =
+      Math.min(labels.length, data.length) ||
+      Math.max(labels.length, data.length);
     finalLabels = labels.slice(0, n);
     const pieData = data
       .slice(0, n)
@@ -434,7 +498,9 @@ export function buildChartFromSpec(spec, skipProductValidation = false) {
     ];
   } else {
     builtDatasets = datasetsToUse.map((ds, i) => {
-      const data = Array.isArray(ds.data) ? ds.data.map((v) => Number(v) || 0) : [];
+      const data = Array.isArray(ds.data)
+        ? ds.data.map((v) => Number(v) || 0)
+        : [];
       const label = ds.label != null ? String(ds.label) : `Series ${i + 1}`;
       const color = CHART_COLORS.lineBar[i % CHART_COLORS.lineBar.length];
       return {
@@ -442,9 +508,11 @@ export function buildChartFromSpec(spec, skipProductValidation = false) {
         data,
         borderColor: ds.borderColor || color,
         backgroundColor:
-          ds.backgroundColor || color.replace("rgb", "rgba").replace(")", ",0.5)"),
-        tension: ds.tension != null ? ds.tension : (chartType === "line" ? 0.3 : 0),
-        fill: ds.fill != null ? ds.fill : (chartType === "line" ? false : true),
+          ds.backgroundColor ||
+          color.replace("rgb", "rgba").replace(")", ",0.5)"),
+        tension:
+          ds.tension != null ? ds.tension : chartType === "line" ? 0.3 : 0,
+        fill: ds.fill != null ? ds.fill : chartType === "line" ? false : true,
         borderWidth: 1,
         pointRadius: ds.pointRadius,
       };
@@ -493,7 +561,7 @@ export function getStockByProductChart(opts = {}) {
     chartType: "bar",
     title: "Current Stock by Product",
     labels: products.map((p) =>
-      p.name.length > 20 ? p.name.slice(0, 20) + "…" : p.name
+      p.name.length > 20 ? p.name.slice(0, 20) + "…" : p.name,
     ),
     datasets: [
       {
@@ -517,7 +585,7 @@ export function getStockMovementChart(opts = {}) {
     product = getProductById(opts.productId);
   } else if (opts.productName) {
     product = getProducts().find((p) =>
-      p.name.toLowerCase().includes(String(opts.productName).toLowerCase())
+      p.name.toLowerCase().includes(String(opts.productName).toLowerCase()),
     );
   }
   if (!product || !product.transactions?.length) return null;
@@ -581,7 +649,7 @@ export function getInventoryValueChart(opts = {}) {
     chartType: "bar",
     title: "Inventory Value by Product (₱)",
     labels: products.map((p) =>
-      p.name.length > 18 ? p.name.slice(0, 18) + "…" : p.name
+      p.name.length > 18 ? p.name.slice(0, 18) + "…" : p.name,
     ),
     datasets: [
       {
@@ -621,8 +689,7 @@ export function ChatHeader({
   onMaintenanceChange,
   onClose,
   onDragStart,
-  onHistoryClick,
-  onNewChatClick,
+  onMoreClick,
   isExpanded,
   onExpandToggle,
   chatMode = "support",
@@ -636,90 +703,20 @@ export function ChatHeader({
     >
       <div className="chat-titleArea">
         <Avatar src={radzLogo} className="chat-header-avatar" />
-        <div style={{ marginLeft: 8, minWidth: 0 }}>
-          <Typography variant="body1" className="chat-titleText">
-            Ulap Chat
-          </Typography>
-          {onChatModeChange && (
-            <div style={{ display: "flex", gap: 4, marginTop: 2 }}>
-              <button
-                type="button"
-                onClick={() => onChatModeChange("support")}
-                style={{
-                  padding: "2px 8px",
-                  fontSize: 11,
-                  border: "none",
-                  background:
-                    chatMode === "support"
-                      ? "rgba(255, 111, 0, 0.2)"
-                      : "transparent",
-                  color: chatMode === "support" ? "#e65100" : "#888",
-                  borderRadius: 4,
-                  cursor: "pointer",
-                  fontWeight: chatMode === "support" ? 600 : 400,
-                }}
-              >
-                Support
-              </button>
-              <button
-                type="button"
-                onClick={() => onChatModeChange("group")}
-                style={{
-                  padding: "2px 8px",
-                  fontSize: 11,
-                  border: "none",
-                  background:
-                    chatMode === "group"
-                      ? "rgba(255, 111, 0, 0.2)"
-                      : "transparent",
-                  color: chatMode === "group" ? "#e65100" : "#888",
-                  borderRadius: 4,
-                  cursor: "pointer",
-                  fontWeight: chatMode === "group" ? 600 : 400,
-                }}
-              >
-                Group
-              </button>
-            </div>
-          )}
-          <div className="chat-header-statusRow">
-            {maintenanceOpen ? (
-              <span className="chat-header-statusLabel">
-                <span className="chat-statusDot" aria-hidden />
-                <Typography variant="caption" component="span" style={{ color: "#777" }}>
-                  Under maintenance
-                </Typography>
-              </span>
-            ) : (
-              <span className="chat-header-statusLabel">
-                <span className="chat-onlineDot" aria-hidden />
-                <Typography variant="caption" component="span" style={{ color: "#777" }}>
-                  Online
-                </Typography>
-              </span>
-            )}
-          </div>
-        </div>
-        <div
-          className="chat-header-toggleWrap"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Typography
-            variant="caption"
-            style={{ color: "#888", fontSize: 11, whiteSpace: "nowrap" }}
-          >
-            Maint.
-          </Typography>
-          <Switch
-            size="small"
-            checked={maintenanceOpen}
-            onChange={(e) => onMaintenanceChange(e.target.checked)}
-            color="primary"
-            aria-label="Toggle maintenance mode"
-          />
-        </div>
+        <Typography variant="h6" className="chat-titleText">
+          UlapAI
+        </Typography>
       </div>
       <div className="chat-controlIcons">
+        {onMoreClick && (
+          <IconButton
+            size="small"
+            onClick={(e) => onMoreClick(e.currentTarget)}
+            aria-label="More actions"
+          >
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
+        )}
         {onExpandToggle && (
           <IconButton
             size="small"
@@ -733,20 +730,6 @@ export function ChatHeader({
             ) : (
               <FullscreenIcon fontSize="small" />
             )}
-          </IconButton>
-        )}
-        {onHistoryClick && (
-          <IconButton
-            size="small"
-            onClick={onHistoryClick}
-            aria-label="Chat history"
-          >
-            <HistoryIcon fontSize="small" />
-          </IconButton>
-        )}
-        {onNewChatClick && (
-          <IconButton size="small" onClick={onNewChatClick} aria-label="New chat">
-            <AddCommentIcon fontSize="small" />
           </IconButton>
         )}
         <IconButton size="small" onClick={onClose} aria-label="Close">
@@ -766,7 +749,12 @@ export function UlapAIMainHeader({ onMinimize, onMore }) {
       </Typography>
       <div className="chat-ulap-main-header-right">
         {onMore && (
-          <IconButton size="small" onClick={onMore} aria-label="More options" className="chat-ulap-header-icon-btn">
+          <IconButton
+            size="small"
+            onClick={onMore}
+            aria-label="More options"
+            className="chat-ulap-header-icon-btn"
+          >
             <MoreVertIcon fontSize="small" />
           </IconButton>
         )}
