@@ -1,5 +1,4 @@
 
-/** Optional override for Gemini API base URL. Set to a non-empty string to use instead of env. */
 export const AI_GEMINI_URL = "";
 
 function path(...segments) {
@@ -18,6 +17,11 @@ export const endpoints = {
   },
   gemini: {
     chat: path("api", "ai", "gemini"),
+    chats: path("genai","chat"),
+  },
+  reports: {
+    gl: path("reports", "gl"),
+    glGraph: path("reports", "gl", "graph"),
   },
 };
 
@@ -45,6 +49,8 @@ export function getLegacyUrls() {
     selectBiz: base + path("api", "select-biz"),
     setBiz: base + path("api", "set-biz"),
     businesses: base + path("api", "businesses"),
+    reportsGl: base + path("reports", "gl"),
+    reportsGlGraph: base + path("reports", "gl", "graph"),
   };
   return flat;
 }

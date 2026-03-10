@@ -62,10 +62,10 @@
   pointer-events: none;
 }
 
-/* Pop-up chat panel - draggable, fixed position */
+/* Pop-up chat panel - draggable, fixed position (wider to give chart more width) */
 .chat-panel-popup {
   position: fixed;
-  width: 340px;
+  width: 520px;
   height: 480px;
   min-height: 480px;
   z-index: 9999;
@@ -622,7 +622,7 @@
   flex-direction: column;
 }
 .chat-panel-expanded .chat-body > div {
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
   width: 100%;
   display: flex;
@@ -1109,11 +1109,27 @@
   color: #f57c00;
 }
 
+/* Chart message: let the chart row take full width */
+.message-with-chart {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+.message-with-chart .chart-with-controls {
+  flex: 1;
+  min-width: 0;
+}
+
 /* Chart customization controls */
 .chart-with-controls {
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.chart-with-controls .chart-renderer-wrap {
+  min-height: 560px;
 }
 .chart-controls {
   display: flex;
