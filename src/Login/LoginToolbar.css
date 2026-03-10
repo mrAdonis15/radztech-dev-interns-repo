@@ -25,6 +25,12 @@
   box-sizing: border-box;
 }
 
+/* Biz context: full width (no centered container) */
+.login-toolbar-container--full {
+  max-width: none;
+  margin: 0;
+}
+
 .login-toolbar-logo {
   display: flex;
   align-items: center;

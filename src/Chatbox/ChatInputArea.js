@@ -19,7 +19,7 @@ export default function ChatInputArea({
   onDragStart,
   themeProps,
   isExpanded = false,
-  placeholder = "Message",
+  placeholder = "Ask UlapAI",
 }) {
   const {
     showThemePicker,
