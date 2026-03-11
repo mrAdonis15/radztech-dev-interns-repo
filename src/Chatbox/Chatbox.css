@@ -784,6 +784,14 @@
   color: #ff7504 !important;
 }
 
+.chat-stopButton {
+  flex-shrink: 0;
+  color: #d32f2f !important;
+}
+.chat-stopButton:hover {
+  color: #b71c1c !important;
+}
+
 /* Emoji picker - reduce emoji sizes */
 .chat-inputArea .emoji-picker-dropdown {
   overflow: hidden;
