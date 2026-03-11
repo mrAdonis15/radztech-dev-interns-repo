@@ -40,7 +40,13 @@ function messageFor504(err) {
 }
 
 /** Axios request with long timeout and retry on 502/503/504. Used for report/graph APIs. */
-async function axiosWithRetry(method, url, bodyOrParams, headers, maxRetries = 2) {
+async function axiosWithRetry(
+  method,
+  url,
+  bodyOrParams,
+  headers,
+  maxRetries = 2,
+) {
   const opts = { headers, timeout: REPORT_REQUEST_TIMEOUT_MS };
   let lastError;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -103,7 +109,8 @@ function normalizeGlArgs(args) {
   const currentYear = now.getFullYear();
   const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
   const lastDay = new Date(currentYear, now.getMonth(), 0).getDate();
-  const requestedYear = args.year != null ? parseInt(String(args.year), 10) : null;
+  const requestedYear =
+    args.year != null ? parseInt(String(args.year), 10) : null;
   const useYear = Number.isFinite(requestedYear) ? requestedYear : null;
 
   let dt1 = args.dt1;
@@ -143,8 +150,15 @@ function normalizeGlArgs(args) {
 async function resolveAccountByQ(q, headers) {
   if (!q || typeof q !== "string" || !String(q).trim()) return null;
   try {
-    const res = await axios.post(`${BASE_URL}/lib/acc`, { q: String(q).trim() }, { headers });
-    const items = res.data?.items ?? res.data?.data ?? (Array.isArray(res.data) ? res.data : []);
+    const res = await axios.post(
+      `${BASE_URL}/lib/acc`,
+      { q: String(q).trim() },
+      { headers },
+    );
+    const items =
+      res.data?.items ??
+      res.data?.data ??
+      (Array.isArray(res.data) ? res.data : []);
     const list = Array.isArray(items) ? items : items ? [items] : [];
     const first = list[0];
     const ixAcc = first?.ixAcc ?? first?.ix ?? first?.id ?? first?.accountId;
@@ -157,12 +171,18 @@ async function resolveAccountByQ(q, headers) {
 /** Tool implementations invoked when Gemini calls a function. */
 export const functions = {
   search_prod: async (args) => {
+    // console.log(args.q);
     const headers = getHeaders();
+
     try {
       const url = `${BASE_URL}/lib/prod`;
-      const response = await axios.post(url, args, { headers });
+
+      const response = await axios.post(url, args, {
+        headers,
+      });
+
       const data = checkItems(response.data.items || []);
-      if (!data.items) return data;
+
       const items = data.items.map(
         ({ ixProd, ProdCd, cCost, sCat, sCatSub, sProd, sProdCat, unit }) => ({
           ixProd,
@@ -175,10 +195,14 @@ export const functions = {
           unit,
         }),
       );
+
       const products = {
         ...data,
         items: items,
       };
+
+      console.log("products", products);
+
       return products;
     } catch (err) {
       return {
@@ -188,14 +212,20 @@ export const functions = {
     }
   },
   search_branch: async (args) => {
+    // console.log(args);
     const headers = getHeaders();
+
     try {
       const url = `${BASE_URL}/lib/brch`;
+
       const response = await axios.get(url, {
         headers: headers,
       });
+
       const data = response.data.items;
+
       const branches = data.filter((item) => item.sBrch === args.q);
+
       if (branches.length > 1) {
         return {
           status: "error",
@@ -203,6 +233,8 @@ export const functions = {
           data: branches,
         };
       }
+
+      console.log("branch", branches);
       return {
         status: "success",
         data: branches[0],
@@ -214,42 +246,19 @@ export const functions = {
       };
     }
   },
-  search_gl_acc: async (args) => {
-    const headers = getHeaders();
-    try {
-      const url = `${BASE_URL}/lib/acc`;
-      const response = await axios.post(url, args, { headers });
-      const raw = response.data?.items ?? response.data;
-      const data = checkItems(Array.isArray(raw) ? raw : []);
-      if (!data.items) return data;
-      const items = data.items.map(
-        ({ ixAcc, sAccTitle, sAccType, parent_sAccTitle }) => ({
-          ixAcc,
-          sAccTitle,
-          sAccType,
-          parent_sAccTitle,
-        }),
-      );
-      const accounts = {
-        ...data,
-        items: items,
-      };
-      return accounts;
-    } catch (err) {
-      return {
-        status: "error",
-        message: err.response?.data || err.message,
-      };
-    }
-  },
+
   get_prod_bal: async (args) => {
+    // console.log(args);
     const headers = getHeaders();
+
     try {
       const url = `${BASE_URL}/trans/search/prod/inv-bal`;
+
       const response = await axios.get(url, {
         headers: headers,
         params: args,
       });
+
       const bal = response.data.qtyBAL;
       return {
         status: "success",
@@ -263,14 +272,19 @@ export const functions = {
     }
   },
   get_prod_bal_by_branch: async (args) => {
+    // console.log(args);
     const headers = getHeaders();
+
     try {
       const url = `${BASE_URL}/trans/search/prod/inv-bal-by-brch`;
+
       const response = await axios.get(url, {
         headers: headers,
         params: args,
       });
+
       const bal = checkItems(response.data);
+
       return bal;
     } catch (err) {
       return {
@@ -281,16 +295,25 @@ export const functions = {
   },
   get_gl_report: async (args) => {
     const headers = getHeaders();
+
     try {
       const url = `${BASE_URL}/reports/gl`;
-      const response = await axios.post(url, args, { headers });
+
+      const response = await axios.post(url, args, {
+        headers,
+      });
+
       const gl = response.data;
+
       const data = {
         begAmt: gl.begAmt,
         tDr: gl.tDr,
         tCr: gl.tCr,
         endAmt: gl.endAmt,
       };
+
+      console.log("gl", data);
+
       return {
         status: "success",
         data: data,
@@ -307,7 +330,8 @@ export const functions = {
     try {
       const now = new Date();
       const currentYear = now.getFullYear();
-      const requestedYear = args.year != null ? parseInt(String(args.year), 10) : null;
+      const requestedYear =
+        args.year != null ? parseInt(String(args.year), 10) : null;
       let dt1 = args.dt1;
       let dt2 = args.dt2;
       const userSpecifiedRange = args.dt1 && args.dt2;
@@ -317,8 +341,12 @@ export const functions = {
       } else if (!userSpecifiedRange) {
         const end = new Date(now);
         const start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-        dt1 = dt1 || `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-01T00:00:00+08:00`;
-        dt2 = dt2 || `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}T23:59:59+08:00`;
+        dt1 =
+          dt1 ||
+          `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-01T00:00:00+08:00`;
+        dt2 =
+          dt2 ||
+          `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}T23:59:59+08:00`;
       } else {
         dt1 = dt1 || `${currentYear}-01-01T00:00:00+08:00`;
         dt2 = dt2 || `${currentYear}-12-31T23:59:59+08:00`;
@@ -335,30 +363,52 @@ export const functions = {
       if (ixProd == null && args.q) {
         const qRaw = String(args.q).trim();
         const codeMatch = qRaw.match(/\s*\(Code:\s*([^)]+)\)\s*$/i);
-        const qForSearch = codeMatch ? qRaw.replace(/\s*\(Code:\s*[^)]+\)\s*$/i, "").trim() : qRaw;
-        const searchRes = await axios.post(`${BASE_URL}/lib/prod`, { q: qForSearch || qRaw }, { headers });
+        const qForSearch = codeMatch
+          ? qRaw.replace(/\s*\(Code:\s*[^)]+\)\s*$/i, "").trim()
+          : qRaw;
+        const searchRes = await axios.post(
+          `${BASE_URL}/lib/prod`,
+          { q: qForSearch || qRaw },
+          { headers },
+        );
         const items = searchRes.data?.items;
         const list = Array.isArray(items) ? items : items ? [items] : [];
         let chosen = list[0];
         if (list.length > 1 && codeMatch) {
           const code = codeMatch[1].trim();
           const byCode = list.find((p) => {
-            const c = p.ProdCd || p.sCode || p.cProd || p.code || (p.ixProd != null ? String(p.ixProd) : "");
+            const c =
+              p.ProdCd ||
+              p.sCode ||
+              p.cProd ||
+              p.code ||
+              (p.ixProd != null ? String(p.ixProd) : "");
             return c && (c === code || String(p.ixProd) === code);
           });
           if (byCode) chosen = byCode;
         }
         ixProd = chosen?.ixProd;
         if (ixProd == null) {
-          return { status: "error", text: "Product not found. Please specify a valid product." };
+          return {
+            status: "error",
+            text: "Product not found. Please specify a valid product.",
+          };
         }
       }
       if (ixProd == null) {
-        return { status: "error", text: "Missing product: pass q (description) or ixProd." };
+        return {
+          status: "error",
+          text: "Missing product: pass q (description) or ixProd.",
+        };
       }
 
       const graphBody = { ixProd, dt1, dt2, bn: "", ixWH, SN: "", SN2: "" };
-      const graphRes = await axiosWithRetry("post", `${BASE_URL}/reports/inv/sc/graph`, graphBody, headers);
+      const graphRes = await axiosWithRetry(
+        "post",
+        `${BASE_URL}/reports/inv/sc/graph`,
+        graphBody,
+        headers,
+      );
       const raw = graphRes.data;
       if (!raw) return { status: "error", text: "No graph data returned." };
 
@@ -370,8 +420,20 @@ export const functions = {
           tOUT: row.out ?? row.tOUT ?? row.Out,
           runBal: row.balance ?? row.runBal ?? row.Balance ?? row.runBalance,
         }));
-        const begQty = d.length ? (d[0].balance ?? d[0].runBal ?? d[0].Balance ?? d[0].runBalance ?? 0) : 0;
-        const endQty = d.length ? (d[d.length - 1].balance ?? d[d.length - 1].runBal ?? d[d.length - 1].Balance ?? d[d.length - 1].runBalance ?? 0) : 0;
+        const begQty = d.length
+          ? (d[0].balance ??
+            d[0].runBal ??
+            d[0].Balance ??
+            d[0].runBalance ??
+            0)
+          : 0;
+        const endQty = d.length
+          ? (d[d.length - 1].balance ??
+            d[d.length - 1].runBal ??
+            d[d.length - 1].Balance ??
+            d[d.length - 1].runBalance ??
+            0)
+          : 0;
         const year = parseInt(String(dt1).slice(0, 4), 10) || currentYear;
         return { items, begQty, endQty, dt1, dt2, year };
       }
@@ -405,7 +467,8 @@ export const functions = {
         if (ixAcc != null) resolvedArgs = { ...args, ixAcc };
       }
       const url = `${BASE_URL}/reports/gl`;
-      const { dt1, dt2, ixAcc, accOthers, showZero } = normalizeGlArgs(resolvedArgs);
+      const { dt1, dt2, ixAcc, accOthers, showZero } =
+        normalizeGlArgs(resolvedArgs);
       const body = {
         ixAcc,
         showZero,
@@ -445,7 +508,8 @@ export const functions = {
         if (ixAcc != null) resolvedArgs = { ...args, ixAcc };
       }
       const url = `${BASE_URL}/reports/gl/graph`;
-      const { dt1, dt2, ixAcc, accOthers, showZero } = normalizeGlArgs(resolvedArgs);
+      const { dt1, dt2, ixAcc, accOthers, showZero } =
+        normalizeGlArgs(resolvedArgs);
       const body = {
         ixAcc,
         showZero,
@@ -596,46 +660,6 @@ export const tools = [
         },
       },
       {
-        name: "gl_report",
-        description:
-          "General Ledger report (table data). Use when user asks for GL report or ledger table. Returns rep array for charting.",
-        parameters: {
-          type: "object",
-          properties: {
-            q: {
-              type: "string",
-              description: "Account name or code to look up (e.g. 'checks', 'cash').",
-            },
-            ixAcc: {
-              type: "integer",
-              description: "Main account index (e.g. 4242).",
-            },
-            showZero: {
-              type: "boolean",
-              description: "Include zero-balance rows. Default true.",
-            },
-            year: {
-              type: "integer",
-              description: "Year requested by the user (e.g. 2024, 2025).",
-            },
-            dt1: {
-              type: "string",
-              description: "Start date (e.g. '2024-01-01' or '2024-03-01T00:00:00+08:00').",
-            },
-            dt2: {
-              type: "string",
-              description: "End date (e.g. '2024-12-31' or '2024-03-31T23:59:59+08:00').",
-            },
-            acc_others: {
-              type: "array",
-              items: {},
-              description: "Optional list of other account filters. Default [].",
-            },
-          },
-          required: [],
-        },
-      },
-      {
         name: "gl_graph",
         description:
           "General Ledger graph (Debit, Credit, Running Balance). Use when the user asks to graph/chart/plot general ledger or GL.",
@@ -644,11 +668,13 @@ export const tools = [
           properties: {
             q: {
               type: "string",
-              description: "Account name or code to look up (e.g. 'checks', 'cash').",
+              description:
+                "Account name or code to look up (e.g. 'checks', 'cash').",
             },
             ixAcc: {
               type: "integer",
-              description: "Main account index (e.g. 4242). Default 4242 if omitted.",
+              description:
+                "Main account index (e.g. 4242). Default 4242 if omitted.",
             },
             showZero: {
               type: "boolean",
@@ -660,16 +686,19 @@ export const tools = [
             },
             dt1: {
               type: "string",
-              description: "Start date (e.g. '2024-01-01' or '2024-03-01T00:00:00+08:00').",
+              description:
+                "Start date (e.g. '2024-01-01' or '2024-03-01T00:00:00+08:00').",
             },
             dt2: {
               type: "string",
-              description: "End date (e.g. '2024-12-31' or '2024-03-31T23:59:59+08:00').",
+              description:
+                "End date (e.g. '2024-12-31' or '2024-03-31T23:59:59+08:00').",
             },
             acc_others: {
               type: "array",
               items: {},
-              description: "Optional list of other account filters. Default [].",
+              description:
+                "Optional list of other account filters. Default [].",
             },
           },
           required: [],
