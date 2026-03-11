@@ -23,22 +23,19 @@ export function isRawChartJsonText(text) {
 
 export function isLikelyChartData(payload) {
   if (!payload || typeof payload !== "object" || payload.status === "error") return false;
-  // GL graph can legitimately return an empty rep (no transactions) but still has beg/end amounts.
-  // We still want to render a flat Running Balance chart in that case.
-  if (
-    payload.glChart &&
-    (payload.begAmt != null || payload.endAmt != null) &&
-    Array.isArray(payload.rep)
-  ) {
+  // GL graph/report can return empty or missing rep (summary-only); may have beg/end amounts or none (e.g. specific account, no data).
+  // We still want to render a chart (flat line or "no data" state) so the user doesn't see a generic error.
+  if (payload.glChart && (Array.isArray(payload.rep) || payload.rep === undefined)) {
     return true;
   }
   if (Array.isArray(payload.rep) && payload.rep.length > 0) {
     const first = payload.rep[0];
-    const hasDebit = first.Dr != null || first.dr != null || first.amountDr != null || first.amount_dr != null || first.debit != null || first.Debit != null;
-    const hasCredit = first.Cr != null || first.cr != null || first.amountCr != null || first.amount_cr != null || first.credit != null || first.Credit != null;
+    const hasDebit = first.Dr != null || first.dr != null || first.amountDr != null || first.amount_dr != null || first.debit != null || first.Debit != null || first.tDr != null;
+    const hasCredit = first.Cr != null || first.cr != null || first.amountCr != null || first.amount_cr != null || first.credit != null || first.Credit != null || first.tCr != null;
     const hasBal = first.runBal != null || first.runBalance != null || first.balance != null || first.Balance != null || first.runningBalance != null;
     const hasDate = first.jDate != null || first.date != null || first.Date != null || first.transDate != null || first.postDate != null || first.dt != null;
-    if (hasDate && (hasDebit || hasCredit || hasBal)) return true;
+    const hasPeriod = first.YrMo != null || first.YrWk != null || first.period != null;
+    if ((hasDate || hasPeriod) && (hasDebit || hasCredit || hasBal)) return true;
   }
   if (payload.chart?.series?.length && payload.chart?.xAxis?.categories) return true;
   if (payload.config?.data?.labels && payload.config?.data?.datasets?.length) return true;
@@ -65,16 +62,16 @@ function getThursdayOfIsoWeek(year, week) {
 
 function getMonthFromPeriod(p) {
   const s = String(p ?? "").trim();
-  if (s.length >= 7 && /^\d{4}-\d{2}/.test(s)) {
-    const m = parseInt(s.slice(5, 7), 10);
-    return m >= 1 && m <= 12 ? m : null;
-  }
   const w = s.match(/^(\d{4})-W?(\d{1,2})$/i);
   if (w) {
     const week = parseInt(w[2], 10) || 1;
     if (week < 1 || week > 53) return null;
     const month = getThursdayOfIsoWeek(parseInt(w[1], 10), week).getMonth() + 1;
     return month >= 1 && month <= 12 ? month : null;
+  }
+  if (s.length >= 7 && /^\d{4}-\d{2}/.test(s)) {
+    const m = parseInt(s.slice(5, 7), 10);
+    return m >= 1 && m <= 12 ? m : null;
   }
   return null;
 }
@@ -89,10 +86,13 @@ function getYearFromPeriod(p) {
 
 function formatLabel(val) {
   if (val == null) return "Period";
-  const s = String(val);
-  if (s.length === 7 && /^\d{4}-\d{2}$/.test(s)) {
-    const [y, m] = s.split("-");
-    return `${MONTHS[parseInt(m, 10) - 1] || m} ${y}`;
+  const s = String(val).trim();
+  if (s.length >= 7 && /^\d{4}-\d{1,2}$/.test(s)) {
+    const [y, part] = s.split("-");
+    const m = getMonthFromPeriod(s);
+    const yr = getYearFromPeriod(s);
+    if (m != null && m >= 1 && m <= 12 && yr != null) return `${MONTHS[m - 1]} ${yr}`;
+    return `${part} ${y}`;
   }
   return s;
 }
@@ -107,12 +107,12 @@ const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 // —— GL rep row field access (backend may use different names) ——
 function getGLDebit(r) {
   if (r == null) return 0;
-  const v = r.Dr ?? r.dr ?? r.amountDr ?? r.amount_dr ?? r.debit ?? r.Debit;
+  const v = r.Dr ?? r.dr ?? r.amountDr ?? r.amount_dr ?? r.debit ?? r.Debit ?? r.tDr;
   return num(v);
 }
 function getGLCredit(r) {
   if (r == null) return 0;
-  const v = r.Cr ?? r.cr ?? r.amountCr ?? r.amount_cr ?? r.credit ?? r.Credit;
+  const v = r.Cr ?? r.cr ?? r.amountCr ?? r.amount_cr ?? r.credit ?? r.Credit ?? r.tCr;
   return num(v);
 }
 function getGLBalance(r) {
@@ -120,12 +120,25 @@ function getGLBalance(r) {
   const v = r.runBal ?? r.runBalance ?? r.balance ?? r.Balance ?? r.runningBalance;
   return num(v);
 }
-/** Parse date from row; return { year, month } or null. */
+/** Parse date from row; return { year, month } or null. Supports jDate/date, numeric timestamp (ms or seconds), and period/YrMo. */
 function getGLDateParts(r) {
   if (r == null) return null;
   let d = r.jDate ?? r.date ?? r.Date ?? r.transDate ?? r.postDate ?? r.dt;
-  if (d == null) return null;
-  if (typeof d === "number") d = new Date(d);
+  if (d == null) {
+    // Period-based rep: YrMo "2024-01" or YrWk "2024-W01" or period
+    const period = r.YrMo ?? r.YrWk ?? r.period;
+    if (period != null) {
+      const m = getMonthFromPeriod(period);
+      const y = getYearFromPeriod(period);
+      if (m != null && y != null) return { year: y, month: m };
+    }
+    return null;
+  }
+  if (typeof d === "number") {
+    // Unix timestamp: if small assume seconds and convert to ms
+    const ms = d < 1e12 ? d * 1000 : d;
+    d = new Date(ms);
+  }
   if (d instanceof Date) {
     if (Number.isNaN(d.getTime())) return null;
     return { year: d.getFullYear(), month: d.getMonth() + 1 };
@@ -143,7 +156,8 @@ function getGLDateParts(r) {
 function getIn(i) { return num(i.tIN ?? i.in ?? i.In ?? i.tDr ?? i.Dr ?? i.debit ?? i.Debit); }
 function getOut(i) { return Math.abs(num(i.tOUT ?? i.out ?? i.Out ?? i.tCr ?? i.Cr ?? i.credit ?? i.Credit)); }
 function getBal(i) { return num(i.runBal ?? i.balance ?? i.Balance ?? i.runBalance); }
-function getPeriod(i) { return i.YrWk ?? i.YrMo ?? i.period; }
+/** Period for aggregation: use explicit period first (e.g. YrMo when set for monthly GL), then YrWk, then YrMo. */
+function getPeriod(i) { return i.period ?? i.YrWk ?? i.YrMo; }
 
 // —— Aggregation ——
 const ITEMS_AGGREGATE_MAX = 3000;
@@ -168,6 +182,70 @@ function aggregateToMonthly(items, year) {
   for (let m = 1; m <= 12; m++) {
     if (lastBal[m] != null) carry = lastBal[m];
     runBalData[m - 1] = carry;
+  }
+  return { labels, inData, outData, runBalData };
+}
+
+/** Aggregate by every period in the data (no year filter). */
+function aggregateByPeriod(items) {
+  const toUse = items.length > ITEMS_AGGREGATE_MAX ? items.slice(-ITEMS_AGGREGATE_MAX) : items;
+  const sorted = [...toUse].sort((a, b) => String(getPeriod(a)).localeCompare(String(getPeriod(b)), undefined, { numeric: true }));
+  const periodToIdx = {};
+  const labels = [];
+  const inData = [];
+  const outData = [];
+  const runBalData = [];
+  for (const i of sorted) {
+    const p = getPeriod(i);
+    if (p == null) continue;
+    const key = String(p).trim();
+    if (periodToIdx[key] == null) {
+      periodToIdx[key] = labels.length;
+      labels.push(formatLabel(key));
+      inData.push(0);
+      outData.push(0);
+      runBalData.push(0);
+    }
+    const idx = periodToIdx[key];
+    inData[idx] += getIn(i);
+    outData[idx] += getOut(i);
+    runBalData[idx] = getBal(i);
+  }
+  return { labels, inData, outData, runBalData };
+}
+
+/** One point per row: tooltip values match Network rep exactly (tDr, tCr, runBal per row). */
+/** Labels are always month + year (e.g. "Jan 2024", "W3 Jan 2024"). */
+function onePointPerRow(items) {
+  const toUse = items.length > ITEMS_AGGREGATE_MAX ? items.slice(-ITEMS_AGGREGATE_MAX) : items;
+  const sorted = [...toUse].sort((a, b) => {
+    const pa = getPeriod(a) ?? "";
+    const pb = getPeriod(b) ?? "";
+    const c = String(pa).localeCompare(String(pb), undefined, { numeric: true });
+    if (c !== 0) return c;
+    const wa = a.YrWk ?? a.YrMo ?? "";
+    const wb = b.YrWk ?? b.YrMo ?? "";
+    return String(wa).localeCompare(String(wb), undefined, { numeric: true });
+  });
+  const labels = [];
+  const inData = [];
+  const outData = [];
+  const runBalData = [];
+  for (const i of sorted) {
+    const p = getPeriod(i);
+    const yw = i.YrWk;
+    let label;
+    if (yw != null && String(yw).match(/^\d{4}-W?\d{1,2}$/i)) {
+      const m = getMonthFromPeriod(yw);
+      const yr = getYearFromPeriod(yw);
+      label = m != null && yr != null ? `${MONTHS[(m - 1)] || ""} ${yr}` : formatLabel(p);
+    } else {
+      label = formatLabel(p);
+    }
+    labels.push(label);
+    inData.push(getIn(i));
+    outData.push(getOut(i));
+    runBalData.push(getBal(i));
   }
   return { labels, inData, outData, runBalData };
 }
@@ -210,6 +288,21 @@ function makeGLChart(year, title, debitData, creditData, runBalData) {
   };
 }
 
+/** GL chart with custom labels (one point per period from API). Use so graph data matches Network response. */
+function makeGLChartWithLabels(labels, title, debitData, creditData, runBalData) {
+  const creditNegated = creditData.map((v) => -num(v));
+  return {
+    chartType: "mixed",
+    title: title || "General Ledger",
+    labels,
+    datasets: [
+      { type: "bar", label: "Debit", data: debitData, backgroundColor: IN_COLOR, borderColor: IN_COLOR, borderWidth: 0, order: 1 },
+      { type: "bar", label: "Credit", data: creditNegated, backgroundColor: OUT_COLOR, borderColor: OUT_COLOR, borderWidth: 0, order: 2 },
+      { type: "line", label: "Running Balance", data: runBalData, borderColor: GL_RUNBAL_COLOR, backgroundColor: "rgba(34, 197, 94, 0.1)", fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: GL_RUNBAL_COLOR, pointBorderColor: "#fff", pointBorderWidth: 1, order: 3 },
+    ],
+  };
+}
+
 function resolveYear(apiData, validPeriods, currentYear) {
   if (apiData.year != null) return apiData.year;
   if (apiData.dt1 != null) {
@@ -232,13 +325,19 @@ function fromItemsFormat(apiData) {
 }
 
 /** Same as items format but GL style: Debit (blue up), Credit (red down), Running Balance (green). Use when apiData.glChart is true. */
+/** One point per rep row so tooltip (tDr, tCr, runBal) matches Network preview exactly. */
+/** X-axis labels always show month + year (e.g. "Jan 2024", "W3 Jan 2024"). */
 function fromItemsFormatGL(apiData) {
   const items = apiData.items;
   if (!Array.isArray(items)) return null;
   const valid = items.filter((i) => i && (getPeriod(i) != null || getIn(i) !== 0 || getOut(i) !== 0 || getBal(i) !== 0));
-  const year = resolveYear(apiData, valid.map((i) => getPeriod(i)), new Date().getFullYear());
-  const agg = valid.length ? aggregateToMonthly(valid, year) : emptyMonthly(year);
-  return makeGLChart(year, `YEAR ${year}`, agg.inData, agg.outData, agg.runBalData);
+  if (!valid.length) return null;
+  const rowData = onePointPerRow(valid);
+  const periods = valid.map((i) => getPeriod(i)).filter(Boolean);
+  const years = [...new Set(periods.map((p) => getYearFromPeriod(p)).filter(Number.isFinite))];
+  const singleYear = years.length === 1 ? years[0] : null;
+  const title = singleYear != null ? `YEAR ${singleYear}` : "General Ledger";
+  return makeGLChartWithLabels(rowData.labels, title, rowData.inData, rowData.outData, rowData.runBalData);
 }
 
 function fromDataConfigFormat(apiData) {
@@ -341,8 +440,11 @@ function fromGLRepFormat(apiData) {
   const lastBalByMonth = {};
   const getSortKey = (r) => {
     let d = r?.jDate ?? r?.date ?? r?.Date ?? r?.transDate ?? r?.postDate ?? r?.dt;
-    if (d == null) return "";
-    if (typeof d === "number") d = new Date(d).toISOString();
+    if (d == null) {
+      const p = r?.YrMo ?? r?.YrWk ?? r?.period;
+      return p != null ? String(p).trim() : "";
+    }
+    if (typeof d === "number") d = new Date(d < 1e12 ? d * 1000 : d).toISOString();
     else if (d instanceof Date) d = d.toISOString();
     const s = String(d).trim();
     return s.slice(0, 19) || s.slice(0, 10) || s;
@@ -448,26 +550,42 @@ export function normalizeToChartConfig(payload) {
 export function buildStockCardRunningBalanceChart(apiData) {
   if (!apiData) return null;
   if (apiData.chartType && apiData.labels && apiData.datasets) return apiData;
-  // Normalize nested .data.rep or .data.items (graph API may return { data: { rep: [...] } })
-  const rep = apiData.rep ?? apiData.data?.rep;
-  const items = apiData.items ?? apiData.data?.items;
-  // GL graph: allow empty rep but with beg/end amounts.
-  if (apiData.glChart && Array.isArray(rep) && rep.length === 0 && (apiData.begAmt != null || apiData.endAmt != null)) {
-    const builtEmpty = fromGLEmptyRepFormat({ ...apiData, rep });
+  // Normalize nested .data.rep, .graph.rep or .items (graph API may return { graph: { rep: [...] } } or { data: { rep: [...] } })
+  const rep = apiData.rep ?? apiData.graph?.rep ?? apiData.data?.rep;
+  const items = apiData.items ?? apiData.graph?.items ?? apiData.data?.items;
+  // GL graph/report: allow empty or missing rep (summary-only) with beg/end amounts.
+  const repArray = Array.isArray(rep) ? rep : [];
+  if (apiData.glChart && repArray.length === 0) {
+    const builtEmpty = fromGLEmptyRepFormat({ ...apiData, rep: repArray });
     if (builtEmpty) return builtEmpty;
   }
   if (Array.isArray(rep) && rep.length > 0) {
     const first = rep[0];
-    const hasDebit = first.Dr != null || first.dr != null || first.amountDr != null || first.amount_dr != null || first.debit != null || first.Debit != null;
-    const hasCredit = first.Cr != null || first.cr != null || first.amountCr != null || first.amount_cr != null || first.credit != null || first.Credit != null;
+    const hasDebit = first.Dr != null || first.dr != null || first.amountDr != null || first.amount_dr != null || first.debit != null || first.Debit != null || first.tDr != null;
+    const hasCredit = first.Cr != null || first.cr != null || first.amountCr != null || first.amount_cr != null || first.credit != null || first.Credit != null || first.tCr != null;
     const hasBal = first.runBal != null || first.runBalance != null || first.balance != null || first.Balance != null || first.runningBalance != null;
-    const hasDate = first.jDate != null || first.date != null || first.Date != null || first.transDate != null || first.postDate != null || first.dt != null;
+    const dateVal = first.jDate ?? first.date ?? first.Date ?? first.transDate ?? first.postDate ?? first.dt;
+    const hasDate = dateVal != null && String(dateVal).trim() !== "";
+    const hasPeriod = (first.YrMo ?? first.YrWk ?? first.period) != null;
+    // Prefer period-based path when data is clearly period-aggregated (YrMo/YrWk) so we don't get an empty chart.
+    // Use YrMo for x-axis (monthly buckets: "Jan 2025", "Feb 2025") when present; tDr/tCr/runBal → y-axis.
+    if (hasPeriod && (hasDebit || hasCredit || hasBal) && apiData.glChart) {
+      const itemsFromRep = rep.map((r) => ({
+        ...r,
+        period: r.YrMo ?? r.YrWk ?? r.period,
+        tIN: r.tIN ?? r.tDr ?? r.Dr ?? r.debit ?? r.Debit ?? 0,
+        tOUT: r.tOUT ?? r.tCr ?? r.Cr ?? r.credit ?? r.Credit ?? 0,
+        runBal: r.runBal ?? r.runBalance ?? r.balance ?? r.Balance ?? r.runningBalance ?? 0,
+      }));
+      const builtFromRep = fromItemsFormatGL({ ...apiData, items: itemsFromRep });
+      if (builtFromRep) return builtFromRep;
+    }
     if (hasDate && (hasDebit || hasCredit || hasBal)) return fromGLRepFormat({ ...apiData, rep });
-    // GL weekly/monthly summary format (YrWk/YrMo, tDr/tCr, runBal) without explicit dates:
-    // map rep rows into items and build a GL-style chart.
+    // GL weekly/monthly summary format (YrWk/YrMo, tDr/tCr, runBal) without explicit dates.
     if (apiData.glChart) {
       const itemsFromRep = rep.map((r) => ({
         ...r,
+        period: r.YrMo ?? r.YrWk ?? r.period,
         tIN: r.tIN ?? r.tDr ?? r.Dr ?? r.debit ?? r.Debit ?? 0,
         tOUT: r.tOUT ?? r.tCr ?? r.Cr ?? r.credit ?? r.Credit ?? 0,
         runBal: r.runBal ?? r.runBalance ?? r.balance ?? r.Balance ?? r.runningBalance ?? 0,

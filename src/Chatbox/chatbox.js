@@ -28,6 +28,7 @@ import {
 } from "./chatboxConstants.js";
 import {
   createMessage,
+  formatTime,
   saveMessages,
   loadHistory,
   addToHistory,
@@ -47,6 +48,7 @@ export default function Chatbox({ defaultOpen = false }) {
   const inputRef = useRef(null);
   const panelRef = useRef(null);
   const isSendingRef = useRef(false);
+  const abortControllerRef = useRef(null);
 
   const [messages, setMessages] = useState(() => getInitialMessages());
   const [input, setInput] = useState("");
@@ -58,10 +60,12 @@ export default function Chatbox({ defaultOpen = false }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [viewingHistoryId, setViewingHistoryId] = useState(null);
   const [currentConversationId, setCurrentConversationId] = useState(null);
+  const [sessionId, setSessionId] = useState(null);
   const [optionsMenuAnchor, setOptionsMenuAnchor] = useState(null);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [modalSearchQuery, setModalSearchQuery] = useState("");
   const [menuChatsCollapsed, setMenuChatsCollapsed] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const theme = useChatboxTheme(rootRef);
 
@@ -190,7 +194,11 @@ export default function Chatbox({ defaultOpen = false }) {
     const text = input.trim();
     if (!text || isSendingRef.current) return;
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     isSendingRef.current = true;
+    setIsSending(true);
+
     const userMsgId = crypto.randomUUID();
     const userMsg = createMessage(userMsgId, "me", text);
     setInput("");
@@ -202,39 +210,53 @@ export default function Chatbox({ defaultOpen = false }) {
 
     const messageForAi = text || "Hello";
 
-    sendMessage(messageForAi, messages)
+    sendMessage(messageForAi, messages, controller.signal, sessionId ?? undefined)
       .then((reply) => {
         const isChart = reply && reply.type === "chart";
         const text = reply?.text ?? "";
+        if (reply?.session_id != null) setSessionId(reply.session_id);
         if (isChart) setIsExpanded(true);
+        const receivedTime = formatTime();
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === placeholderId
               ? isChart
-                ? { ...msg, type: "chart", data: reply.data, text }
-                : { ...msg, text }
+                ? { ...msg, type: "chart", data: reply.data, text, time: receivedTime }
+                : { ...msg, text, time: receivedTime }
               : msg
           )
         );
       })
-      .catch(() => {
+      .catch((err) => {
+        const isCancelled =
+          err?.name === "CanceledError" ||
+          err?.code === "ERR_CANCELED" ||
+          err?.message === "canceled";
+        const receivedTime = formatTime();
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === placeholderId
-              ? { ...msg, text: "Sorry, something went wrong. Please try again." }
+              ? { ...msg, text: isCancelled ? "Request cancelled." : "Sorry, something went wrong. Please try again.", time: receivedTime }
               : msg
           )
         );
       })
       .finally(() => {
+        abortControllerRef.current = null;
         isSendingRef.current = false;
+        setIsSending(false);
       });
+  };
+
+  const handleStop = () => {
+    abortControllerRef.current?.abort();
   };
 
   const handleNewChat = () => {
     setMessages(getInitialMessages());
     setViewingHistoryId(null);
     setCurrentConversationId(null);
+    setSessionId(null);
     setHistory(loadHistory());
   };
 
@@ -242,6 +264,7 @@ export default function Chatbox({ defaultOpen = false }) {
     setMessages(item.messages || []);
     setViewingHistoryId(item.id);
     setCurrentConversationId(null);
+    setSessionId(null);
   };
 
   const handleDeleteHistoryChat = (id) => {
@@ -509,6 +532,8 @@ export default function Chatbox({ defaultOpen = false }) {
                       setShowEmoji={setShowEmoji}
                       onEmojiClick={handleEmojiClick}
                       onSend={handleSend}
+                      onStop={handleStop}
+                      isSending={isSending}
                       onKeyDown={handleKeyDown}
                       onDragStart={handleDragStart}
                       themeProps={theme}
@@ -662,7 +687,7 @@ export default function Chatbox({ defaultOpen = false }) {
                             primaryTypographyProps={{ noWrap: true, variant: "body2" }}
                           />
                         </ListItem>
-                      ))}
+                      ))} 
                     </List>
                   </div>
                 )}
