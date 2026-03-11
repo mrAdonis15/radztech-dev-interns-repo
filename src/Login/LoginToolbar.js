@@ -1,11 +1,12 @@
 import React, { Component } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Button from "@material-ui/core/Button";
 import ExitToAppIcon from "@material-ui/icons/ExitToApp";
 import BusinessCenterIcon from "@material-ui/icons/Business";
 import { request, API_URLS } from "../Chatbox/api/Request";
+import { getBizName } from "../Chatbox/api/selectedBiz";
 import "./LoginToolbar.css";
 
 class LoginToolbar extends Component {
@@ -44,15 +45,37 @@ class LoginToolbar extends Component {
             })();
             const existingToken =
               existing?.token ?? existing?.biz?.token ?? existing?.dataAccessToken ?? existing?.biz?.dataAccessToken;
-            const toStore = { ...data };
-            const biz = toStore.biz ?? toStore;
-            if (typeof biz === "object" && !biz.token && existingToken) {
-              biz.token = existingToken;
+            const incoming = { ...data };
+
+            // Preserve existing biz fields (like name) when API returns partial shape
+            const existingBiz =
+              (existing?.biz && typeof existing.biz === "object" && !Array.isArray(existing.biz))
+                ? existing.biz
+                : (existing && typeof existing === "object" && !Array.isArray(existing) ? existing : null);
+
+            const incomingBiz =
+              (incoming?.biz && typeof incoming.biz === "object" && !Array.isArray(incoming.biz))
+                ? incoming.biz
+                : (incoming && typeof incoming === "object" && !Array.isArray(incoming) ? incoming : null);
+
+            const mergedBiz = { ...(existingBiz || {}), ...(incomingBiz || {}) };
+
+            // Ensure token survives refreshes
+            if (!mergedBiz.token && existingToken) mergedBiz.token = existingToken;
+
+            const toStore = { ...(existing || {}), ...(incoming || {}) };
+            // Keep a consistent shape with `.biz` when possible
+            if (incoming?.biz != null || existing?.biz != null) {
+              toStore.biz = mergedBiz;
+            } else {
+              Object.assign(toStore, mergedBiz);
             }
-            if (!toStore.token && existingToken) {
-              toStore.token = existingToken;
-            }
+            if (!toStore.token && existingToken) toStore.token = existingToken;
+
             localStorage.setItem("selectedBiz", JSON.stringify(toStore));
+
+            // Force re-render to show latest biz name from localStorage
+            this.forceUpdate();
           }
         })
         .catch(() => {});
@@ -92,17 +115,25 @@ class LoginToolbar extends Component {
 
   render() {
     const { loggingOut } = this.state;
+    const bizName = getBizName();
+    const pathname = this.props.pathname || "";
+    const isBizContext = pathname.startsWith("/Chatbox") || pathname.startsWith("/ChatboxGC");
 
     return (
       <AppBar position="fixed" className="login-toolbar-appbar">
         <Toolbar className="login-toolbar" disableGutters>
-          <div className="login-toolbar-container">
+          <div
+            className={
+              "login-toolbar-container" +
+              (isBizContext ? " login-toolbar-container--full" : "")
+            }
+          >
             <div className="login-toolbar-logo">
               <div className="login-toolbar-icon-wrap">
                 <img src="/favicon.ico" alt="UlapBiz" className="login-toolbar-icon" />
               </div>
               <span className="login-toolbar-text">
-                UlapBiz
+                UlapBiz{isBizContext && bizName ? ` - ${bizName}` : ""}
               </span>
             </div>
             <div className="login-toolbar-spacer" />
@@ -132,7 +163,8 @@ class LoginToolbar extends Component {
 
 function LoginToolbarWithRouter() {
   const navigate = useNavigate();
-  return <LoginToolbar navigate={navigate} />;
+  const location = useLocation();
+  return <LoginToolbar navigate={navigate} pathname={location.pathname} />;
 }
 
 export default LoginToolbarWithRouter;

@@ -62,10 +62,10 @@
   pointer-events: none;
 }
 
-/* Pop-up chat panel - draggable, fixed position */
+/* Pop-up chat panel - draggable, fixed position (wider to give chart more width) */
 .chat-panel-popup {
   position: fixed;
-  width: 340px;
+  width: 520px;
   height: 480px;
   min-height: 480px;
   z-index: 9999;
@@ -437,8 +437,8 @@
 }
 
 .chat-ulap-chats-title {
-  font-weight: 600 !important;
-  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
+  font-size: 0.78rem !important;
 }
 
 .chat-ulap-chats-arrow {
@@ -622,7 +622,7 @@
   flex-direction: column;
 }
 .chat-panel-expanded .chat-body > div {
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
   width: 100%;
   display: flex;
@@ -685,6 +685,11 @@
   min-width: 0;
 }
 
+/* Ensure minimized popup input also uses 24px radius */
+.chat-panel .chat-inputPaper {
+  border-radius: 24px;
+}
+
 .chat-input-container .slash-menu-wrapper {
   flex: 1;
   min-width: 0;
@@ -702,22 +707,23 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  padding: 10px 12px 12px;
+  padding: 10px 16px 14px;
   gap: 4px;
-  min-height: 52px;
+  min-height: 60px;
   box-sizing: border-box;
   background: #fff;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: none;
 }
 .chat-inputPaper {
   display: flex;
   align-items: center;
   flex: 1;
   min-width: 0;
-  padding: 8px 12px 8px 8px;
-  border-radius: 20px;
-  background: #f5f5f5;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 8px 16px 8px 10px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .chat-inputPaper .emoji-wrapper {
@@ -775,6 +781,7 @@
 }
 .chat-sendButton {
   flex-shrink: 0;
+  color: #ff7504 !important;
 }
 
 /* Emoji picker - reduce emoji sizes */
@@ -898,12 +905,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  /* Soft white -> theme-accent gradient. --panel-accent is set from theme (defaults to light-orange). */
-  background: linear-gradient(
-    180deg,
-    #ffffff 0%,
-    var(--panel-accent, #fff3e0) 100%
-  );
+  background: #ffffff;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
   position: relative;
 }
@@ -932,9 +934,9 @@
 }
 .chat-titleText {
   margin-left: 8px;
-  font-weight: 200;
-  color: #333;
-  font-size: 15px;
+  font-weight: 600;
+  color: #212121;
+  font-size: 1.05rem;
   line-height: 1.25;
 }
 .chat-header-statusRow {
@@ -1109,11 +1111,27 @@
   color: #f57c00;
 }
 
+/* Chart message: let the chart row take full width */
+.message-with-chart {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+.message-with-chart .chart-with-controls {
+  flex: 1;
+  min-width: 0;
+}
+
 /* Chart customization controls */
 .chart-with-controls {
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.chart-with-controls .chart-renderer-wrap {
+  min-height: 560px;
 }
 .chart-controls {
   display: flex;
