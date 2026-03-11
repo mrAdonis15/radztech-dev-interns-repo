@@ -14,7 +14,8 @@ function isRawChartJson(text) {
     /\b"datasets"\s*:/.test(t) ||
     (/\b"data"\s*:/.test(t) && /\b"labels"\s*:/.test(t)) ||
     /\b"graph"\s*:/.test(t) ||
-    (/\b"config"\s*:/.test(t) && (/\b"datasets"\b/.test(t) || /\b"labels"\b/.test(t)))
+    (/\b"config"\s*:/.test(t) &&
+      (/\b"datasets"\b/.test(t) || /\b"labels"\b/.test(t)))
   );
 }
 
@@ -39,14 +40,14 @@ function checkItems(data) {
     return {
       status: "error",
       error: "too many exist",
-      data: data.slice(0, 10),
+      items: data.slice(0, 10),
     };
   }
   if (data.length > 1) {
     return {
       status: "success",
       error: "multiple_exist",
-      data: data,
+      items: data,
     };
   }
 
@@ -59,7 +60,7 @@ function checkItems(data) {
   }
   return {
     status: "success",
-    data: data,
+    items: data,
   };
 }
 
@@ -67,7 +68,12 @@ function checkItems(data) {
 function productDisplayLabel(p) {
   if (!p) return "";
   const desc = p.sProd || p.sDesc || p.name || "";
-  const code = p.ProdCd || p.sCode || p.cProd || p.code || (p.ixProd != null ? String(p.ixProd) : "");
+  const code =
+    p.ProdCd ||
+    p.sCode ||
+    p.cProd ||
+    p.code ||
+    (p.ixProd != null ? String(p.ixProd) : "");
   return code ? `${desc} (Code: ${code})` : desc;
 }
 
@@ -75,7 +81,10 @@ function addDisplayLabels(result) {
   if (!result || result.status === "error") return result;
   const data = result.data;
   if (Array.isArray(data)) {
-    result.data = data.map((p) => ({ ...p, displayLabel: productDisplayLabel(p) }));
+    result.data = data.map((p) => ({
+      ...p,
+      displayLabel: productDisplayLabel(p),
+    }));
   } else if (data && typeof data === "object") {
     result.data = { ...data, displayLabel: productDisplayLabel(data) };
   }
@@ -94,11 +103,28 @@ const functions = {
       const response = await axios.post(url, args, {
         headers,
       });
-      const items = response.data.items || {};
 
-      const products = checkItems(items);
+      const data = checkItems(response.data.items || []);
 
-      // console.log(products);
+      const items = data.items.map(
+        ({ ixProd, ProdCd, cCost, sCat, sCatSub, sProd, sProdCat, unit }) => ({
+          ixProd,
+          ProdCd,
+          cCost,
+          sCat,
+          sCatSub,
+          sProd,
+          sProdCat,
+          unit,
+        }),
+      );
+
+      const products = {
+        ...data,
+        items: items,
+      };
+
+      console.log("products", products);
 
       return products;
     } catch (err) {
@@ -108,6 +134,80 @@ const functions = {
       };
     }
   },
+  search_branch: async (args) => {
+    // console.log(args);
+    const headers = getHeaders();
+
+    try {
+      const url = `${BASE_URL}/lib/brch`;
+
+      const response = await axios.get(url, {
+        headers: headers,
+      });
+
+      const data = response.data.items;
+
+      const branches = data.filter((item) => item.sBrch === args.q);
+
+      if (branches.length > 1) {
+        return {
+          status: "error",
+          error: "multiple",
+          data: branches,
+        };
+      }
+
+      console.log("branch", branches);
+      return {
+        status: "success",
+        data: branches[0],
+      };
+    } catch (err) {
+      return {
+        status: "error",
+        message: err.response?.data || err.message,
+      };
+    }
+  },
+
+  search_gl_acc: async (args) => {
+    // console.log(args.q);
+    const headers = getHeaders();
+
+    try {
+      const url = `${BASE_URL}/lib/acc`;
+
+      const response = await axios.post(url, args, {
+        headers,
+      });
+
+      const data = checkItems(response.data) || {};
+
+      const items = data.items.map(
+        ({ ixAcc, sAccTitle, sAccType, parent_sAccTitle }) => ({
+          ixAcc,
+          sAccTitle,
+          sAccType,
+          parent_sAccTitle,
+        }),
+      );
+
+      const accounts = {
+        ...data,
+        items: items,
+      };
+
+      console.log("accounts", accounts);
+
+      return accounts;
+    } catch (err) {
+      return {
+        status: "error",
+        message: err.response?.data || err.message,
+      };
+    }
+  },
+
   get_prod_bal: async (args) => {
     // console.log(args);
     const headers = getHeaders();
@@ -121,8 +221,6 @@ const functions = {
       });
 
       const bal = response.data.qtyBAL;
-      console.log(bal);
-
       return {
         status: "success",
         data: bal,
@@ -134,91 +232,53 @@ const functions = {
       };
     }
   },
-  sc_graph: async (args) => {
+  get_prod_bal_by_branch: async (args) => {
+    // console.log(args);
     const headers = getHeaders();
+
     try {
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      // Use year from user request (args.year) or from dt1; then build dt1/dt2 so display follows user request
-      const requestedYear = args.year != null ? parseInt(String(args.year), 10) : null;
-      let dt1 = args.dt1;
-      let dt2 = args.dt2;
-      if (requestedYear != null && Number.isFinite(requestedYear)) {
-        dt1 = dt1 || `${requestedYear}-01-01T00:00:00+08:00`;
-        dt2 = dt2 || `${requestedYear}-12-31T23:59:59+08:00`;
-      } else {
-        dt1 = dt1 || `${currentYear}-01-01T00:00:00+08:00`;
-        dt2 = dt2 || `${currentYear}-12-31T23:59:59+08:00`;
-      }
-      let ixWH = args.ixWH;
-      let ixProd = args.ixProd;
+      const url = `${BASE_URL}/trans/search/prod/inv-bal-by-brch`;
 
-      if (ixWH == null) {
-        const whRes = await axios.get(`${BASE_URL}/trans/get/wh`, { headers });
-        const whList = Array.isArray(whRes.data) ? whRes.data : [];
-        ixWH = whList[0]?.ixWH ?? 4282;
-      }
+      const response = await axios.get(url, {
+        headers: headers,
+        params: args,
+      });
 
-      if (ixProd == null && args.q) {
-        const qRaw = String(args.q).trim();
-        const codeMatch = qRaw.match(/\s*\(Code:\s*([^)]+)\)\s*$/i);
-        const qForSearch = codeMatch ? qRaw.replace(/\s*\(Code:\s*[^)]+\)\s*$/i, "").trim() : qRaw;
-        const searchRes = await axios.post(`${BASE_URL}/lib/prod`, { q: qForSearch || qRaw }, { headers });
-        const items = searchRes.data?.items;
-        const list = Array.isArray(items) ? items : items ? [items] : [];
-        let chosen = list[0];
-        if (list.length > 1 && codeMatch) {
-          const code = codeMatch[1].trim();
-          const byCode = list.find((p) => {
-            const c = p.ProdCd || p.sCode || p.cProd || p.code || (p.ixProd != null ? String(p.ixProd) : "");
-            return c && (c === code || String(p.ixProd) === code);
-          });
-          if (byCode) chosen = byCode;
-        }
-        ixProd = chosen?.ixProd;
-        if (ixProd == null) {
-          return { status: "error", text: "Product not found. Please specify a valid product." };
-        }
-      }
-      if (ixProd == null) {
-        return { status: "error", text: "Missing product: pass q (description) or ixProd." };
-      }
+      const bal = checkItems(response.data);
 
-      const scBody = { ixProd, dt1, dt2, ixWH, SN: "", SN2: "" };
-      await axios.post(`${BASE_URL}/reports/inv/sc`, scBody, { headers });
+      return bal;
+    } catch (err) {
+      return {
+        status: "error",
+        message: err.response?.data || err.message,
+      };
+    }
+  },
+  get_gl_report: async (args) => {
+    const headers = getHeaders();
 
-      const graphBody = { ixProd, dt1, dt2, bn: "", ixWH, SN: "", SN2: "" };
-      const graphRes = await axios.post(`${BASE_URL}/reports/inv/sc/graph`, graphBody, { headers });
-      const raw = graphRes.data;
-      if (!raw) return { status: "error", text: "No graph data returned." }
+    try {
+      const url = `${BASE_URL}/reports/gl`;
 
-      if (Array.isArray(raw.data) && raw.config) {
-        const d = raw.data;
-        const items = d.map((row) => ({
-          YrWk: row.period ?? row.YrWk ?? row.YrMo,
-          tIN: row.in ?? row.tIN ?? row.In,
-          tOUT: row.out ?? row.tOUT ?? row.Out,
-          runBal: row.balance ?? row.runBal ?? row.Balance ?? row.runBalance,
-        }));
-        const begQty = d.length ? (d[0].balance ?? d[0].runBal ?? d[0].Balance ?? d[0].runBalance ?? 0) : 0;
-        const endQty = d.length ? (d[d.length - 1].balance ?? d[d.length - 1].runBal ?? d[d.length - 1].Balance ?? d[d.length - 1].runBalance ?? 0) : 0;
-        const year = parseInt(String(dt1).slice(0, 4), 10) || currentYear;
-        return { items, begQty, endQty, dt1, dt2, year };
-      }
-      if (Array.isArray(raw.items)) {
-        // Use the year from our request (dt1), not the API's raw.dt1, so the chart shows the user-requested year
-        const y = parseInt(String(dt1).slice(0, 4), 10);
-        return { ...raw, dt1, dt2, year: Number.isFinite(y) ? y : currentYear };
-      }
-      if (raw.config?.data?.labels && raw.config?.data?.datasets) {
-        const y = parseInt(String(dt1).slice(0, 4), 10);
-        return { ...raw, dt1, dt2, year: Number.isFinite(y) ? y : currentYear };
-      }
-      if (raw.chart?.series?.length && raw.chart?.xAxis?.categories) {
-        const y = parseInt(String(dt1).slice(0, 4), 10);
-        return { ...raw, dt1, dt2, year: Number.isFinite(y) ? y : currentYear };
-      }
-      return { status: "error", text: "No graph data returned." };
+      const response = await axios.post(url, args, {
+        headers,
+      });
+
+      const gl = response.data;
+
+      const data = {
+        begAmt: gl.begAmt,
+        tDr: gl.tDr,
+        tCr: gl.tCr,
+        endAmt: gl.endAmt,
+      };
+
+      console.log("gl", data);
+
+      return {
+        status: "success",
+        data: data,
+      };
     } catch (err) {
       return {
         status: "error",
@@ -233,7 +293,8 @@ const tools = [
     functionDeclarations: [
       {
         name: "search_prod",
-        description: "Use this to search for specific products.",
+        description:
+          "Use this to search for specific products. Use ProdCd to display multiple entries. If no items found on the first search, return the result immediately and do not search again.",
         parameters: {
           type: "object",
           properties: {
@@ -246,9 +307,37 @@ const tools = [
         },
       },
       {
+        name: "search_branch",
+        description: "Use this to search for specific branch.",
+        parameters: {
+          type: "object",
+          properties: {
+            q: {
+              type: "string",
+              description: "The name/title of the branch.",
+            },
+          },
+          required: ["q"],
+        },
+      },
+      {
+        name: "search_gl_acc",
+        description: "Use this to search specific gl account.",
+        parameters: {
+          type: "object",
+          properties: {
+            q: {
+              type: "string",
+              description: "The title of the account",
+            },
+          },
+          required: ["q"],
+        },
+      },
+      {
         name: "get_prod_bal",
         description:
-          "Get the balance of a certain product. Only use this if the user specifically needs the balance of a certain product.",
+          "Get the total product balance or the balance in a specific branch.",
         parameters: {
           type: "object",
           properties: {
@@ -260,8 +349,70 @@ const tools = [
               type: "integer",
               description: "Use 4282 as ixWH",
             },
+            ixBrch: {
+              type: "integer",
+              description:
+                "The branch where the product belongs. This is optional.",
+            },
           },
-          required: ["ixProd"],
+          required: ["ixProd", "ixWH"],
+        },
+      },
+      {
+        name: "get_prod_bal_by_branch",
+        description: "Get the product balance for each branch.",
+        parameters: {
+          type: "object",
+          properties: {
+            ixProd: {
+              type: "integer",
+              description: "The id of the product",
+            },
+            ixWH: {
+              type: "integer",
+              description: "USE 4282 as ixWH",
+            },
+          },
+          required: ["ixProd", "ixWH"],
+        },
+      },
+      {
+        name: "get_gl_report",
+        description:
+          "Returns the general ledger report for descriptive responses.",
+        parameters: {
+          type: "object",
+          properties: {
+            ixAcc: {
+              type: "integer",
+              description: "The id of the gl account (ixAcc).",
+            },
+            showZero: {
+              type: "boolean",
+              description: "Include zero-balance rows. Default true.",
+            },
+            group_by_branch: {
+              type: "boolean",
+              description: "Group report by branch. Default false.",
+            },
+            dt1: {
+              type: "string",
+              description:
+                "Start date (%Y-%m-%dT%H:%M:%S%z). Defaults to current month's start date.",
+            },
+            dt2: {
+              type: "string",
+              description:
+                "End date (%Y-%m-%dT%H:%M:%S%z). Defaults to current month's end date.",
+            },
+            acc_others: {
+              type: "array",
+              items: {},
+              description:
+                "Optional list of other account filters. Default [].",
+            },
+          },
+          required: ["ixAcc", "dt1", "dt2", "acc_others"],
         },
       },
       {
@@ -273,7 +424,8 @@ const tools = [
           properties: {
             q: {
               type: "string",
-              description: "Product displayLabel (e.g. 'CLICK160 Black (Code: ACB160CBTN-MGB)') or description. Use the displayLabel from the search result when user picked one.",
+              description:
+                "Product displayLabel (e.g. 'CLICK160 Black (Code: ACB160CBTN-MGB)') or description. Use the displayLabel from the search result when user picked one.",
             },
             ixProd: {
               type: "integer",
@@ -281,11 +433,23 @@ const tools = [
             },
             year: {
               type: "integer",
-              description: "Year requested by the user (e.g. 2026). Use when the user says a specific year. The chart will show this year; dt1/dt2 are derived from it if not provided.",
+              description:
+                "Year requested by the user (e.g. 2026). Use when the user says a specific year. The chart will show this year; dt1/dt2 are derived from it if not provided.",
             },
-            dt1: { type: "string", description: "Start date (e.g. '2026-01-01T00:00:00+08:00'). Optional; built from year when year is provided." },
-            dt2: { type: "string", description: "End date (e.g. '2026-12-31T23:59:59+08:00'). Optional; built from year when year is provided." },
-            ixWH: { type: "integer", description: "Warehouse id (default from API). Optional." },
+            dt1: {
+              type: "string",
+              description:
+                "Start date (e.g. '2026-01-01T00:00:00+08:00'). Optional; built from year when year is provided.",
+            },
+            dt2: {
+              type: "string",
+              description:
+                "End date (e.g. '2026-12-31T23:59:59+08:00'). Optional; built from year when year is provided.",
+            },
+            ixWH: {
+              type: "integer",
+              description: "Warehouse id (default from API). Optional.",
+            },
           },
           required: [],
         },
@@ -308,84 +472,55 @@ export async function sendToGemini(userMessage, messageHistory = []) {
   let finalData = {};
   let lastToolName = null;
 
+  let session_id = localStorage.getItem("session_id");
+
   try {
     const payload = {
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: userMessage,
-            },
-          ],
-        },
-      ],
+      session_id: session_id ? session_id : null,
+      message: userMessage,
       tools,
     };
+
     // console.log("payload", payload);
+
+    const genai_base_url = "http://localhost:3000";
     let response;
-    response = await axios.post(`${BASE_URL}/ai/gemini`, payload, {
+    response = await axios.post(`${genai_base_url}/genai/chat`, payload, {
       headers,
     });
 
     // console.log("initial", response);
 
-    while (true) {
-      let functionResponses = [];
-      const functionCalls =
-        response?.data?.candidates?.[0]?.content?.parts?.filter(
-          (p) => p.functionCall,
-        ) || [];
+    const functionCall = response?.data?.function_call;
 
-      if (!functionCalls.length) break;
+    if (functionCall) {
+      const { name, args } = functionCall;
 
-      for (const func of functionCalls) {
-        const { name, args } = func.functionCall;
+      if (!functions[name]) throw new Error(`Function ${name} not defined`);
+      const result = await functions[name](args || {});
 
-        if (!functions[name]) throw new Error(`Function ${name} not defined`);
-
-        const result = await functions[name](args || {});
-
-        lastToolName = name;
-        finalData = result;
-       
-
-        functionResponses.push({
-          role: "tool",
-          parts: [
-            {
-              functionResponse: {
-                name,
-                response: result,
-              },
-            },
-          ],
-        });
-
-        // console.log("array", functionResponses);
+      if (!session_id) {
+        session_id = response.data.session_id;
+        localStorage.setItem("session_id", session_id);
       }
 
-      // console.log("funcRes", result);
-
-      const modelContent = response?.data?.candidates?.[0]?.content;
-
-      const toolPayload = {
-        contents: [...payload.contents, modelContent, ...functionResponses],
-        tools,
+      const resultPayload = {
+        session_id,
+        message: JSON.stringify(result),
       };
-      console.log("secondary", toolPayload);
 
-      response = await axios.post(`${BASE_URL}/ai/gemini`, toolPayload, {
-        headers,
-      });
+      console.log(resultPayload);
 
-      // console.log("secondary", response);
+      response = await axios.post(
+        `${genai_base_url}/genai/chat`,
+        resultPayload,
+        {
+          headers,
+        },
+      );
     }
 
-    const finalText =
-      response?.data?.candidates?.[0]?.content?.parts
-        ?.map((p) => p.text)
-        ?.join("") || FALL_BACK_MSG;
+    const text = response?.data?.text || FALL_BACK_MSG;
 
     const isChartFromRequest = isChart;
     const isChartFromTool = lastToolName === "sc_graph";
@@ -400,11 +535,14 @@ export async function sendToGemini(userMessage, messageHistory = []) {
         return { type: "chart", data: chartConfig, text: CHART_REPLY_TEXT };
       }
     }
-    if (isChart && finalText) {
-      return { type: "text", text: isRawChartJson(finalText) ? CHART_REPLY_TEXT : finalText };
+    if (isChart && text) {
+      return {
+        type: "text",
+        text: isRawChartJson(text) ? CHART_REPLY_TEXT : text,
+      };
     }
 
-    return { type: "text", text: finalText };
+    return { type: "text", text: text };
   } catch (err) {
     console.error("Gemini error:", err);
     return {
