@@ -3,6 +3,7 @@ import Paper from "@material-ui/core/Paper";
 import IconButton from "@material-ui/core/IconButton";
 import InputBase from "@material-ui/core/InputBase";
 import SendIcon from "@material-ui/icons/Send";
+import StopIcon from "@material-ui/icons/Stop";
 import EmojiEmotionsIcon from "@material-ui/icons/EmojiEmotions";
 import EmojiPicker from "emoji-picker-react";
 import ulapLogo from "./Assets/ulap-biz-logo.png";
@@ -15,11 +16,13 @@ export default function ChatInputArea({
   setShowEmoji,
   onEmojiClick,
   onSend,
+  onStop,
+  isSending = false,
   onKeyDown,
   onDragStart,
   themeProps,
   isExpanded = false,
-  placeholder = "Message",
+  placeholder = "Ask UlapAI",
 }) {
   const {
     showThemePicker,
@@ -186,13 +189,25 @@ export default function ChatInputArea({
         </div>
         </Paper>
 
-        <IconButton
-          className="chat-sendButton"
-          style={{ marginLeft: 8 }}
-          onClick={onSend}
-        >
-          <SendIcon />
-        </IconButton>
+        {isSending ? (
+          <IconButton
+            className="chat-stopButton"
+            style={{ marginLeft: 8 }}
+            onClick={onStop}
+            aria-label="Stop generating"
+            title="Stop"
+          >
+            <StopIcon />
+          </IconButton>
+        ) : (
+          <IconButton
+            className="chat-sendButton"
+            style={{ marginLeft: 8 }}
+            onClick={onSend}
+          >
+            <SendIcon />
+          </IconButton>
+        )}
       </div>
     </div>
   );

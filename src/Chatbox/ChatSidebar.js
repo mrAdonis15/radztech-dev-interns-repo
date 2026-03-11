@@ -45,11 +45,11 @@ export default function ChatSidebar({
   const [logoHovered, setLogoHovered] = useState(false);
 
   const filteredHistory = history;
-  // "New Chat" always at top (clickable), then saved chats below
-  const listItems = [
-    { id: "__new_chat__", title: "New Chat", isNewChat: true },
-    ...filteredHistory,
-  ];
+  const hasConversations = filteredHistory.length > 0;
+  // Only show "New Chat" entry in the list when there is at least one saved conversation
+  const listItems = hasConversations
+    ? [{ id: "__new_chat__", title: "New Chat", isNewChat: true }, ...filteredHistory]
+    : filteredHistory;
 
   const formatDate = (ts) => {
     const d = new Date(ts);

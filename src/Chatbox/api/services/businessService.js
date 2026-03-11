@@ -51,8 +51,11 @@ export async function getBusinesses(token) {
   });
 }
 
-export default {
+/* Fix for ESLint warning */
+const businessService = {
   selectBiz,
   setBiz,
   getBusinesses,
 };
+
+export default businessService;

@@ -2,7 +2,20 @@ import React, { useState, useRef, useEffect } from "react";
 import "./Chatbox.css";
 import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
+import IconButton from "@material-ui/core/IconButton";
+import Menu from "@material-ui/core/Menu";
+import MenuItem from "@material-ui/core/MenuItem";
+import ListItemText from "@material-ui/core/ListItemText";
+import Dialog from "@material-ui/core/Dialog";
+import DialogContent from "@material-ui/core/DialogContent";
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
 import ChatIcon from "@material-ui/icons/Chat";
+import DeleteOutlineIcon from "@material-ui/icons/DeleteOutline";
+import CloseIcon from "@material-ui/icons/Close";
+import ChatBubbleOutlineIcon from "@material-ui/icons/ChatBubbleOutline";
+import ExpandLessIcon from "@material-ui/icons/ExpandLess";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 
 import { sendMessage } from "./api/services/chatService.js";
 import {
@@ -15,9 +28,11 @@ import {
 } from "./chatboxConstants.js";
 import {
   createMessage,
+  formatTime,
   saveMessages,
   loadHistory,
   addToHistory,
+  updateHistoryItem,
   deleteHistoryItem,
   ChatHeader,
   UlapAIMainHeader,
@@ -26,7 +41,6 @@ import ChatSidebar from "./ChatSidebar.js";
 import { useChatboxTheme } from "./useChatboxTheme.js";
 import ChatMessage from "./ChatMessage.js";
 import ChatInputArea from "./ChatInputArea.js";
-import ChatHistory from "./ChatHistory.js";
 
 export default function Chatbox({ defaultOpen = false }) {
   const rootRef = useRef(null);
@@ -34,6 +48,7 @@ export default function Chatbox({ defaultOpen = false }) {
   const inputRef = useRef(null);
   const panelRef = useRef(null);
   const isSendingRef = useRef(false);
+  const abortControllerRef = useRef(null);
 
   const [messages, setMessages] = useState(() => getInitialMessages());
   const [input, setInput] = useState("");
@@ -41,10 +56,16 @@ export default function Chatbox({ defaultOpen = false }) {
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [panelPosition, setPanelPosition] = useState({ x: null, y: null });
-  const [showHistoryOpen, setShowHistoryOpen] = useState(false);
   const [history, setHistory] = useState(loadHistory());
   const [isExpanded, setIsExpanded] = useState(true);
   const [viewingHistoryId, setViewingHistoryId] = useState(null);
+  const [currentConversationId, setCurrentConversationId] = useState(null);
+  const [sessionId, setSessionId] = useState(null);
+  const [optionsMenuAnchor, setOptionsMenuAnchor] = useState(null);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [modalSearchQuery, setModalSearchQuery] = useState("");
+  const [menuChatsCollapsed, setMenuChatsCollapsed] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const theme = useChatboxTheme(rootRef);
 
@@ -62,6 +83,22 @@ export default function Chatbox({ defaultOpen = false }) {
   useEffect(() => {
     saveMessages(messages);
   }, [messages]);
+
+  // Auto-save to chat history when there's a conversation (not when viewing a saved chat)
+  useEffect(() => {
+    const hasUserMessage = messages.some((m) => m.sender === "me");
+    if (!hasUserMessage || viewingHistoryId != null) return;
+    if (currentConversationId) {
+      updateHistoryItem(currentConversationId, messages);
+      setHistory(loadHistory());
+    } else {
+      const next = addToHistory(messages);
+      if (next.length > 0) {
+        setCurrentConversationId(next[0].id);
+        setHistory(next);
+      }
+    }
+  }, [messages, viewingHistoryId, currentConversationId]);
 
   // Click/touch outside to close emoji picker
   useEffect(() => {
@@ -157,7 +194,11 @@ export default function Chatbox({ defaultOpen = false }) {
     const text = input.trim();
     if (!text || isSendingRef.current) return;
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     isSendingRef.current = true;
+    setIsSending(true);
+
     const userMsgId = crypto.randomUUID();
     const userMsg = createMessage(userMsgId, "me", text);
     setInput("");
@@ -169,56 +210,143 @@ export default function Chatbox({ defaultOpen = false }) {
 
     const messageForAi = text || "Hello";
 
-    sendMessage(messageForAi, messages)
+    sendMessage(messageForAi, messages, controller.signal, sessionId ?? undefined)
       .then((reply) => {
         const isChart = reply && reply.type === "chart";
         const text = reply?.text ?? "";
+        if (reply?.session_id != null) setSessionId(reply.session_id);
         if (isChart) setIsExpanded(true);
+        const receivedTime = formatTime();
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === placeholderId
               ? isChart
-                ? { ...msg, type: "chart", data: reply.data, text }
-                : { ...msg, text }
+                ? { ...msg, type: "chart", data: reply.data, text, time: receivedTime }
+                : { ...msg, text, time: receivedTime }
               : msg
           )
         );
       })
-      .catch(() => {
+      .catch((err) => {
+        const isCancelled =
+          err?.name === "CanceledError" ||
+          err?.code === "ERR_CANCELED" ||
+          err?.message === "canceled";
+        const receivedTime = formatTime();
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === placeholderId
-              ? { ...msg, text: "Sorry, something went wrong. Please try again." }
+              ? { ...msg, text: isCancelled ? "Request cancelled." : "Sorry, something went wrong. Please try again.", time: receivedTime }
               : msg
           )
         );
       })
       .finally(() => {
+        abortControllerRef.current = null;
         isSendingRef.current = false;
+        setIsSending(false);
       });
   };
 
+  const handleStop = () => {
+    abortControllerRef.current?.abort();
+  };
+
   const handleNewChat = () => {
-    const hasUserMessage = messages.some((m) => m.sender === "me");
-    const isViewingSavedChat = viewingHistoryId != null;
-    if (hasUserMessage && messages.length > 0 && !isViewingSavedChat) {
-      addToHistory(messages);
-      setHistory(loadHistory());
-    }
     setMessages(getInitialMessages());
     setViewingHistoryId(null);
-    setShowHistoryOpen(false);
+    setCurrentConversationId(null);
+    setSessionId(null);
+    setHistory(loadHistory());
   };
 
   const handleSelectHistoryChat = (item) => {
     setMessages(item.messages || []);
     setViewingHistoryId(item.id);
-    setShowHistoryOpen(false);
+    setCurrentConversationId(null);
+    setSessionId(null);
   };
 
   const handleDeleteHistoryChat = (id) => {
     setHistory(deleteHistoryItem(id));
   };
+
+  const historyMenuOpen = Boolean(optionsMenuAnchor);
+
+  const handleOpenHistoryMenu = (anchorEl) => {
+    setHistory(loadHistory());
+    setOptionsMenuAnchor(anchorEl);
+  };
+
+  const handleCloseHistoryMenu = () => {
+    setOptionsMenuAnchor(null);
+  };
+
+  const handleSelectHistoryFromMenu = (item) => {
+    handleSelectHistoryChat(item);
+    setOptionsMenuAnchor(null);
+  };
+
+  const handleDeleteHistoryFromMenu = (id) => {
+    handleDeleteHistoryChat(id);
+  };
+
+  const formatHistoryDate = (ts) => {
+    const d = new Date(ts);
+    const now = new Date();
+    const isToday =
+      d.getDate() === now.getDate() &&
+      d.getMonth() === now.getMonth() &&
+      d.getFullYear() === now.getFullYear();
+    if (isToday) {
+      return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
+    }
+    return d.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: d.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+    });
+  };
+
+  const handleOpenSearchModal = () => {
+    setOptionsMenuAnchor(null);
+    setSearchModalOpen(true);
+    setModalSearchQuery("");
+  };
+
+  const handleCloseSearchModal = () => {
+    setSearchModalOpen(false);
+    setModalSearchQuery("");
+  };
+
+  const handleSelectFromSearchModal = (item) => {
+    handleSelectHistoryChat(item);
+    handleCloseSearchModal();
+  };
+
+  const filterByQuery = (list, q) => {
+    if (!q || !q.trim()) return list;
+    const lower = q.trim().toLowerCase();
+    return list.filter((item) => (item.title || "Chat").toLowerCase().includes(lower));
+  };
+
+  const groupHistoryByPeriod = (all) => {
+    const now = Date.now();
+    const MS_7_DAYS = 7 * 24 * 60 * 60 * 1000;
+    const MS_30_DAYS = 30 * 24 * 60 * 60 * 1000;
+    const last7Days = [];
+    const previous30Days = [];
+    all.forEach((item) => {
+      const age = now - (item.createdAt || 0);
+      if (age <= MS_7_DAYS) last7Days.push(item);
+      else if (age <= MS_30_DAYS) previous30Days.push(item);
+    });
+    return { last7Days, previous30Days };
+  };
+
+  const { last7Days, previous30Days } = groupHistoryByPeriod(history);
+  const modal7 = filterByQuery(last7Days, modalSearchQuery);
+  const modal30 = filterByQuery(previous30Days, modalSearchQuery);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -266,7 +394,11 @@ export default function Chatbox({ defaultOpen = false }) {
                     />
                     <div className="chat-ulap-main">
                       <UlapAIMainHeader
-                        onMinimize={() => { setIsOpen(false); setIsExpanded(false); }}
+                        onMinimize={() => {
+                          // Go to minimized/popup version instead of closing the chat
+                          setIsOpen(true);
+                          setIsExpanded(false);
+                        }}
                       />
                       {maintenanceOpen ? (
                         <div className="chat-body chat-ulap-main-body">
@@ -329,15 +461,13 @@ export default function Chatbox({ defaultOpen = false }) {
                   onMinimize={() => { setIsOpen(false); setIsExpanded(false); }}
                   onClose={() => { setIsOpen(false); setIsExpanded(false); }}
                   onDragStart={handleDragStart}
-                  onHistoryClick={
+                  onMoreClick={
                     maintenanceOpen
                       ? undefined
-                      : () => {
-                          setHistory(loadHistory());
-                          setShowHistoryOpen(true);
+                      : (anchorEl) => {
+                          handleOpenHistoryMenu(anchorEl);
                         }
                   }
-                  onNewChatClick={maintenanceOpen ? undefined : handleNewChat}
                   isExpanded={isExpanded}
                   onExpandToggle={() => setIsExpanded((e) => !e)}
                 />
@@ -402,6 +532,8 @@ export default function Chatbox({ defaultOpen = false }) {
                       setShowEmoji={setShowEmoji}
                       onEmojiClick={handleEmojiClick}
                       onSend={handleSend}
+                      onStop={handleStop}
+                      isSending={isSending}
                       onKeyDown={handleKeyDown}
                       onDragStart={handleDragStart}
                       themeProps={theme}
@@ -412,13 +544,156 @@ export default function Chatbox({ defaultOpen = false }) {
                 </Paper>
               )
             )}
-            <ChatHistory
-              open={showHistoryOpen}
-              onClose={() => setShowHistoryOpen(false)}
-              history={history}
-              onSelectChat={handleSelectHistoryChat}
-              onDeleteChat={handleDeleteHistoryChat}
-            />
+            <Menu
+              anchorEl={optionsMenuAnchor}
+              keepMounted
+              open={historyMenuOpen}
+              onClose={handleCloseHistoryMenu}
+              classes={{ paper: "chat-history-menu-paper" }}
+            >
+              <MenuItem onClick={handleNewChat}>
+                <ListItemText primary="New Chat" />
+              </MenuItem>
+              <MenuItem onClick={handleOpenSearchModal}>
+                <ListItemText primary="Search Chat" />
+              </MenuItem>
+              <MenuItem onClick={() => setMenuChatsCollapsed((c) => !c)}>
+                <ListItemText
+                  primary="Your chats"
+                  primaryTypographyProps={{
+                    className: "chat-menu-your-chats-label",
+                  }}
+                />
+                {menuChatsCollapsed ? (
+                  <ExpandMoreIcon fontSize="small" />
+                ) : (
+                  <ExpandLessIcon fontSize="small" />
+                )}
+              </MenuItem>
+              {!menuChatsCollapsed &&
+                (history.length === 0 ? (
+                  <MenuItem disabled>
+                    <ListItemText
+                      primary="No past chats"
+                      secondary="Start a new chat to see it here."
+                      primaryTypographyProps={{ variant: "body2" }}
+                      secondaryTypographyProps={{ variant: "caption" }}
+                    />
+                  </MenuItem>
+                ) : (
+                  history.map((item) => (
+                    <MenuItem
+                      key={item.id}
+                      onClick={() => handleSelectHistoryFromMenu(item)}
+                      className="chat-history-menu-item"
+                    >
+                      <ListItemText
+                        primary={item.title || "Chat"}
+                        secondary={formatHistoryDate(item.createdAt)}
+                        primaryTypographyProps={{ noWrap: true, variant: "body2" }}
+                        secondaryTypographyProps={{ variant: "caption" }}
+                      />
+                      <IconButton
+                        size="small"
+                        edge="end"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteHistoryFromMenu(item.id);
+                        }}
+                        aria-label="Delete chat"
+                      >
+                        <DeleteOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </MenuItem>
+                  ))
+                ))}
+            </Menu>
+            <Dialog
+              open={searchModalOpen}
+              onClose={handleCloseSearchModal}
+              maxWidth="sm"
+              fullWidth
+              classes={{ paper: "chat-search-modal-paper" }}
+              PaperProps={{ elevation: 8 }}
+            >
+              <div className="chat-search-modal-header">
+                <input
+                  type="text"
+                  className="chat-search-modal-input"
+                  placeholder="Search chats..."
+                  value={modalSearchQuery}
+                  onChange={(e) => setModalSearchQuery(e.target.value)}
+                  aria-label="Search chats"
+                />
+                <IconButton
+                  size="small"
+                  className="chat-search-modal-close"
+                  onClick={handleCloseSearchModal}
+                  aria-label="Close"
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </div>
+              <DialogContent className="chat-search-modal-content">
+                <MenuItem
+                  onClick={() => {
+                    handleNewChat();
+                    handleCloseSearchModal();
+                  }}
+                  className="chat-search-modal-new-chat"
+                >
+                  <ListItemText primary="New chat" />
+                </MenuItem>
+
+                {modal7.length > 0 && (
+                  <div className="chat-search-modal-section">
+                    <Typography variant="body2" className="chat-search-modal-section-title">
+                      Previous 7 Days
+                    </Typography>
+                    <List disablePadding className="chat-search-modal-list">
+                      {modal7.map((item) => (
+                        <ListItem
+                          key={item.id}
+                          button
+                          className="chat-search-modal-item"
+                          onClick={() => handleSelectFromSearchModal(item)}
+                        >
+                          <ChatBubbleOutlineIcon className="chat-search-modal-bubble-icon" />
+                          <ListItemText
+                            primary={item.title || "Chat"}
+                            primaryTypographyProps={{ noWrap: true, variant: "body2" }}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </div>
+                )}
+
+                {modal30.length > 0 && (
+                  <div className="chat-search-modal-section">
+                    <Typography variant="body2" className="chat-search-modal-section-title">
+                      Previous 30 Days
+                    </Typography>
+                    <List disablePadding className="chat-search-modal-list">
+                      {modal30.map((item) => (
+                        <ListItem
+                          key={item.id}
+                          button
+                          className="chat-search-modal-item"
+                          onClick={() => handleSelectFromSearchModal(item)}
+                        >
+                          <ChatBubbleOutlineIcon className="chat-search-modal-bubble-icon" />
+                          <ListItemText
+                            primary={item.title || "Chat"}
+                            primaryTypographyProps={{ noWrap: true, variant: "body2" }}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         );
 

@@ -73,8 +73,43 @@ const functions = {
       };
     }
   },
+  search_branch: async (args) => {
+    // console.log(args);
+    const headers = getHeaders();
+
+    try {
+      const url = `${BASE_URL}/lib/brch`;
+
+      const response = await axios.get(url, {
+        headers: headers,
+      });
+
+      const data = response.data.items;
+      console.log("branch", data);
+
+      const branches = data.filter((item) => item.sBrch === args.q);
+
+      if (branches.length > 1) {
+        return {
+          status: "error",
+          error: "multiple",
+          data: branches,
+        };
+      }
+
+      return {
+        status: "success",
+        data: branches[0],
+      };
+    } catch (err) {
+      return {
+        status: "error",
+        message: err.response?.data || err.message,
+      };
+    }
+  },
   get_prod_bal: async (args) => {
-    console.log(args);
+    // console.log(args);
     const headers = getHeaders();
 
     try {
@@ -85,9 +120,38 @@ const functions = {
         params: args,
       });
 
-      const bal = response.data;
+      const bal = response.data.qtyBAL;
+      console.log(bal);
 
-      return bal;
+      return {
+        status: "success",
+        data: bal,
+      };
+    } catch (err) {
+      return {
+        status: "error",
+        message: err.response?.data || err.message,
+      };
+    }
+  },
+  get_prod_bal_by_branch: async (args) => {
+    // console.log(args);
+    const headers = getHeaders();
+
+    try {
+      const url = `${BASE_URL}/trans/search/prod/inv-bal-by-brch`;
+
+      const response = await axios.get(url, {
+        headers: headers,
+        params: args,
+      });
+
+      const bal = checkItems(response.data);
+
+      return {
+        status: "success",
+        data: bal,
+      };
     } catch (err) {
       return {
         status: "error",
@@ -115,9 +179,23 @@ const tools = [
         },
       },
       {
+        name: "search_branch",
+        description: "Use this to search for specific branch.",
+        parameters: {
+          type: "object",
+          properties: {
+            q: {
+              type: "string",
+              description: "The name/title of the branch.",
+            },
+          },
+          required: ["q"],
+        },
+      },
+      {
         name: "get_prod_bal",
         description:
-          "Get the balance of a certain product. Only use this if the user specifically needs the balance of a certain product.",
+          "Get the total product balance or the balance in a specific branch.",
         parameters: {
           type: "object",
           properties: {
@@ -129,8 +207,31 @@ const tools = [
               type: "integer",
               description: "Use 4282 as ixWH",
             },
+            ixBrch: {
+              type: "integer",
+              description:
+                "The branch where the product belongs. This is optional.",
+            },
           },
-          required: ["ixProd"],
+          required: ["ixProd", "ixWH"],
+        },
+      },
+      {
+        name: "get_prod_bal_by_branch",
+        description: "Get the product balance for each branch.",
+        parameters: {
+          type: "object",
+          properties: {
+            ixProd: {
+              type: "integer",
+              description: "The id of the product",
+            },
+            ixWH: {
+              type: "integer",
+              description: "USE 4282 as ixWH",
+            },
+          },
+          required: ["ixProd", "ixWH"],
         },
       },
     ],

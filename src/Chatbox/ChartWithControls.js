@@ -1,14 +1,36 @@
 import React, { useState, useMemo } from "react";
 import ChartRenderer from "src/components/Marth/chartRenderer";
 
-const CHART_TYPES = ["line", "bar", "pie"];
+const CHART_TYPES = ["mixed", "line", "bar", "pie"];
 
-/** Stock movement layout: title left, Show Breakdown + arrows right */
-function StockChartHeader({ title, showBreakdown, onShowBreakdownChange, onPrev, onNext }) {
+/** Stock movement layout: title left, type + Show Breakdown + arrows right */
+function StockChartHeader({
+  title,
+  showBreakdown,
+  onShowBreakdownChange,
+  onPrev,
+  onNext,
+  chartType,
+  onChartTypeChange,
+}) {
   return (
     <div className="chart-stock-header">
       <h3 className="chart-stock-title">{title}</h3>
       <div className="chart-stock-controls">
+        <div className="chart-stock-type">
+          <label className="chart-control-label">Chart type:</label>
+          <select
+            value={chartType}
+            onChange={(e) => onChartTypeChange(e.target.value)}
+            className="chart-type-select"
+          >
+            {CHART_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
         <label className="chart-stock-breakdown">
           <span className="chart-stock-toggle-wrap">
             <input
@@ -85,9 +107,10 @@ export default function ChartWithControls({ chart }) {
   if (!chart || !chart.labels || !chart.datasets?.length) return null;
 
   const hasMultipleDatasets = chart.datasets.length > 1;
+  const currentType = chartTypeOverride || chart.chartType;
 
-  const handleChartTypeChange = (e) => {
-    const v = e.target.value;
+  const handleChartTypeChange = (valueOrEvent) => {
+    const v = typeof valueOrEvent === "string" ? valueOrEvent : valueOrEvent.target.value;
     setChartTypeOverride(v === chart.chartType ? null : v);
   };
 
@@ -110,12 +133,14 @@ export default function ChartWithControls({ chart }) {
           onShowBreakdownChange={setShowBreakdown}
           onPrev={handlePrev}
           onNext={handleNext}
+          chartType={currentType}
+          onChartTypeChange={handleChartTypeChange}
         />
       ) : (
         <div className="chart-controls">
         <label className="chart-control-label">Chart type:</label>
         <select
-          value={chartTypeOverride || chart.chartType}
+          value={currentType}
           onChange={handleChartTypeChange}
           className="chart-type-select"
         >

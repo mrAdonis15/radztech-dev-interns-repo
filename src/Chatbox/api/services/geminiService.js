@@ -1,6 +1,6 @@
 import axios from "axios";
-import { getBizToken } from "../selectedBiz";
-import { isLikelyChartData, normalizeToChartConfig } from "./stockcardgraph.js";
+import { isLikelyChartData } from "./stockcardgraph.js";
+import { tools, functions, getHeaders } from "./tools.js";
 
 const BASE_URL = "http://localhost:3000/api";
 /** Return false if text looks like raw chart/graph JSON (should not be shown to user). */
@@ -23,17 +23,17 @@ const FALL_BACK_MSG =
   "Sorry, I'm having trouble processing your request. Please try again.";
 const CHART_REPLY_TEXT = "Here is the chart you requested.";
 
-function getHeaders() {
-  const token = getBizToken();
+// function getHeaders() {
+//   const token = getBizToken();
 
-  const headers = {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-    "x-access-tokens": token,
-  };
+//   const headers = {
+//     "Content-Type": "application/json",
+//     Accept: "application/json",
+//     "x-access-tokens": token,
+//   };
 
-  return headers;
-}
+//   return headers;
+// }
 
 function checkItems(data) {
   if (data.length > 10) {
@@ -92,382 +92,29 @@ function addDisplayLabels(result) {
 }
 
 // TOOLS
-const functions = {
-  search_prod: async (args) => {
-    // console.log(args.q);
-    const headers = getHeaders();
-
-    try {
-      const url = `${BASE_URL}/lib/prod`;
-
-      const response = await axios.post(url, args, {
-        headers,
-      });
-
-      const data = checkItems(response.data.items || []);
-
-      const items = data.items.map(
-        ({ ixProd, ProdCd, cCost, sCat, sCatSub, sProd, sProdCat, unit }) => ({
-          ixProd,
-          ProdCd,
-          cCost,
-          sCat,
-          sCatSub,
-          sProd,
-          sProdCat,
-          unit,
-        }),
-      );
-
-      const products = {
-        ...data,
-        items: items,
-      };
-
-      console.log("products", products);
-
-      return products;
-    } catch (err) {
-      return {
-        status: "error",
-        message: err.response?.data || err.message,
-      };
-    }
-  },
-  search_branch: async (args) => {
-    // console.log(args);
-    const headers = getHeaders();
-
-    try {
-      const url = `${BASE_URL}/lib/brch`;
-
-      const response = await axios.get(url, {
-        headers: headers,
-      });
-
-      const data = response.data.items;
-
-      const branches = data.filter((item) => item.sBrch === args.q);
-
-      if (branches.length > 1) {
-        return {
-          status: "error",
-          error: "multiple",
-          data: branches,
-        };
-      }
-
-      console.log("branch", branches);
-      return {
-        status: "success",
-        data: branches[0],
-      };
-    } catch (err) {
-      return {
-        status: "error",
-        message: err.response?.data || err.message,
-      };
-    }
-  },
-
-  search_gl_acc: async (args) => {
-    // console.log(args.q);
-    const headers = getHeaders();
-
-    try {
-      const url = `${BASE_URL}/lib/acc`;
-
-      const response = await axios.post(url, args, {
-        headers,
-      });
-
-      const data = checkItems(response.data) || {};
-
-      const items = data.items.map(
-        ({ ixAcc, sAccTitle, sAccType, parent_sAccTitle }) => ({
-          ixAcc,
-          sAccTitle,
-          sAccType,
-          parent_sAccTitle,
-        }),
-      );
-
-      const accounts = {
-        ...data,
-        items: items,
-      };
-
-      console.log("accounts", accounts);
-
-      return accounts;
-    } catch (err) {
-      return {
-        status: "error",
-        message: err.response?.data || err.message,
-      };
-    }
-  },
-
-  get_prod_bal: async (args) => {
-    // console.log(args);
-    const headers = getHeaders();
-
-    try {
-      const url = `${BASE_URL}/trans/search/prod/inv-bal`;
-
-      const response = await axios.get(url, {
-        headers: headers,
-        params: args,
-      });
-
-      const bal = response.data.qtyBAL;
-      return {
-        status: "success",
-        data: bal,
-      };
-    } catch (err) {
-      return {
-        status: "error",
-        message: err.response?.data || err.message,
-      };
-    }
-  },
-  get_prod_bal_by_branch: async (args) => {
-    // console.log(args);
-    const headers = getHeaders();
-
-    try {
-      const url = `${BASE_URL}/trans/search/prod/inv-bal-by-brch`;
-
-      const response = await axios.get(url, {
-        headers: headers,
-        params: args,
-      });
-
-      const bal = checkItems(response.data);
-
-      return bal;
-    } catch (err) {
-      return {
-        status: "error",
-        message: err.response?.data || err.message,
-      };
-    }
-  },
-  get_gl_report: async (args) => {
-    const headers = getHeaders();
-
-    try {
-      const url = `${BASE_URL}/reports/gl`;
-
-      const response = await axios.post(url, args, {
-        headers,
-      });
-
-      const gl = response.data;
-
-      const data = {
-        begAmt: gl.begAmt,
-        tDr: gl.tDr,
-        tCr: gl.tCr,
-        endAmt: gl.endAmt,
-      };
-
-      console.log("gl", data);
-
-      return {
-        status: "success",
-        data: data,
-      };
-    } catch (err) {
-      return {
-        status: "error",
-        message: err.response?.data || err.message,
-      };
-    }
-  },
-};
-
-const tools = [
-  {
-    functionDeclarations: [
-      {
-        name: "search_prod",
-        description:
-          "Use this to search for specific products. Use ProdCd to display multiple entries. If no items found on the first search, return the result immediately and do not search again.",
-        parameters: {
-          type: "object",
-          properties: {
-            q: {
-              type: "string",
-              description: "The name or category of the product",
-            },
-          },
-          required: ["q"],
-        },
-      },
-      {
-        name: "search_branch",
-        description: "Use this to search for specific branch.",
-        parameters: {
-          type: "object",
-          properties: {
-            q: {
-              type: "string",
-              description: "The name/title of the branch.",
-            },
-          },
-          required: ["q"],
-        },
-      },
-      {
-        name: "search_gl_acc",
-        description: "Use this to search specific gl account.",
-        parameters: {
-          type: "object",
-          properties: {
-            q: {
-              type: "string",
-              description: "The title of the account",
-            },
-          },
-          required: ["q"],
-        },
-      },
-      {
-        name: "get_prod_bal",
-        description:
-          "Get the total product balance or the balance in a specific branch.",
-        parameters: {
-          type: "object",
-          properties: {
-            ixProd: {
-              type: "integer",
-              description: "The id of the product",
-            },
-            ixWH: {
-              type: "integer",
-              description: "Use 4282 as ixWH",
-            },
-            ixBrch: {
-              type: "integer",
-              description:
-                "The branch where the product belongs. This is optional.",
-            },
-          },
-          required: ["ixProd", "ixWH"],
-        },
-      },
-      {
-        name: "get_prod_bal_by_branch",
-        description: "Get the product balance for each branch.",
-        parameters: {
-          type: "object",
-          properties: {
-            ixProd: {
-              type: "integer",
-              description: "The id of the product",
-            },
-            ixWH: {
-              type: "integer",
-              description: "USE 4282 as ixWH",
-            },
-          },
-          required: ["ixProd", "ixWH"],
-        },
-      },
-      {
-        name: "get_gl_report",
-        description:
-          "Returns the general ledger report for descriptive responses.",
-        parameters: {
-          type: "object",
-          properties: {
-            ixAcc: {
-              type: "integer",
-              description: "The id of the gl account (ixAcc).",
-            },
-            showZero: {
-              type: "boolean",
-              description: "Include zero-balance rows. Default true.",
-            },
-            group_by_branch: {
-              type: "boolean",
-              description: "Group report by branch. Default false.",
-            },
-            dt1: {
-              type: "string",
-              description:
-                "Start date (%Y-%m-%dT%H:%M:%S%z). Defaults to current month's start date.",
-            },
-            dt2: {
-              type: "string",
-              description:
-                "End date (%Y-%m-%dT%H:%M:%S%z). Defaults to current month's end date.",
-            },
-            acc_others: {
-              type: "array",
-              items: {},
-              description:
-                "Optional list of other account filters. Default [].",
-            },
-          },
-          required: ["ixAcc", "dt1", "dt2", "acc_others"],
-        },
-      },
-      {
-        name: "sc_graph",
-        description:
-          "Get stock card graph data (running balance, IN, OUT by period). Use when the user asks to graph/chart/plot stock card or running balance. For q, use the product displayLabel from search_prod (e.g. 'CLICK160 Black (Code: ACB160CBTN-MGB)') or the description when the user chose from the list (e.g. 'the first one' → use that item's displayLabel). When the user asks for a specific year (e.g. '2026', 'stock card for 2026'), pass that year in the year parameter so the chart shows the requested year.",
-        parameters: {
-          type: "object",
-          properties: {
-            q: {
-              type: "string",
-              description:
-                "Product displayLabel (e.g. 'CLICK160 Black (Code: ACB160CBTN-MGB)') or description. Use the displayLabel from the search result when user picked one.",
-            },
-            ixProd: {
-              type: "integer",
-              description: "Product id. Use only when q is not available.",
-            },
-            year: {
-              type: "integer",
-              description:
-                "Year requested by the user (e.g. 2026). Use when the user says a specific year. The chart will show this year; dt1/dt2 are derived from it if not provided.",
-            },
-            dt1: {
-              type: "string",
-              description:
-                "Start date (e.g. '2026-01-01T00:00:00+08:00'). Optional; built from year when year is provided.",
-            },
-            dt2: {
-              type: "string",
-              description:
-                "End date (e.g. '2026-12-31T23:59:59+08:00'). Optional; built from year when year is provided.",
-            },
-            ixWH: {
-              type: "integer",
-              description: "Warehouse id (default from API). Optional.",
-            },
-          },
-          required: [],
-        },
-      },
-    ],
-  },
-];
 
 //  MAIN FUNCTION
-export async function sendToGemini(userMessage, messageHistory = []) {
-  const token = localStorage.getItem("authToken");
-  const headers = {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-    "x-access-tokens": token,
-  };
+/**
+ * @param {string} userMessage
+ * @param {Array} messageHistory
+ * @param {AbortSignal} [signal] - Optional abort signal to cancel the request.
+ * @param {string} [sessionId] - Optional session id from a previous chat response (for continuing conversation).
+ */
+export async function sendToGemini(
+  userMessage,
+  messageHistory = [],
+  signal = undefined,
+  sessionId = undefined,
+) {
+  const headers = getHeaders();
+  if (!headers["x-access-tokens"] && typeof localStorage !== "undefined") {
+    headers["x-access-tokens"] = localStorage.getItem("authToken");
+  }
 
-  const isChart = /graph|chart|plot|visual/i.test(userMessage);
+  /** Deciding factor: only show chart when user explicitly asked for a graph/chart/plot/visual. */
+  const userAskedForGraph = /graph|chart|plot|visual|visualize/i.test(
+    userMessage,
+  );
 
   let finalData = {};
   let lastToolName = null;
@@ -475,6 +122,7 @@ export async function sendToGemini(userMessage, messageHistory = []) {
   let session_id = localStorage.getItem("session_id");
 
   try {
+    // genai/chat API expects { session_id?, parts: [{ text }], tools } (same as Postman)
     const payload = {
       session_id: session_id ? session_id : null,
       message: userMessage,
@@ -488,8 +136,6 @@ export async function sendToGemini(userMessage, messageHistory = []) {
     response = await axios.post(`${genai_base_url}/genai/chat`, payload, {
       headers,
     });
-
-    // console.log("initial", response);
 
     const functionCall = response?.data?.function_call;
 
@@ -522,32 +168,36 @@ export async function sendToGemini(userMessage, messageHistory = []) {
 
     const text = response?.data?.text || FALL_BACK_MSG;
 
-    const isChartFromRequest = isChart;
-    const isChartFromTool = lastToolName === "sc_graph";
-    const hasChartPayload =
-      finalData &&
-      !finalData.status &&
-      (isLikelyChartData(finalData) || normalizeToChartConfig(finalData));
-
-    if ((isChartFromRequest || isChartFromTool) && hasChartPayload) {
-      const chartConfig = normalizeToChartConfig(finalData);
-      if (chartConfig) {
-        return { type: "chart", data: chartConfig, text: CHART_REPLY_TEXT };
-      }
-    }
-    if (isChart && text) {
-      return {
-        type: "text",
-        text: isRawChartJson(text) ? CHART_REPLY_TEXT : text,
-      };
-    }
-
     return { type: "text", text: text };
   } catch (err) {
     console.error("Gemini error:", err);
+    const status = err.response?.status;
+    const is504 =
+      status === 504 ||
+      /504|gateway timeout/i.test(String(err.message || err.code));
+    const isNetworkError =
+      !err.response &&
+      (err.code === "ECONNABORTED" ||
+        err.code === "ECONNREFUSED" ||
+        err.code === "ERR_NETWORK" ||
+        /network|failed to fetch|cors/i.test(String(err.message || "")));
+    let text;
+    if (is504) {
+      text =
+        "The request took too long (504 Gateway Timeout). Please try again or use a smaller date range for reports.";
+    } else if (isNetworkError) {
+      text =
+        "Cannot reach the server. Check that the API is running at " +
+        BASE_URL +
+        " and try again. If using a different port or URL, set it in geminiService.js (BASE_URL).";
+    } else {
+      text =
+        "Sorry, I'm having trouble processing your request. Please try again. " +
+        (err.response?.data?.message || err.message || "").slice(0, 80);
+    }
     return {
       type: "text",
-      text: "Sorry, I'm having trouble processing your request.",
+      text,
     };
   }
 }
