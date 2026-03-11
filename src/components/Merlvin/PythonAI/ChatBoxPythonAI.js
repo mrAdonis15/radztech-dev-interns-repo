@@ -128,28 +128,38 @@ export default function ChatBoxPythonAI() {
       // Send to Python AI
       const response = await sendMessageToPythonAI(currentInput);
 
-      const messageType = response.message_type || "text";
+      const payload = response?.response ?? response;
+      const messageType =
+        payload?.message_type || response?.message_type || "text";
 
       // Extract chart data and text differently based on message type
       let chartData = null;
       let messageText = "";
 
-      if (messageType === "chart" && response.response) {
-        // For charts, flatten the chartData structure to match ChartWithControls expectations
-        const chartResponse = response.response;
+      const responseLooksLikeChart =
+        messageType === "chart" ||
+        !!payload?.chartData ||
+        !!payload?.datasets ||
+        !!response?.chartData;
+
+      if (responseLooksLikeChart) {
+        // Flatten chart data structure to match ChartWithControls expectations
+        const chartResponse = payload;
+        const chartDataSource = chartResponse?.chartData || chartResponse;
         chartData = {
-          chartType: chartResponse.chartType,
-          title: chartResponse.title,
-          labels: chartResponse.chartData?.labels || [],
-          datasets: chartResponse.chartData?.datasets || [],
+          chartType: chartResponse?.chartType || "bar",
+          title: chartResponse?.title || "Chart",
+          labels: chartDataSource?.labels || [],
+          datasets: chartDataSource?.datasets || [],
         };
-        messageText = chartResponse.message || "Here's your chart:";
-      } else {
-        // For text messages, response.response should be a string
         messageText =
-          typeof response.response === "string"
-            ? response.response
-            : response.message || "No response received";
+          chartResponse?.message || response?.message || "Here's your chart:";
+      } else {
+        // For text responses
+        messageText =
+          typeof payload === "string"
+            ? payload
+            : response?.message || payload?.message || "No response received";
       }
 
       const botMsg = buildMessageWithType(

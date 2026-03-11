@@ -65,15 +65,13 @@ export default function Login() {
           "";
         const isOtherDevice =
           /other device|another device|already logged in|log off|logout/i.test(
-            rawMsg
-          ) ||
-          status === 403;
+            rawMsg,
+          ) || status === 403;
         let msg;
         if (isOtherDevice) {
           msg = "Please log off from other device.";
         } else if (status === 401) {
-          msg =
-            "Invalid username or password. Please try again.";
+          msg = "Invalid username or password. Please try again.";
         } else if (rawMsg) {
           msg = rawMsg;
         } else {
@@ -90,6 +88,10 @@ export default function Login() {
         }
         sessionStorage.setItem("logoutUsername", Username.trim());
         sessionStorage.setItem("logoutPassword", Password);
+
+        // Notify AuthContext to sync with localStorage
+        window.dispatchEvent(new Event("auth-storage-sync"));
+
         // Redirect to Biz selection UI after login; from there user goes to Chatbox
         navigate("/select-biz", { replace: true });
       } else {
@@ -98,7 +100,7 @@ export default function Login() {
     } catch (err) {
       setError(
         err.message ||
-          "Login failed. Please check your credentials and try again."
+          "Login failed. Please check your credentials and try again.",
       );
     } finally {
       setLoading(false);
@@ -116,7 +118,11 @@ export default function Login() {
         <Box className="login-content">
           <Box className="login-logo">
             <img src="/favicon.ico" alt="UlapBiz" className="login-logo-icon" />
-            <Typography variant="h6" className="login-logo-text" component="span">
+            <Typography
+              variant="h6"
+              className="login-logo-text"
+              component="span"
+            >
               <Typography component="span" className="login-logo-ulap">
                 Ulap
               </Typography>
@@ -153,7 +159,9 @@ export default function Login() {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                       onClick={() => setShowPassword(!showPassword)}
                       edge="end"
                       size="small"

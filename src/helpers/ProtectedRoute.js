@@ -7,8 +7,13 @@ import { AuthContext } from "../contexts/AuthContext";
  */
 export const ProtectedRoute = ({ children }) => {
   const { token } = useContext(AuthContext);
+  const storedToken =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem("authToken")
+      : null;
+  const effectiveToken = token || storedToken;
 
-  if (!token) {
+  if (!effectiveToken) {
     return <Navigate to="/login" replace />;
   }
 

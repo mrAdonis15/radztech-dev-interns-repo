@@ -43,7 +43,10 @@ class LoginToolbar extends Component {
               }
             })();
             const existingToken =
-              existing?.token ?? existing?.biz?.token ?? existing?.dataAccessToken ?? existing?.biz?.dataAccessToken;
+              existing?.token ??
+              existing?.biz?.token ??
+              existing?.dataAccessToken ??
+              existing?.biz?.dataAccessToken;
             const toStore = { ...data };
             const biz = toStore.biz ?? toStore;
             if (typeof biz === "object" && !biz.token && existingToken) {
@@ -85,6 +88,10 @@ class LoginToolbar extends Component {
       localStorage.removeItem("user");
       sessionStorage.removeItem("logoutUsername");
       sessionStorage.removeItem("logoutPassword");
+
+      // Notify AuthContext to sync with localStorage
+      window.dispatchEvent(new Event("auth-storage-sync"));
+
       this.setState({ loggingOut: false });
       this.props.navigate("/login");
     }
@@ -99,11 +106,13 @@ class LoginToolbar extends Component {
           <div className="login-toolbar-container">
             <div className="login-toolbar-logo">
               <div className="login-toolbar-icon-wrap">
-                <img src="/favicon.ico" alt="UlapBiz" className="login-toolbar-icon" />
+                <img
+                  src="/favicon.ico"
+                  alt="UlapBiz"
+                  className="login-toolbar-icon"
+                />
               </div>
-              <span className="login-toolbar-text">
-                UlapBiz
-              </span>
+              <span className="login-toolbar-text">UlapBiz</span>
             </div>
             <div className="login-toolbar-spacer" />
             <Button

@@ -24,7 +24,6 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [expandedMenus, setExpandedMenus] = useState({});
-  const [displayUser, setDisplayUser] = useState(() => getDisplayUser());
 
   useEffect(() => {
     // Auto-expand menu if current path matches any submenu

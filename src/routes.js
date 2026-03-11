@@ -48,6 +48,12 @@ const routes = [
     children: [{ index: true, element: ChatboxPage }],
   },
   {
+    path: "/PythonAIChat",
+    element: ChatboxLayout,
+    guard: ProtectedRoute,
+    children: [{ index: true, element: PythonAIPage }],
+  },
+  {
     path: "/",
     element: DefaultLayout,
     guard: ProtectedRoute,
@@ -99,10 +105,6 @@ const routes = [
       {
         path: "/TimeLogs",
         element: Timelogstest,
-      },
-      {
-        path: "/PythonAIChat",
-        element: PythonAIPage,
       },
     ],
   },

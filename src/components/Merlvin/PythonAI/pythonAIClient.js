@@ -1,13 +1,45 @@
 import axios from "axios";
 import tokenManager from "./tokenManager";
 
+const getSelectedBizToken = () => {
+  try {
+    const raw = localStorage.getItem("selectedBiz");
+    if (!raw) return "";
+    const parsed = JSON.parse(raw);
+    const biz = parsed?.biz ?? parsed;
+    return (
+      biz?.token ||
+      biz?.dataAccessToken ||
+      biz?.accessToken ||
+      parsed?.token ||
+      parsed?.dataAccessToken ||
+      parsed?.accessToken ||
+      parsed?.access_token ||
+      parsed?.auth_token ||
+      ""
+    );
+  } catch (_error) {
+    return "";
+  }
+};
+
+const getUlapToken = () => {
+  return (
+    getSelectedBizToken() ||
+    localStorage.getItem("authToken") ||
+    localStorage.getItem("access_token") ||
+    localStorage.getItem("token") ||
+    ""
+  );
+};
+
 /**
  * Get headers with JWT token and biz token for API requests
  */
 export const getHeaders = async () => {
   try {
     const token = await tokenManager.getValidToken();
-    const bizToken = localStorage.getItem("authToken"); // Biz token from main app
+    const bizToken = getUlapToken();
 
     const headers = {
       "Content-Type": "application/json",

@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/static/css/main.7d8819fd.css",
+    "main.js": "/static/js/main.b5d58915.js",
+    "static/media/SHARED] Radztech Interns Logo - 32.png": "/static/media/SHARED] Radztech Interns Logo - 32.43fe7f314a60d84b52f2.png",
+    "static/media/ulap-biz-logo.png": "/static/media/ulap-biz-logo.b0eb2d8b82fc32a01c16.png",
+    "index.html": "/index.html",
+    "main.7d8819fd.css.map": "/static/css/main.7d8819fd.css.map",
+    "main.b5d58915.js.map": "/static/js/main.b5d58915.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.7d8819fd.css",
+    "static/js/main.b5d58915.js"
+  ]
+}
