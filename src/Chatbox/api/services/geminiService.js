@@ -1,26 +1,93 @@
 import axios from "axios";
 import { getBizToken } from "../selectedBiz";
-import { isLikelyChartData, normalizeToChartConfig } from "./stockcardgraph.js";
+import { isLikelyChartData } from "./stockcardgraph.js";
 
 const BASE_URL = "http://localhost:3000/api";
-/** Return false if text looks like raw chart/graph JSON (should not be shown to user). */
-function isRawChartJson(text) {
-  if (typeof text !== "string" || !text.trim()) return false;
-  const t = text.trim();
-  if (t[0] !== "{" || t[t.length - 1] !== "}") return false;
-  return (
-    /\b"chart"\s*:/.test(t) ||
-    /\b"series"\s*:/.test(t) ||
-    /\b"datasets"\s*:/.test(t) ||
-    (/\b"data"\s*:/.test(t) && /\b"labels"\s*:/.test(t)) ||
-    /\b"graph"\s*:/.test(t) ||
-    (/\b"config"\s*:/.test(t) && (/\b"datasets"\b/.test(t) || /\b"labels"\b/.test(t)))
-  );
-}
 
 const FALL_BACK_MSG =
   "Sorry, I'm having trouble processing your request. Please try again.";
-const CHART_REPLY_TEXT = "Here is the chart you requested.";
+
+const CHART_REPLY_TEXT = "Here is the chart based on your request.";
+const GEMINI_REQUEST_TIMEOUT_MS = 180000;
+/** Timeout for report/graph API calls. Keep under gateway (e.g. 60s) so we fail fast and retry. */
+const REPORT_REQUEST_TIMEOUT_MS = 55000;
+const RETRYABLE_STATUSES = [502, 503, 504];
+const GATEWAY_TIMEOUT_MSG =
+  "The server took too long to respond (504). Please try again or use a smaller date range.";
+
+/** Cap date range to at most maxMonths to reduce server load. Returns [dt1, dt2] as ISO strings. */
+function capDateRangeToMonths(dt1, dt2, maxMonths) {
+  const d1 = new Date(String(dt1).slice(0, 10));
+  const d2 = new Date(String(dt2).slice(0, 10));
+  if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return [dt1, dt2];
+  const start = new Date(d2);
+  start.setMonth(start.getMonth() - maxMonths);
+  if (start <= d1) return [dt1, dt2];
+  const y = start.getFullYear();
+  const m = String(start.getMonth() + 1).padStart(2, "0");
+  const newDt1 = `${y}-${m}-01T00:00:00+08:00`;
+  const suffix = (String(dt2).match(/T[\d:+-]+/) || ["T23:59:59+08:00"])[0];
+  return [newDt1, String(dt2).slice(0, 10) + suffix];
+}
+
+function isRetryableError(err) {
+  if (RETRYABLE_STATUSES.includes(err.response?.status)) return true;
+  const code = err.code || err.message || "";
+  return (
+    code === "ECONNABORTED" ||
+    code === "ETIMEDOUT" ||
+    /timeout|504|gateway/i.test(String(code))
+  );
+}
+
+function messageFor504(err) {
+  if (err.response?.status === 504) return GATEWAY_TIMEOUT_MSG;
+  return err.response?.data?.message ?? err.response?.data ?? err.message;
+}
+
+/** POST to Gemini AI with long timeout and retry on gateway/timeout errors. */
+async function postToGemini(url, data, headers, maxRetries = 3) {
+  let lastError;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await axios.post(url, data, {
+        headers,
+        timeout: GEMINI_REQUEST_TIMEOUT_MS,
+      });
+      return res;
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxRetries && isRetryableError(err)) {
+        await new Promise((r) => setTimeout(r, 3000));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastError;
+}
+
+/** Axios request with long timeout and retry on 502/503/504. Used for report/graph APIs. */
+async function axiosWithRetry(method, url, bodyOrParams, headers, maxRetries = 2) {
+  const opts = { headers, timeout: REPORT_REQUEST_TIMEOUT_MS };
+  let lastError;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      if (method === "get") {
+        return await axios.get(url, { ...opts, params: bodyOrParams });
+      }
+      return await axios.post(url, bodyOrParams, opts);
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxRetries && isRetryableError(err)) {
+        await new Promise((r) => setTimeout(r, 2000));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastError;
+}
 
 function getHeaders() {
   const token = getBizToken();
@@ -63,23 +130,39 @@ function checkItems(data) {
   };
 }
 
-/** Format product for display: "Description (Code: XXX)" using ProdCd. */
-function productDisplayLabel(p) {
-  if (!p) return "";
-  const desc = p.sProd || p.sDesc || p.name || "";
-  const code = p.ProdCd || p.sCode || p.cProd || p.code || (p.ixProd != null ? String(p.ixProd) : "");
-  return code ? `${desc} (Code: ${code})` : desc;
-}
+function normalizeGlArgs(args) {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
+  const lastDay = new Date(currentYear, now.getMonth(), 0).getDate();
 
-function addDisplayLabels(result) {
-  if (!result || result.status === "error") return result;
-  const data = result.data;
-  if (Array.isArray(data)) {
-    result.data = data.map((p) => ({ ...p, displayLabel: productDisplayLabel(p) }));
-  } else if (data && typeof data === "object") {
-    result.data = { ...data, displayLabel: productDisplayLabel(data) };
+  let dt1 = args.dt1;
+  let dt2 = args.dt2;
+
+  if (!dt1 || !dt2) {
+    dt1 = dt1 || `${currentYear}-${currentMonth}-01T00:00:00+08:00`;
+    dt2 = dt2 || `${currentYear}-${currentMonth}-${lastDay}T23:59:59+08:00`;
+  } else {
+    if (!/T\d{2}:\d{2}/.test(dt1)) {
+      dt1 = `${String(dt1).replace(/Z$/, "").trim()}T00:00:00+08:00`;
+    }
+    if (!/T\d{2}:\d{2}/.test(dt2)) {
+      dt2 = `${String(dt2).replace(/Z$/, "").trim()}T23:59:59+08:00`;
+    }
+    [dt1, dt2] = capDateRangeToMonths(dt1, dt2, 6);
   }
-  return result;
+
+  const ixAcc = args.ixAcc != null ? Number(args.ixAcc) : 4242;
+  const accOthers = Array.isArray(args.acc_others) ? args.acc_others : [];
+
+  return {
+    dt1: String(dt1),
+    dt2: String(dt2),
+    ixAcc,
+    accOthers,
+    showZero: args.showZero !== false,
+    groupByBranch: args.group_by_branch === true,
+  };
 }
 
 // TOOLS
@@ -139,13 +222,19 @@ const functions = {
     try {
       const now = new Date();
       const currentYear = now.getFullYear();
-      // Use year from user request (args.year) or from dt1; then build dt1/dt2 so display follows user request
       const requestedYear = args.year != null ? parseInt(String(args.year), 10) : null;
       let dt1 = args.dt1;
       let dt2 = args.dt2;
+      const userSpecifiedRange = args.dt1 && args.dt2;
       if (requestedYear != null && Number.isFinite(requestedYear)) {
         dt1 = dt1 || `${requestedYear}-01-01T00:00:00+08:00`;
         dt2 = dt2 || `${requestedYear}-12-31T23:59:59+08:00`;
+      } else if (!userSpecifiedRange) {
+        // Default to last 3 months to reduce server load and stay under gateway timeout
+        const end = new Date(now);
+        const start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+        dt1 = dt1 || `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-01T00:00:00+08:00`;
+        dt2 = dt2 || `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}T23:59:59+08:00`;
       } else {
         dt1 = dt1 || `${currentYear}-01-01T00:00:00+08:00`;
         dt2 = dt2 || `${currentYear}-12-31T23:59:59+08:00`;
@@ -184,11 +273,9 @@ const functions = {
         return { status: "error", text: "Missing product: pass q (description) or ixProd." };
       }
 
-      const scBody = { ixProd, dt1, dt2, ixWH, SN: "", SN2: "" };
-      await axios.post(`${BASE_URL}/reports/inv/sc`, scBody, { headers });
-
+      // Call only the graph endpoint to reduce server load (skip redundant /reports/inv/sc)
       const graphBody = { ixProd, dt1, dt2, bn: "", ixWH, SN: "", SN2: "" };
-      const graphRes = await axios.post(`${BASE_URL}/reports/inv/sc/graph`, graphBody, { headers });
+      const graphRes = await axiosWithRetry("post", `${BASE_URL}/reports/inv/sc/graph`, graphBody, headers);
       const raw = graphRes.data;
       if (!raw) return { status: "error", text: "No graph data returned." }
 
@@ -222,7 +309,70 @@ const functions = {
     } catch (err) {
       return {
         status: "error",
-        message: err.response?.data || err.message,
+        text: err.response?.status === 504 ? GATEWAY_TIMEOUT_MSG : undefined,
+        message: messageFor504(err),
+      };
+    }
+  },
+  gl_report: async (args) => {
+    const headers = getHeaders();
+    try {
+      const url = `${BASE_URL}/reports/gl`;
+      const { dt1, dt2, ixAcc, accOthers, showZero, groupByBranch } = normalizeGlArgs(args);
+      const body = {
+        ixAcc,
+        showZero,
+        group_by_branch: groupByBranch,
+        dt1,
+        dt2,
+        acc_others: accOthers,
+      };
+      const response = await axiosWithRetry("post", url, body, headers);
+       const gl = response.data;
+
+       const data = {
+        begAmt: gl.begAmt,
+        tDr: gl.tDr,
+        tCr: gl.tCr,
+        endAmt: gl.endAmt,
+      };
+
+      console.log("gl", data);
+
+      return {
+        status: "success",
+        data: data,
+      };
+    } catch (err) {
+      return {
+        status: "error",
+        text: err.response?.status === 504 ? GATEWAY_TIMEOUT_MSG : undefined,
+        message: messageFor504(err),
+      };
+    }
+  },
+  gl_graph: async (args) => {
+    const headers = getHeaders();
+    try {
+      const url = `${BASE_URL}/reports/gl/graph`;
+      const { dt1, dt2, ixAcc, accOthers, showZero, groupByBranch } = normalizeGlArgs(args);
+      const body = {
+        ixAcc,
+        showZero,
+        group_by_branch: groupByBranch,
+        dt1,
+        dt2,
+        acc_others: accOthers,
+      };
+      const response = await axiosWithRetry("post", url, body, headers);
+      const raw = response.data;
+      if (!raw) return { status: "error", text: "No graph data returned." };
+      return raw;
+    } catch (err) {
+      return {
+        status: "error",
+        text: err.response?.status === 504 ? GATEWAY_TIMEOUT_MSG : undefined,
+        message: messageFor504(err),
       };
     }
   },
@@ -267,7 +417,7 @@ const tools = [
       {
         name: "sc_graph",
         description:
-          "Get stock card graph data (running balance, IN, OUT by period). Use when the user asks to graph/chart/plot stock card or running balance. For q, use the product displayLabel from search_prod (e.g. 'CLICK160 Black (Code: ACB160CBTN-MGB)') or the description when the user chose from the list (e.g. 'the first one' → use that item's displayLabel). When the user asks for a specific year (e.g. '2026', 'stock card for 2026'), pass that year in the year parameter so the chart shows the requested year.",
+          "Get stock card graph data (running balance, IN, OUT by period). Use when the user asks to graph/chart/plot stock card or running balance. For q, use the product displayLabel from search_prod. When the user asks for a specific year, pass the year parameter. If no period is given, the chart shows the last 3 months (faster). Prefer shorter date ranges to avoid timeouts.",
         parameters: {
           type: "object",
           properties: {
@@ -286,6 +436,78 @@ const tools = [
             dt1: { type: "string", description: "Start date (e.g. '2026-01-01T00:00:00+08:00'). Optional; built from year when year is provided." },
             dt2: { type: "string", description: "End date (e.g. '2026-12-31T23:59:59+08:00'). Optional; built from year when year is provided." },
             ixWH: { type: "integer", description: "Warehouse id (default from API). Optional." },
+          },
+          required: [],
+        },
+      },
+      {
+        name: "gl_report",
+        description:
+          "General Ledger report (table data). Use when the user asks for general ledger report, account summary, or balances in a date range. If the user asks to graph or chart the general ledger, you may use gl_report or gl_graph; both are rendered with the shared stockcardgraph module (Debit/Credit/Running Balance design).",
+        parameters: {
+          type: "object",
+          properties: {
+            ixAcc: {
+              type: "integer",
+              description: "Main account index (e.g. 4242). Default 4242 if omitted.",
+            },
+            showZero: {
+              type: "boolean",
+              description: "Include zero-balance rows. Default true.",
+            },
+            group_by_branch: {
+              type: "boolean",
+              description: "Group report by branch. Default false.",
+            },
+            dt1: {
+              type: "string",
+              description: "Start date (e.g. '2024-03-01' or '2024-03-01T00:00:00+08:00'). Defaults to first day of current month.",
+            },
+            dt2: {
+              type: "string",
+              description: "End date (e.g. '2024-03-31' or '2024-03-31T23:59:59+08:00'). Defaults to last day of current month.",
+            },
+            acc_others: {
+              type: "array",
+              items: {},
+              description: "Optional list of other account filters. Default [].",
+            },
+          },
+          required: [],
+        },
+      },
+      {
+        name: "gl_graph",
+        description:
+          "General Ledger graph (Debit, Credit, Running Balance). Use when the user asks to graph or chart the general ledger. Calls /reports/gl/graph. Response is rendered with the shared stockcardgraph module (same graphical design as stock card: Debit blue up, Credit red down, Running Balance green line, YEAR title).",
+        parameters: {
+          type: "object",
+          properties: {
+            ixAcc: {
+              type: "integer",
+              description: "Main account index (e.g. 4242). Default 4242 if omitted.",
+            },
+            showZero: {
+              type: "boolean",
+              description: "Include zero-balance rows. Default true.",
+            },
+            group_by_branch: {
+              type: "boolean",
+              description: "Group by branch. Default false.",
+            },
+            dt1: {
+              type: "string",
+              description: "Start date (e.g. '2024-03-01' or '2024-03-01T00:00:00+08:00'). Defaults to first day of current month.",
+            },
+            dt2: {
+              type: "string",
+              description: "End date (e.g. '2024-03-31' or '2024-03-31T23:59:59+08:00'). Defaults to last day of current month.",
+            },
+            acc_others: {
+              type: "array",
+              items: {},
+              description: "Optional list of other account filters. Default [].",
+            },
           },
           required: [],
         },
@@ -324,9 +546,7 @@ export async function sendToGemini(userMessage, messageHistory = []) {
     };
     // console.log("payload", payload);
     let response;
-    response = await axios.post(`${BASE_URL}/ai/gemini`, payload, {
-      headers,
-    });
+    response = await postToGemini(`${BASE_URL}/ai/gemini`, payload, headers);
 
     // console.log("initial", response);
 
@@ -375,9 +595,7 @@ export async function sendToGemini(userMessage, messageHistory = []) {
       };
       console.log("secondary", toolPayload);
 
-      response = await axios.post(`${BASE_URL}/ai/gemini`, toolPayload, {
-        headers,
-      });
+      response = await postToGemini(`${BASE_URL}/ai/gemini`, toolPayload, headers);
 
       // console.log("secondary", response);
     }
@@ -388,28 +606,63 @@ export async function sendToGemini(userMessage, messageHistory = []) {
         ?.join("") || FALL_BACK_MSG;
 
     const isChartFromRequest = isChart;
-    const isChartFromTool = lastToolName === "sc_graph";
-    const hasChartPayload =
-      finalData &&
-      !finalData.status &&
-      (isLikelyChartData(finalData) || normalizeToChartConfig(finalData));
+    const isChartFromTool = lastToolName === "sc_graph" || lastToolName === "gl_graph" || lastToolName === "gl_report";
+    let chartPayload =
+      lastToolName === "gl_report" && finalData?.data != null
+        ? finalData.data
+        : lastToolName === "gl_graph" && finalData != null
+          ? { ...(finalData.data || finalData), glChart: true }
+          : finalData;
+    if (chartPayload?.data && (chartPayload.data.rep != null || chartPayload.data.items != null)) {
+      chartPayload = { ...chartPayload.data, glChart: chartPayload.glChart || chartPayload.data.glChart };
+    }
 
-    if ((isChartFromRequest || isChartFromTool) && hasChartPayload) {
-      const chartConfig = normalizeToChartConfig(finalData);
-      if (chartConfig) {
-        return { type: "chart", data: chartConfig, text: CHART_REPLY_TEXT };
+    if ((isChartFromRequest || isChartFromTool) && chartPayload && chartPayload.status !== "error") {
+      try {
+        // General Ledger and Stock Card graphs both use stockcardgraph (data + graphical design: Debit/Credit/RunBal, colors, layout)
+        if (isLikelyChartData(chartPayload)) {
+          return { type: "chart", data: chartPayload, text: CHART_REPLY_TEXT };
+        }
+      } catch (chartErr) {
+        console.warn("Chart build failed:", chartErr);
+      }
+    }
+
+    // If user asked for a GL graph but Gemini responded with text (no tool call),
+    // fetch the graph directly so we display ONLY the chart.
+    const wantsGLGraph =
+      isChart &&
+      /(general\s*ledger|\bgl\b|ledger)/i.test(userMessage || "");
+    if (wantsGLGraph && (lastToolName == null || lastToolName === "gl_report")) {
+      const yearMatch = String(userMessage || "").match(/\b(20\d{2})\b/);
+      const year = yearMatch ? parseInt(yearMatch[1], 10) : new Date().getFullYear();
+      const dt1 = `${year}-01-01T00:00:00+08:00`;
+      const dt2 = `${year}-12-31T23:59:59+08:00`;
+      try {
+        const raw = await functions.gl_graph({ dt1, dt2 });
+        const payload = raw && raw.status !== "error" ? { ...(raw.data || raw), glChart: true, dt1, dt2, year } : null;
+        if (payload && isLikelyChartData(payload)) {
+          return { type: "chart", data: payload, text: CHART_REPLY_TEXT };
+        }
+      } catch (e) {
+        // fall through to text response below
       }
     }
     if (isChart && finalText) {
-      return { type: "text", text: isRawChartJson(finalText) ? CHART_REPLY_TEXT : finalText };
+      // If the model returns raw chart JSON as text, keep it so the UI can render the graph.
+      return { type: "text", text: finalText };
     }
 
     return { type: "text", text: finalText };
   } catch (err) {
     console.error("Gemini error:", err);
+    const is504 = err.response?.status === 504 || /504|gateway timeout/i.test(String(err.message || err.code));
+    const text = is504
+      ? "The request took too long (504 Gateway Timeout). Please try again or use a smaller date range for reports."
+      : "Sorry, I'm having trouble processing your request.";
     return {
       type: "text",
-      text: "Sorry, I'm having trouble processing your request.",
+      text,
     };
   }
 }

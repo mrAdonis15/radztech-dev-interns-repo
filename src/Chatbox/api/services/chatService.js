@@ -35,7 +35,7 @@ export async function sendMessage(userMessage, messageHistory = []) {
     if (result && (result.text != null || result.type != null)) {
       return {
         type: result.type || "text",
-        text: result.text ?? "",
+        text: result.text ?? FALLBACK_MESSAGE,
         data: result.data,
       };
     }
