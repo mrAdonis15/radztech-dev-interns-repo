@@ -19,6 +19,10 @@ import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 
 import { sendMessage } from "./api/services/chatService.js";
 import {
+  saveChatHistory,
+  fetchChatHistoryBySessionId,
+} from "./api/services/chatHistoryService.js";
+import {
   getInitialMessages,
   getDefaultPanelPosition,
   PANEL_WIDTH,
@@ -34,6 +38,7 @@ import {
   addToHistory,
   updateHistoryItem,
   deleteHistoryItem,
+  getTitleFromMessages,
   ChatHeader,
   UlapAIMainHeader,
 } from "./chatboxUtils.js";
@@ -88,17 +93,24 @@ export default function Chatbox({ defaultOpen = false }) {
   useEffect(() => {
     const hasUserMessage = messages.some((m) => m.sender === "me");
     if (!hasUserMessage || viewingHistoryId != null) return;
+    const title = getTitleFromMessages(messages);
     if (currentConversationId) {
-      updateHistoryItem(currentConversationId, messages);
+      updateHistoryItem(currentConversationId, messages, sessionId ?? undefined);
       setHistory(loadHistory());
+      if (sessionId) {
+        saveChatHistory(sessionId, { title, messages }).catch(() => {});
+      }
     } else {
-      const next = addToHistory(messages);
+      const next = addToHistory(messages, sessionId ?? undefined);
       if (next.length > 0) {
         setCurrentConversationId(next[0].id);
         setHistory(next);
+        if (sessionId) {
+          saveChatHistory(sessionId, { title, messages }).catch(() => {});
+        }
       }
     }
-  }, [messages, viewingHistoryId, currentConversationId]);
+  }, [messages, viewingHistoryId, currentConversationId, sessionId]);
 
   // Click/touch outside to close emoji picker
   useEffect(() => {
@@ -261,10 +273,23 @@ export default function Chatbox({ defaultOpen = false }) {
   };
 
   const handleSelectHistoryChat = (item) => {
-    setMessages(item.messages || []);
     setViewingHistoryId(item.id);
     setCurrentConversationId(null);
-    setSessionId(null);
+    const sid = item.sessionId ?? null;
+    setSessionId(sid);
+    if (sid) {
+      fetchChatHistoryBySessionId(sid)
+        .then((apiMessages) => {
+          if (apiMessages && apiMessages.length > 0) {
+            setMessages(apiMessages);
+          } else {
+            setMessages(item.messages || []);
+          }
+        })
+        .catch(() => setMessages(item.messages || []));
+    } else {
+      setMessages(item.messages || []);
+    }
   };
 
   const handleDeleteHistoryChat = (id) => {
