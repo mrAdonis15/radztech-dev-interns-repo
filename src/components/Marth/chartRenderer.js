@@ -92,7 +92,7 @@ const ChartRenderer = ({ chart }) => {
                   yAxes: [
                     {
                       gridLines: { display: true, color: "rgba(0,0,0,0.06)", zeroLineColor: "rgba(0,0,0,0.12)" },
-                      ticks: { fontColor: "#666", fontSize: 11, beginAtZero: true, stepSize: 1 },
+                      ticks: { fontColor: "#666", fontSize: 11, beginAtZero: true },
                     },
                   ],
                 }

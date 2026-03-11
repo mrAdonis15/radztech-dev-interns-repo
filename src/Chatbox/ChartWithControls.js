@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import ChartRenderer from "src/components/Marth/chartRenderer";
 
-const CHART_TYPES = ["line", "bar", "pie"];
+const CHART_TYPES = ["mixed", "line", "bar", "pie"];
 
 /** Stock movement layout: title left, type + Show Breakdown + arrows right */
 function StockChartHeader({
