@@ -1,14 +1,67 @@
 import React, { useState, useMemo } from "react";
 import ChartRenderer from "src/components/Marth/chartRenderer";
 
-const CHART_TYPES = ["line", "bar", "pie"];
+const CHART_TYPES = ["mixed", "line", "bar", "pie"];
 
+/** Stock movement layout: title left, type + Show Breakdown + arrows right */
+function StockChartHeader({
+  title,
+  showBreakdown,
+  onShowBreakdownChange,
+  onPrev,
+  onNext,
+  chartType,
+  onChartTypeChange,
+}) {
+  return (
+    <div className="chart-stock-header">
+      <h3 className="chart-stock-title">{title}</h3>
+      <div className="chart-stock-controls">
+        <div className="chart-stock-type">
+          <label className="chart-control-label">Chart type:</label>
+          <select
+            value={chartType}
+            onChange={(e) => onChartTypeChange(e.target.value)}
+            className="chart-type-select"
+          >
+            {CHART_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <label className="chart-stock-breakdown">
+          <span className="chart-stock-toggle-wrap">
+            <input
+              type="checkbox"
+              checked={showBreakdown}
+              onChange={(e) => onShowBreakdownChange(e.target.checked)}
+              className="chart-stock-toggle"
+            />
+            <span className="chart-stock-toggle-label">Show Breakdown</span>
+          </span>
+        </label>
+        <div className="chart-stock-arrows">
+          <button type="button" onClick={onPrev} className="chart-stock-arrow" aria-label="Previous">
+            ‹
+          </button>
+          <button type="button" onClick={onNext} className="chart-stock-arrow" aria-label="Next">
+            ›
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ChartWithControls({ chart }) {
   const [chartTypeOverride, setChartTypeOverride] = useState(null);
   const [visibleDatasets, setVisibleDatasets] = useState(() =>
     chart?.datasets?.map((_, i) => i) ?? []
   );
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const isStockMovement = chart?.title && String(chart.title).startsWith("YEAR ");
 
   const modifiedChart = useMemo(() => {
     if (!chart || !chart.labels || !chart.datasets?.length) return null;
@@ -54,9 +107,10 @@ export default function ChartWithControls({ chart }) {
   if (!chart || !chart.labels || !chart.datasets?.length) return null;
 
   const hasMultipleDatasets = chart.datasets.length > 1;
+  const currentType = chartTypeOverride || chart.chartType;
 
-  const handleChartTypeChange = (e) => {
-    const v = e.target.value;
+  const handleChartTypeChange = (valueOrEvent) => {
+    const v = typeof valueOrEvent === "string" ? valueOrEvent : valueOrEvent.target.value;
     setChartTypeOverride(v === chart.chartType ? null : v);
   };
 
@@ -67,12 +121,26 @@ export default function ChartWithControls({ chart }) {
     });
   };
 
+  const handlePrev = () => {};
+  const handleNext = () => {};
+
   return (
-    <div className="chart-with-controls">
-      <div className="chart-controls">
+    <div className={"chart-with-controls" + (isStockMovement ? " chart-with-controls-stock" : "")}>
+      {isStockMovement ? (
+        <StockChartHeader
+          title={chart.title}
+          showBreakdown={showBreakdown}
+          onShowBreakdownChange={setShowBreakdown}
+          onPrev={handlePrev}
+          onNext={handleNext}
+          chartType={currentType}
+          onChartTypeChange={handleChartTypeChange}
+        />
+      ) : (
+        <div className="chart-controls">
         <label className="chart-control-label">Chart type:</label>
         <select
-          value={chartTypeOverride || chart.chartType}
+          value={currentType}
           onChange={handleChartTypeChange}
           className="chart-type-select"
         >
@@ -97,6 +165,7 @@ export default function ChartWithControls({ chart }) {
           </div>
         )}
       </div>
+      )}
       <ChartRenderer chart={modifiedChart} />
     </div>
   );

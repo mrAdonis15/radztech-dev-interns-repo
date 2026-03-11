@@ -10,7 +10,7 @@ import InputAdornment from "@material-ui/core/InputAdornment";
 import IconButton from "@material-ui/core/IconButton";
 import VisibilityIcon from "@material-ui/icons/Visibility";
 import VisibilityOffIcon from "@material-ui/icons/VisibilityOff";
-import { request, API_URLS } from "../api/Request";
+import { request, API_URLS } from "../Chatbox/api/Request";
 import "./Login.css";
 
 function getBasicAuthHeader(Username, Password) {
@@ -44,7 +44,10 @@ export default function Login() {
           "x-access-tokens": existingToken,
           Authorization: getBasicAuthHeader(Username.trim(), Password),
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          username: Username.trim(),
+          password: Password,
+        }),
       });
 
       let data = {};

@@ -98,7 +98,7 @@ const themeSettings = {
   palette: {
     type: "light",
     background: {
-      default: "#FAFAFA",
+      default: "#f5f5f5",
       paper: "#FFFFFF",
       navbar: "#FF7504",
       dark: "#f4f6f8",
@@ -108,8 +108,8 @@ const themeSettings = {
       contrastText: "rgba(255,255,255,0.87)",
     },
     secondary: {
-      main: "#FF7504",
-      contrastText: "rgba(255,255,255,0.87)",
+      main: "#ff0808",
+      contrastText: "rgba(255, 255, 255, 0.87)",
     },
     text: {
       primary: "#282C34",

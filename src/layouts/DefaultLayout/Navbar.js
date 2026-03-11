@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import UlapBizLogo from "src/images/ulapbiz.png";
 import MenuIcon from "@material-ui/icons/Menu";
 import CloseIcon from "@material-ui/icons/Close";
 import { useAuth } from "src/contexts/AuthContext";
@@ -63,6 +62,7 @@ const useStyles = makeStyles((theme) => ({
     gap: ".3em",
     alignItems: "center",
     filter: "grayscale(10%)",
+    fontFamily: '"Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     transition: "all 500ms ease-in-out",
     [theme.breakpoints.down("md")]: {
       flexGrow: 1,
@@ -172,7 +172,7 @@ const Navbar = () => {
                 <button
                   onClick={() => handleSmoothScroll("ulap", "https://ulap.biz/")}
                   style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-                  <Avatar src={UlapBizLogo} />
+                  <Avatar src="/favicon.ico" />
                 </button>
                 <Link
                   variant="h4"
