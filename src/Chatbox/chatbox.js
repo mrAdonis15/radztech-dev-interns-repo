@@ -662,7 +662,7 @@ export default function Chatbox({ defaultOpen = false }) {
                             primaryTypographyProps={{ noWrap: true, variant: "body2" }}
                           />
                         </ListItem>
-                      ))}
+                      ))} 
                     </List>
                   </div>
                 )}
