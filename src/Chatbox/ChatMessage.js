@@ -5,7 +5,17 @@ import Typography from "@material-ui/core/Typography";
 import radzLogo from "./Assets/SHARED] Radztech Interns Logo - 32.png";
 import ChartRenderer from "./chartRenderer";
 
+const markdownImgComponent = {
+  img: ({ node, alt, ...props }) => (
+    <span className="chat-message-image">
+      <img {...props} alt={alt || ""} />
+    </span>
+  ),
+};
+
 function ChatMessageInner({ msg }) {
+  console.log("msg", msg);
+
   const isMe = msg.sender === "me";
   const isTyping = msg.text === "...";
   const isChart = msg.type === "chart";
@@ -84,7 +94,7 @@ function ChatMessageInner({ msg }) {
                   "bubble-text left" + (isTyping ? " chat-typing-text" : "")
                 }
               >
-                <ReactMarkdown>{msg.text}</ReactMarkdown>
+                <ReactMarkdown components={markdownImgComponent}>{msg.text}</ReactMarkdown>
               </Typography>
             </div>
           )}

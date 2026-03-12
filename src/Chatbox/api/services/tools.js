@@ -514,6 +514,30 @@ export const functions = {
       type: "chart",
     };
   },
+  get_prod_img: async (args) => {
+    const headers = getHeaders();
+
+    try {
+      const url = `${BASE_URL}/images/prod/${args.ixProd}`;
+
+      const response = await axios.get(url, {
+        headers: headers,
+      });
+
+      console.log(response.data);
+
+      const images = response.data;
+
+      const avatarImg = images.find((img) => img.filename.includes("avatar"));
+
+      return avatarImg || images;
+    } catch (err) {
+      return {
+        status: "error",
+        message: err.response?.data || err.message,
+      };
+    }
+  },
 };
 
 /** Gemini function declarations (tool schema) sent to the AI. */
@@ -772,6 +796,21 @@ export const tools = [
             },
           },
           required: ["chartType", "data", "options"],
+        },
+      },
+      {
+        name: "get_prod_img",
+        description:
+          "Return the product description first, followed by the product image in Markdown format. The image must appear below the description.",
+        parameters: {
+          type: "object",
+          properties: {
+            ixProd: {
+              type: "integer",
+              description: "The id of the product",
+            },
+          },
+          required: ["ixProd"],
         },
       },
     ],

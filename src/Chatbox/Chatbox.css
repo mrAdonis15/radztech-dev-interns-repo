@@ -1097,6 +1097,29 @@
 .chat-bubbleRight li {
   margin: 0.15em 0;
 }
+
+/* Images in chat: no bubble, constrained size, no overlap */
+.chat-message-image {
+  display: block;
+  margin-top: 8px;
+  background: transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  max-width: 100%;
+}
+.chat-message-image img,
+.chat-bubbleLeft img,
+.chat-bubbleRight img {
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  max-height: min(70vh, 420px);
+  object-fit: contain;
+  display: block;
+  border-radius: 8px;
+  vertical-align: middle;
+}
+
 .chat-typing .chat-typing-text {
   animation: chat-typing-blink 0.9s ease-in-out infinite;
 }
