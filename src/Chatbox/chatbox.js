@@ -21,6 +21,7 @@ import { sendMessage } from "./api/services/chatService.js";
 import {
   saveChatHistory,
   fetchChatHistoryBySessionId,
+  normalizeToDisplayMessages,
 } from "./api/services/chatHistoryService.js";
 import {
   getInitialMessages,
@@ -280,15 +281,12 @@ export default function Chatbox({ defaultOpen = false }) {
     if (sid) {
       fetchChatHistoryBySessionId(sid)
         .then((apiMessages) => {
-          if (apiMessages && apiMessages.length > 0) {
-            setMessages(apiMessages);
-          } else {
-            setMessages(item.messages || []);
-          }
+          const toShow = apiMessages?.length > 0 ? apiMessages : item.messages || [];
+          setMessages(normalizeToDisplayMessages(toShow));
         })
-        .catch(() => setMessages(item.messages || []));
+        .catch(() => setMessages(normalizeToDisplayMessages(item.messages || [])));
     } else {
-      setMessages(item.messages || []);
+      setMessages(normalizeToDisplayMessages(item.messages || []));
     }
   };
 

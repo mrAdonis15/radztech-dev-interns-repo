@@ -2,8 +2,15 @@ import axios from "axios";
 import { getHeaders } from "./tools.js";
 import { getLegacyUrls } from "../config/endpoints.js";
 
+/** Header value so DevTools Network shows which requests are chat-history */
+const CHAT_HISTORY_HEADER = "chat-history";
+
 function getChatHistoryUrl() {
   return getLegacyUrls().genaiChatHistory;
+}
+
+function withChatHistoryHeaders(headers) {
+  return { ...headers, "X-Endpoint": CHAT_HISTORY_HEADER };
 }
 
 /**
@@ -17,7 +24,7 @@ export async function saveChatHistory(sessionId, payload = {}, signal = undefine
   if (!sessionId || typeof sessionId !== "string" || sessionId.trim() === "") {
     return { success: false };
   }
-  const headers = getHeaders();
+  const headers = withChatHistoryHeaders(getHeaders());
   if (!headers["x-access-tokens"] && typeof localStorage !== "undefined") {
     headers["x-access-tokens"] = localStorage.getItem("authToken");
   }
@@ -46,7 +53,7 @@ export async function saveChatHistory(sessionId, payload = {}, signal = undefine
  * @returns {Promise<Array>} List of history items from the API
  */
 export async function getChatHistory(signal = undefined) {
-  const headers = getHeaders();
+  const headers = withChatHistoryHeaders(getHeaders());
   if (!headers["x-access-tokens"] && typeof localStorage !== "undefined") {
     headers["x-access-tokens"] = localStorage.getItem("authToken");
   }
@@ -60,19 +67,11 @@ export async function getChatHistory(signal = undefined) {
     return [];
   }
 }
-
-/**
- * Fetch conversation for a session from chat-history. Request body: { session_id }.
- * API returns array of { parts: [{ text, ... }], role: "user" | "model" }.
- * @param {string} sessionId - Session id from the chat endpoint
- * @param {AbortSignal} [signal] - Optional abort signal
- * @returns {Promise<Array<{ parts: Array<{ text?: string }>, role: string }>>} Raw API format
- */
 export async function getChatHistoryBySessionId(sessionId, signal = undefined) {
   if (!sessionId || typeof sessionId !== "string" || sessionId.trim() === "") {
     return [];
   }
-  const headers = getHeaders();
+  const headers = withChatHistoryHeaders(getHeaders());
   if (!headers["x-access-tokens"] && typeof localStorage !== "undefined") {
     headers["x-access-tokens"] = localStorage.getItem("authToken");
   }
@@ -84,7 +83,10 @@ export async function getChatHistoryBySessionId(sessionId, signal = undefined) {
       signal,
     });
     const data = res.data;
-    return Array.isArray(data) ? data : [];
+    if (Array.isArray(data)) return data;
+    if (data != null && typeof data === "object" && Array.isArray(data.data)) return data.data;
+    if (data != null && typeof data === "object" && Array.isArray(data.messages)) return data.messages;
+    return [];
   } catch (err) {
     if (axios.isCancel(err)) throw err;
     console.warn("[chatHistoryService] getChatHistoryBySessionId failed:", err?.message || err);
@@ -94,7 +96,8 @@ export async function getChatHistoryBySessionId(sessionId, signal = undefined) {
 
 /**
  * Map API history format to app message format.
- * API: { parts: [{ text }], role: "user"|"model" } -> App: { id, sender: "me"|"bot", text, time }
+ * API: { parts: [{ text?, function_call?, ... }], role: "user"|"model" } -> App: { id, sender, text, time }
+ * Uses last part with non-empty text; for model with only function_call shows placeholder.
  */
 function mapHistoryPartsToMessages(apiMessages) {
   if (!Array.isArray(apiMessages) || apiMessages.length === 0) return [];
@@ -102,8 +105,13 @@ function mapHistoryPartsToMessages(apiMessages) {
   const timeStr = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
   return apiMessages.map((entry, index) => {
     const parts = entry.parts || [];
-    const textPart = parts.find((p) => p != null && (p.text != null && p.text !== ""));
-    const text = textPart ? String(textPart.text) : "";
+    const withText = parts.filter((p) => p != null && p.text != null && String(p.text).trim() !== "");
+    const textPart = withText.length > 0 ? withText[withText.length - 1] : null;
+    let text = textPart ? String(textPart.text).trim() : "";
+    if (!text && entry.role === "model") {
+      const hasFunctionCall = parts.some((p) => p != null && p.function_call != null);
+      if (hasFunctionCall) text = "...";
+    }
     const sender = entry.role === "user" ? "me" : "bot";
     return {
       id: crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}-${index}`,
@@ -123,4 +131,30 @@ function mapHistoryPartsToMessages(apiMessages) {
 export async function fetchChatHistoryBySessionId(sessionId, signal = undefined) {
   const raw = await getChatHistoryBySessionId(sessionId, signal);
   return mapHistoryPartsToMessages(raw);
+}
+
+/**
+ * Check if a value looks like API format (has parts + role).
+ */
+function isApiHistoryEntry(entry) {
+  return (
+    entry != null &&
+    typeof entry === "object" &&
+    Array.isArray(entry.parts) &&
+    typeof entry.role === "string"
+  );
+}
+
+/**
+ * Normalize to display format. If messages are in API format (parts/role), convert them.
+ * Use this before setMessages() so the UI never shows raw API JSON.
+ * @param {Array} messages - Either API format [{ parts, role }] or app format [{ id, sender, text, time }]
+ * @returns {Array<{ id: string, sender: string, text: string, time?: string }>}
+ */
+export function normalizeToDisplayMessages(messages) {
+  if (!Array.isArray(messages) || messages.length === 0) return [];
+  if (isApiHistoryEntry(messages[0])) {
+    return mapHistoryPartsToMessages(messages);
+  }
+  return messages;
 }
