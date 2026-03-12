@@ -1,12 +1,16 @@
 import React from "react";
-import { Outlet, Navigate } from "react-router-dom";
+import { Outlet, Navigate, useLocation } from "react-router-dom";
 import LoginToolbar from "../../Login/LoginToolbar";
 
 const ChatboxLayout = () => {
+  const location = useLocation();
   const isLoggedIn = !!localStorage.getItem("authToken");
 
   if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
+    try {
+      sessionStorage.setItem("chatboxReturnUrl", location.pathname + (location.search || ""));
+    } catch (_) {}
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return (

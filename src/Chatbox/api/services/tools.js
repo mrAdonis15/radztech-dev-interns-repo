@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getBizToken } from "../selectedBiz";
+import { getGraphConfig } from "./stockcardgraph.js";
 
 const BASE_URL = "http://localhost:3000/api";
 const REPORT_REQUEST_TIMEOUT_MS = 55000;
@@ -146,6 +147,33 @@ function normalizeGlArgs(args) {
   };
 }
 
+/** Normalize stockcard report/graph args: dt1, dt2 (default current year), ixProd, ixWH. */
+function normalizeStockcardArgs(args) {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const requestedYear =
+    args.year != null ? parseInt(String(args.year), 10) : null;
+  const useYear = Number.isFinite(requestedYear) ? requestedYear : currentYear;
+
+  let dt1 = args.dt1;
+  let dt2 = args.dt2;
+  if (!dt1 || !dt2) {
+    dt1 = dt1 || `${useYear}-01-01T00:00:00+08:00`;
+    dt2 = dt2 || `${useYear}-12-31T23:59:59+08:00`;
+  } else {
+    if (!/T\d{2}:\d{2}/.test(dt1)) dt1 = `${String(dt1).replace(/Z$/, "").trim()}T00:00:00+08:00`;
+    if (!/T\d{2}:\d{2}/.test(dt2)) dt2 = `${String(dt2).replace(/Z$/, "").trim()}T23:59:59+08:00`;
+    [dt1, dt2] = capDateRangeToMonths(dt1, dt2, 12);
+  }
+
+  return {
+    dt1: String(dt1),
+    dt2: String(dt2),
+    ixProd: args.ixProd != null ? Number(args.ixProd) : undefined,
+    ixWH: args.ixWH != null ? Number(args.ixWH) : undefined,
+  };
+}
+
 /** Resolve account by name/code. Payload { q: "checks" }. Returns ixAcc or null. */
 async function resolveAccountByQ(q, headers) {
   if (!q || typeof q !== "string" || !String(q).trim()) return null;
@@ -283,7 +311,7 @@ export const functions = {
         params: args,
       });
 
-      const bal = checkItems(response.data);
+      const bal = response.data;
 
       return bal;
     } catch (err) {
@@ -325,168 +353,82 @@ export const functions = {
       };
     }
   },
-  sc_graph: async (args) => {
+
+  get_gl_graph: async (args) => {
     const headers = getHeaders();
+    const params = normalizeGlArgs(args);
     try {
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const requestedYear =
-        args.year != null ? parseInt(String(args.year), 10) : null;
-      let dt1 = args.dt1;
-      let dt2 = args.dt2;
-      const userSpecifiedRange = args.dt1 && args.dt2;
-      if (requestedYear != null && Number.isFinite(requestedYear)) {
-        dt1 = dt1 || `${requestedYear}-01-01T00:00:00+08:00`;
-        dt2 = dt2 || `${requestedYear}-12-31T23:59:59+08:00`;
-      } else if (!userSpecifiedRange) {
-        const end = new Date(now);
-        const start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-        dt1 =
-          dt1 ||
-          `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-01T00:00:00+08:00`;
-        dt2 =
-          dt2 ||
-          `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}T23:59:59+08:00`;
-      } else {
-        dt1 = dt1 || `${currentYear}-01-01T00:00:00+08:00`;
-        dt2 = dt2 || `${currentYear}-12-31T23:59:59+08:00`;
-      }
-      let ixWH = args.ixWH;
-      let ixProd = args.ixProd;
-
-      if (ixWH == null) {
-        const whRes = await axios.get(`${BASE_URL}/trans/get/wh`, { headers });
-        const whList = Array.isArray(whRes.data) ? whRes.data : [];
-        ixWH = whList[0]?.ixWH ?? 4282;
-      }
-
-      if (ixProd == null && args.q) {
-        const qRaw = String(args.q).trim();
-        const codeMatch = qRaw.match(/\s*\(Code:\s*([^)]+)\)\s*$/i);
-        const qForSearch = codeMatch
-          ? qRaw.replace(/\s*\(Code:\s*[^)]+\)\s*$/i, "").trim()
-          : qRaw;
-        const searchRes = await axios.post(
-          `${BASE_URL}/lib/prod`,
-          { q: qForSearch || qRaw },
-          { headers },
-        );
-        const items = searchRes.data?.items;
-        const list = Array.isArray(items) ? items : items ? [items] : [];
-        let chosen = list[0];
-        if (list.length > 1 && codeMatch) {
-          const code = codeMatch[1].trim();
-          const byCode = list.find((p) => {
-            const c =
-              p.ProdCd ||
-              p.sCode ||
-              p.cProd ||
-              p.code ||
-              (p.ixProd != null ? String(p.ixProd) : "");
-            return c && (c === code || String(p.ixProd) === code);
-          });
-          if (byCode) chosen = byCode;
-        }
-        ixProd = chosen?.ixProd;
-        if (ixProd == null) {
-          return {
-            status: "error",
-            text: "Product not found. Please specify a valid product.",
-          };
-        }
-      }
-      if (ixProd == null) {
-        return {
-          status: "error",
-          text: "Missing product: pass q (description) or ixProd.",
-        };
-      }
-
-      const graphBody = { ixProd, dt1, dt2, bn: "", ixWH, SN: "", SN2: "" };
-      const graphRes = await axiosWithRetry(
+      const response = await axiosWithRetry(
         "post",
-        `${BASE_URL}/reports/inv/sc/graph`,
-        graphBody,
+        `${BASE_URL}/reports/gl/graph`,
+        params,
         headers,
       );
-      const raw = graphRes.data;
-      if (!raw) return { status: "error", text: "No graph data returned." };
+      const raw = response.data;
+      const apiData = { ...raw, glChart: true };
+      const config = getGraphConfig(apiData);
+      if (!config || !config.labels || !config.datasets?.length) {
+        return {
+          status: "error",
+          message: "Could not build chart from general ledger graph data.",
+        };
+      }
+      const chartType =
+        config.chartType === "pie"
+          ? "pie"
+          : config.chartType === "mixed"
+            ? "bar"
+            : config.chartType || "bar";
+      const labels = Array.isArray(config.labels) ? [...config.labels] : [];
+      const n = labels.length;
+      const datasets = (config.datasets || []).map((ds) => {
+        const data = Array.isArray(ds.data) ? ds.data : [];
+        const padded =
+          data.length >= n
+            ? data.slice(0, n)
+            : [...data, ...Array(n - data.length).fill(0)];
+        return { ...ds, data: padded };
+      });
 
-      if (Array.isArray(raw.data) && raw.config) {
-        const d = raw.data;
-        const items = d.map((row) => ({
-          YrWk: row.period ?? row.YrWk ?? row.YrMo,
-          tIN: row.in ?? row.tIN ?? row.In,
-          tOUT: row.out ?? row.tOUT ?? row.Out,
-          runBal: row.balance ?? row.runBal ?? row.Balance ?? row.runBalance,
-        }));
-        const begQty = d.length
-          ? (d[0].balance ??
-            d[0].runBal ??
-            d[0].Balance ??
-            d[0].runBalance ??
-            0)
-          : 0;
-        const endQty = d.length
-          ? (d[d.length - 1].balance ??
-            d[d.length - 1].runBal ??
-            d[d.length - 1].Balance ??
-            d[d.length - 1].runBalance ??
-            0)
-          : 0;
-        const year = parseInt(String(dt1).slice(0, 4), 10) || currentYear;
-        return { items, begQty, endQty, dt1, dt2, year };
-      }
-      if (Array.isArray(raw.items)) {
-        const y = parseInt(String(dt1).slice(0, 4), 10);
-        return { ...raw, dt1, dt2, year: Number.isFinite(y) ? y : currentYear };
-      }
-      if (raw.config?.data?.labels && raw.config?.data?.datasets) {
-        const y = parseInt(String(dt1).slice(0, 4), 10);
-        return { ...raw, dt1, dt2, year: Number.isFinite(y) ? y : currentYear };
-      }
-      if (raw.chart?.series?.length && raw.chart?.xAxis?.categories) {
-        const y = parseInt(String(dt1).slice(0, 4), 10);
-        return { ...raw, dt1, dt2, year: Number.isFinite(y) ? y : currentYear };
-      }
-      return { status: "error", text: "No graph data returned." };
+      const chartPayload = {
+        type: "chart",
+        chartType,
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          title: {
+            display: !!config.title,
+            text: config.title || "General Ledger (Debit / Credit / Running Balance)",
+          },
+          scales:
+            chartType !== "pie"
+              ? {
+                  xAxes: [{ display: true }],
+                  yAxes: [{ display: true, beginAtZero: true }],
+                }
+              : undefined,
+        },
+      };
+      return chartPayload;
     } catch (err) {
       return {
         status: "error",
-        text: err.response?.status === 504 ? GATEWAY_TIMEOUT_MSG : undefined,
-        message: messageFor504(err),
+        message: messageFor504(err) || err.response?.data?.message || err.message,
       };
     }
   },
-  gl_report: async (args) => {
+
+  get_stockcard_report: async (args) => {
     const headers = getHeaders();
+    const params = normalizeStockcardArgs(args);
     try {
-      let resolvedArgs = { ...args };
-      if (args.ixAcc == null && args.q) {
-        const ixAcc = await resolveAccountByQ(args.q, headers);
-        if (ixAcc != null) resolvedArgs = { ...args, ixAcc };
-      }
-      const url = `${BASE_URL}/reports/gl`;
-      const { dt1, dt2, ixAcc, accOthers, showZero } =
-        normalizeGlArgs(resolvedArgs);
-      const body = {
-        ixAcc,
-        showZero,
-        dt1,
-        dt2,
-        acc_others: accOthers,
-      };
-      const response = await axiosWithRetry("post", url, body, headers);
-      const gl = response.data;
-      const rep = Array.isArray(gl.rep) ? gl.rep : [];
-      const data = {
-        begAmt: gl.begAmt,
-        tDr: gl.tDr,
-        tCr: gl.tCr,
-        endAmt: gl.endAmt,
-        glChart: true,
-        rep,
-      };
+      const response = await axiosWithRetry(
+        "post",
+        `${BASE_URL}/reports/inv/sc`,
+        params,
+        headers,
+      );
+      const data = response.data;
       return {
         status: "success",
         data,
@@ -494,40 +436,83 @@ export const functions = {
     } catch (err) {
       return {
         status: "error",
-        text: err.response?.status === 504 ? GATEWAY_TIMEOUT_MSG : undefined,
-        message: messageFor504(err),
+        message: messageFor504(err) || err.response?.data?.message || err.message,
       };
     }
   },
-  gl_graph: async (args) => {
+
+  get_stockcard_graph: async (args) => {
     const headers = getHeaders();
+    const params = normalizeStockcardArgs(args);
     try {
-      let resolvedArgs = { ...args };
-      if (args.ixAcc == null && args.q) {
-        const ixAcc = await resolveAccountByQ(args.q, headers);
-        if (ixAcc != null) resolvedArgs = { ...args, ixAcc };
+      const response = await axiosWithRetry(
+        "post",
+        `${BASE_URL}/reports/inv/sc/graph`,
+        params,
+        headers,
+      );
+      const apiData = response.data;
+      const config = getGraphConfig(apiData);
+      if (!config || !config.labels || !config.datasets?.length) {
+        return {
+          status: "error",
+          message: "Could not build chart from stockcard graph data.",
+        };
       }
-      const url = `${BASE_URL}/reports/gl/graph`;
-      const { dt1, dt2, ixAcc, accOthers, showZero } =
-        normalizeGlArgs(resolvedArgs);
-      const body = {
-        ixAcc,
-        showZero,
-        dt1,
-        dt2,
-        acc_others: accOthers,
+      // Chart.js has no "mixed" type; use "bar" so bar+line datasets render (datasets already specify type per series).
+      const chartType =
+        config.chartType === "pie"
+          ? "pie"
+          : config.chartType === "mixed"
+            ? "bar"
+            : config.chartType || "bar";
+      const labels = Array.isArray(config.labels) ? [...config.labels] : [];
+      const n = labels.length;
+      const datasets = (config.datasets || []).map((ds) => {
+        const data = Array.isArray(ds.data) ? ds.data : [];
+        const padded =
+          data.length >= n
+            ? data.slice(0, n)
+            : [...data, ...Array(n - data.length).fill(0)];
+        return { ...ds, data: padded };
+      });
+
+      const chartPayload = {
+        type: "chart",
+        chartType,
+        data: {
+          labels,
+          datasets,
+        },
+        options: {
+          responsive: true,
+          title: {
+            display: !!config.title,
+            text: config.title || "Stock Card (IN / OUT / Running Balance)",
+          },
+          scales:
+            chartType !== "pie"
+              ? {
+                  xAxes: [{ display: true }],
+                  yAxes: [{ display: true, beginAtZero: true }],
+                }
+              : undefined,
+        },
       };
-      const response = await axiosWithRetry("post", url, body, headers);
-      const raw = response.data;
-      if (!raw) return { status: "error", text: "No graph data returned." };
-      return raw;
+      return chartPayload;
     } catch (err) {
       return {
         status: "error",
-        text: err.response?.status === 504 ? GATEWAY_TIMEOUT_MSG : undefined,
-        message: messageFor504(err),
+        message: messageFor504(err) || err.response?.data?.message || err.message,
       };
     }
+  },
+
+  chart_renderer: async (args) => {
+    return {
+      ...args,
+      type: "chart",
+    };
   },
 };
 
@@ -660,87 +645,133 @@ export const tools = [
         },
       },
       {
-        name: "gl_graph",
+        name: "get_gl_graph",
         description:
-          "General Ledger graph (Debit, Credit, Running Balance). Use when the user asks to graph/chart/plot general ledger or GL.",
+          "Get and render a graph of general ledger Debit, Credit and running balance. Call this when the user wants to see a chart of GL account movement. Returns chart data for visualization.",
         parameters: {
           type: "object",
           properties: {
-            q: {
-              type: "string",
-              description:
-                "Account name or code to look up (e.g. 'checks', 'cash').",
-            },
             ixAcc: {
               type: "integer",
-              description:
-                "Main account index (e.g. 4242). Default 4242 if omitted.",
+              description: "The id of the GL account (ixAcc).",
             },
             showZero: {
               type: "boolean",
               description: "Include zero-balance rows. Default true.",
             },
-            year: {
-              type: "integer",
-              description: "Year requested by the user (e.g. 2024, 2025).",
-            },
             dt1: {
               type: "string",
               description:
-                "Start date (e.g. '2024-01-01' or '2024-03-01T00:00:00+08:00').",
+                "Start date (%Y-%m-%d or %Y-%m-%dT%H:%M:%S%z). Defaults to current month start.",
             },
             dt2: {
               type: "string",
               description:
-                "End date (e.g. '2024-12-31' or '2024-03-31T23:59:59+08:00').",
+                "End date (%Y-%m-%d or %Y-%m-%dT%H:%M:%S%z). Defaults to current month end.",
             },
             acc_others: {
               type: "array",
               items: {},
-              description:
-                "Optional list of other account filters. Default [].",
-            },
-          },
-          required: [],
-        },
-      },
-      {
-        name: "sc_graph",
-        description:
-          "Get stock card graph data (running balance, IN, OUT by period). Use when the user asks to graph/chart/plot stock card or running balance. For q, use the product displayLabel from search_prod (e.g. 'CLICK160 Black (Code: ACB160CBTN-MGB)') or the description when the user chose from the list (e.g. 'the first one' → use that item's displayLabel). When the user asks for a specific year (e.g. '2026', 'stock card for 2026'), pass that year in the year parameter so the chart shows the requested year.",
-        parameters: {
-          type: "object",
-          properties: {
-            q: {
-              type: "string",
-              description:
-                "Product displayLabel (e.g. 'CLICK160 Black (Code: ACB160CBTN-MGB)') or description. Use the displayLabel from the search result when user picked one.",
-            },
-            ixProd: {
-              type: "integer",
-              description: "Product id. Use only when q is not available.",
+              description: "Optional list of other account filters. Default [].",
             },
             year: {
               type: "integer",
-              description:
-                "Year requested by the user (e.g. 2026). Use when the user says a specific year. The chart will show this year; dt1/dt2 are derived from it if not provided.",
+              description: "Optional year; used to default dt1/dt2 to that year.",
+            },
+          },
+          required: ["ixAcc", "dt1", "dt2", "acc_others"],
+        },
+      },
+      {
+        name: "get_stockcard_report",
+        description:
+          "Get the stock card report (IN, OUT, running balance) for a product and date range. Use for tabular or summary responses.",
+        parameters: {
+          type: "object",
+          properties: {
+            ixProd: {
+              type: "integer",
+              description: "The product id (ixProd).",
+            },
+            ixWH: {
+              type: "integer",
+              description: "The warehouse id (ixWH). Use 4282 if not specified.",
             },
             dt1: {
               type: "string",
               description:
-                "Start date (e.g. '2026-01-01T00:00:00+08:00'). Optional; built from year when year is provided.",
+                "Start date (e.g. %Y-%m-%d or %Y-%m-%dT%H:%M:%S%z). Defaults to start of year.",
             },
             dt2: {
               type: "string",
               description:
-                "End date (e.g. '2026-12-31T23:59:59+08:00'). Optional; built from year when year is provided.",
+                "End date (e.g. %Y-%m-%d or %Y-%m-%dT%H:%M:%S%z). Defaults to end of year.",
+            },
+            year: {
+              type: "integer",
+              description: "Optional year; used to default dt1/dt2 to that year.",
+            },
+          },
+          required: ["ixProd"],
+        },
+      },
+      {
+        name: "get_stockcard_graph",
+        description:
+          "Get and render a graph of stock card IN, OUT and running balance. Call this when the user wants to see a chart of stock card movement. Returns chart data for visualization.",
+        parameters: {
+          type: "object",
+          properties: {
+            ixProd: {
+              type: "integer",
+              description: "The product id (ixProd).",
             },
             ixWH: {
               type: "integer",
-              description: "Warehouse id (default from API). Optional.",
+              description: "The warehouse id (ixWH). Use 4282 if not specified.",
+            },
+            dt1: {
+              type: "string",
+              description:
+                "Start date (e.g. %Y-%m-%d). Defaults to start of year.",
+            },
+            dt2: {
+              type: "string",
+              description:
+                "End date (e.g. %Y-%m-%d). Defaults to end of year.",
+            },
+            year: {
+              type: "integer",
+              description: "Optional year; used to default dt1/dt2 to that year.",
             },
           },
-          required: [],
+          required: ["ixProd"],
+        },
+      },
+      {
+        name: "chart_renderer",
+        description:
+          "Return chart data for dynamic chart rendering. Use this if the data you received can be visualize to a graph.",
+        parameters: {
+          type: "object",
+          properties: {
+            chartType: {
+              type: "string",
+              description:
+                "Choose the chart type based on the data: line (trends), pie/doughnut (proportions), bar (category comparison).",
+            },
+            data: {
+              type: "object",
+              description:
+                "The chart data object containing 'labels' (array of strings) and 'datasets' (array of dataset objects). Each dataset should include 'label' (string), 'data' (array of numbers), and optional styling such as 'backgroundColor' or 'borderColor'.",
+            },
+            options: {
+              type: "object",
+              description:
+                "Chart.js options object for customizing the chart's appearance and behavior, including title, legend, scales, tooltips, responsiveness, and animations.",
+            },
+          },
+          required: ["chartType", "data", "options"],
         },
       },
     ],
