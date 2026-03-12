@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getBizToken } from "../selectedBiz";
+import { getGraphConfig } from "./stockcardgraph.js";
 
 const BASE_URL = "http://localhost:3000/api";
 const REPORT_REQUEST_TIMEOUT_MS = 55000;
@@ -143,6 +144,33 @@ function normalizeGlArgs(args) {
     ixAcc,
     accOthers,
     showZero: args.showZero !== false,
+  };
+}
+
+/** Normalize stockcard report/graph args: dt1, dt2 (default current year), ixProd, ixWH. */
+function normalizeStockcardArgs(args) {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const requestedYear =
+    args.year != null ? parseInt(String(args.year), 10) : null;
+  const useYear = Number.isFinite(requestedYear) ? requestedYear : currentYear;
+
+  let dt1 = args.dt1;
+  let dt2 = args.dt2;
+  if (!dt1 || !dt2) {
+    dt1 = dt1 || `${useYear}-01-01T00:00:00+08:00`;
+    dt2 = dt2 || `${useYear}-12-31T23:59:59+08:00`;
+  } else {
+    if (!/T\d{2}:\d{2}/.test(dt1)) dt1 = `${String(dt1).replace(/Z$/, "").trim()}T00:00:00+08:00`;
+    if (!/T\d{2}:\d{2}/.test(dt2)) dt2 = `${String(dt2).replace(/Z$/, "").trim()}T23:59:59+08:00`;
+    [dt1, dt2] = capDateRangeToMonths(dt1, dt2, 12);
+  }
+
+  return {
+    dt1: String(dt1),
+    dt2: String(dt2),
+    ixProd: args.ixProd != null ? Number(args.ixProd) : undefined,
+    ixWH: args.ixWH != null ? Number(args.ixWH) : undefined,
   };
 }
 
@@ -326,6 +354,160 @@ export const functions = {
     }
   },
 
+  get_gl_graph: async (args) => {
+    const headers = getHeaders();
+    const params = normalizeGlArgs(args);
+    try {
+      const response = await axiosWithRetry(
+        "post",
+        `${BASE_URL}/reports/gl/graph`,
+        params,
+        headers,
+      );
+      const raw = response.data;
+      const apiData = { ...raw, glChart: true };
+      const config = getGraphConfig(apiData);
+      if (!config || !config.labels || !config.datasets?.length) {
+        return {
+          status: "error",
+          message: "Could not build chart from general ledger graph data.",
+        };
+      }
+      const chartType =
+        config.chartType === "pie"
+          ? "pie"
+          : config.chartType === "mixed"
+            ? "bar"
+            : config.chartType || "bar";
+      const labels = Array.isArray(config.labels) ? [...config.labels] : [];
+      const n = labels.length;
+      const datasets = (config.datasets || []).map((ds) => {
+        const data = Array.isArray(ds.data) ? ds.data : [];
+        const padded =
+          data.length >= n
+            ? data.slice(0, n)
+            : [...data, ...Array(n - data.length).fill(0)];
+        return { ...ds, data: padded };
+      });
+
+      const chartPayload = {
+        type: "chart",
+        chartType,
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          title: {
+            display: !!config.title,
+            text: config.title || "General Ledger (Debit / Credit / Running Balance)",
+          },
+          scales:
+            chartType !== "pie"
+              ? {
+                  xAxes: [{ display: true }],
+                  yAxes: [{ display: true, beginAtZero: true }],
+                }
+              : undefined,
+        },
+      };
+      return chartPayload;
+    } catch (err) {
+      return {
+        status: "error",
+        message: messageFor504(err) || err.response?.data?.message || err.message,
+      };
+    }
+  },
+
+  get_stockcard_report: async (args) => {
+    const headers = getHeaders();
+    const params = normalizeStockcardArgs(args);
+    try {
+      const response = await axiosWithRetry(
+        "post",
+        `${BASE_URL}/reports/inv/sc`,
+        params,
+        headers,
+      );
+      const data = response.data;
+      return {
+        status: "success",
+        data,
+      };
+    } catch (err) {
+      return {
+        status: "error",
+        message: messageFor504(err) || err.response?.data?.message || err.message,
+      };
+    }
+  },
+
+  get_stockcard_graph: async (args) => {
+    const headers = getHeaders();
+    const params = normalizeStockcardArgs(args);
+    try {
+      const response = await axiosWithRetry(
+        "post",
+        `${BASE_URL}/reports/inv/sc/graph`,
+        params,
+        headers,
+      );
+      const apiData = response.data;
+      const config = getGraphConfig(apiData);
+      if (!config || !config.labels || !config.datasets?.length) {
+        return {
+          status: "error",
+          message: "Could not build chart from stockcard graph data.",
+        };
+      }
+      // Chart.js has no "mixed" type; use "bar" so bar+line datasets render (datasets already specify type per series).
+      const chartType =
+        config.chartType === "pie"
+          ? "pie"
+          : config.chartType === "mixed"
+            ? "bar"
+            : config.chartType || "bar";
+      const labels = Array.isArray(config.labels) ? [...config.labels] : [];
+      const n = labels.length;
+      const datasets = (config.datasets || []).map((ds) => {
+        const data = Array.isArray(ds.data) ? ds.data : [];
+        const padded =
+          data.length >= n
+            ? data.slice(0, n)
+            : [...data, ...Array(n - data.length).fill(0)];
+        return { ...ds, data: padded };
+      });
+
+      const chartPayload = {
+        type: "chart",
+        chartType,
+        data: {
+          labels,
+          datasets,
+        },
+        options: {
+          responsive: true,
+          title: {
+            display: !!config.title,
+            text: config.title || "Stock Card (IN / OUT / Running Balance)",
+          },
+          scales:
+            chartType !== "pie"
+              ? {
+                  xAxes: [{ display: true }],
+                  yAxes: [{ display: true, beginAtZero: true }],
+                }
+              : undefined,
+        },
+      };
+      return chartPayload;
+    } catch (err) {
+      return {
+        status: "error",
+        message: messageFor504(err) || err.response?.data?.message || err.message,
+      };
+    }
+  },
+
   chart_renderer: async (args) => {
     return {
       ...args,
@@ -462,7 +644,110 @@ export const tools = [
           required: ["ixAcc", "dt1", "dt2", "acc_others"],
         },
       },
-
+      {
+        name: "get_gl_graph",
+        description:
+          "Get and render a graph of general ledger Debit, Credit and running balance. Call this when the user wants to see a chart of GL account movement. Returns chart data for visualization.",
+        parameters: {
+          type: "object",
+          properties: {
+            ixAcc: {
+              type: "integer",
+              description: "The id of the GL account (ixAcc).",
+            },
+            showZero: {
+              type: "boolean",
+              description: "Include zero-balance rows. Default true.",
+            },
+            dt1: {
+              type: "string",
+              description:
+                "Start date (%Y-%m-%d or %Y-%m-%dT%H:%M:%S%z). Defaults to current month start.",
+            },
+            dt2: {
+              type: "string",
+              description:
+                "End date (%Y-%m-%d or %Y-%m-%dT%H:%M:%S%z). Defaults to current month end.",
+            },
+            acc_others: {
+              type: "array",
+              items: {},
+              description: "Optional list of other account filters. Default [].",
+            },
+            year: {
+              type: "integer",
+              description: "Optional year; used to default dt1/dt2 to that year.",
+            },
+          },
+          required: ["ixAcc", "dt1", "dt2", "acc_others"],
+        },
+      },
+      {
+        name: "get_stockcard_report",
+        description:
+          "Get the stock card report (IN, OUT, running balance) for a product and date range. Use for tabular or summary responses.",
+        parameters: {
+          type: "object",
+          properties: {
+            ixProd: {
+              type: "integer",
+              description: "The product id (ixProd).",
+            },
+            ixWH: {
+              type: "integer",
+              description: "The warehouse id (ixWH). Use 4282 if not specified.",
+            },
+            dt1: {
+              type: "string",
+              description:
+                "Start date (e.g. %Y-%m-%d or %Y-%m-%dT%H:%M:%S%z). Defaults to start of year.",
+            },
+            dt2: {
+              type: "string",
+              description:
+                "End date (e.g. %Y-%m-%d or %Y-%m-%dT%H:%M:%S%z). Defaults to end of year.",
+            },
+            year: {
+              type: "integer",
+              description: "Optional year; used to default dt1/dt2 to that year.",
+            },
+          },
+          required: ["ixProd"],
+        },
+      },
+      {
+        name: "get_stockcard_graph",
+        description:
+          "Get and render a graph of stock card IN, OUT and running balance. Call this when the user wants to see a chart of stock card movement. Returns chart data for visualization.",
+        parameters: {
+          type: "object",
+          properties: {
+            ixProd: {
+              type: "integer",
+              description: "The product id (ixProd).",
+            },
+            ixWH: {
+              type: "integer",
+              description: "The warehouse id (ixWH). Use 4282 if not specified.",
+            },
+            dt1: {
+              type: "string",
+              description:
+                "Start date (e.g. %Y-%m-%d). Defaults to start of year.",
+            },
+            dt2: {
+              type: "string",
+              description:
+                "End date (e.g. %Y-%m-%d). Defaults to end of year.",
+            },
+            year: {
+              type: "integer",
+              description: "Optional year; used to default dt1/dt2 to that year.",
+            },
+          },
+          required: ["ixProd"],
+        },
+      },
       {
         name: "chart_renderer",
         description:
