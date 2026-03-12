@@ -126,10 +126,13 @@ export function loadHistory() {
   }
 }
 
-function saveHistory(history) {
+export function saveHistoryToStorage(history) {
   try {
     localStorage.setItem(CHAT_HISTORY_STORAGE_KEY, JSON.stringify(history));
   } catch (_) {}
+}
+function saveHistory(history) {
+  saveHistoryToStorage(history);
 }
 
 const MAX_TITLE_LEN = 42;
@@ -172,9 +175,10 @@ export function getTitleFromMessages(messages) {
 /**
  * Add current conversation to history and return updated history.
  * @param {Array} messages
+ * @param {string} [sessionId] - Optional session id from the chat endpoint to store in history
  * @returns {Array} updated history
  */
-export function addToHistory(messages) {
+export function addToHistory(messages, sessionId = undefined) {
   if (!messages || messages.length === 0) return loadHistory();
   const history = loadHistory();
   const item = {
@@ -182,6 +186,7 @@ export function addToHistory(messages) {
     title: getTitleFromMessages(messages),
     messages: [...messages],
     createdAt: Date.now(),
+    ...(sessionId != null && sessionId !== "" && { sessionId: String(sessionId) }),
   };
   const next = [item, ...history].slice(0, 50);
   saveHistory(next);
@@ -189,12 +194,13 @@ export function addToHistory(messages) {
 }
 
 /**
- * Update an existing history item's messages and title.
+ * Update an existing history item's messages, title, and optionally session id.
  * @param {string} id - history item id
  * @param {Array} messages
+ * @param {string} [sessionId] - Optional session id from the chat endpoint to store in history
  * @returns {Array} updated history
  */
-export function updateHistoryItem(id, messages) {
+export function updateHistoryItem(id, messages, sessionId = undefined) {
   if (!id || !messages || messages.length === 0) return loadHistory();
   const history = loadHistory();
   const idx = history.findIndex((h) => h.id === id);
@@ -205,6 +211,7 @@ export function updateHistoryItem(id, messages) {
     title: getTitleFromMessages(messages),
     messages: [...messages],
     updatedAt: Date.now(),
+    ...(sessionId != null && sessionId !== "" && { sessionId: String(sessionId) }),
   };
   saveHistory(next);
   return next;

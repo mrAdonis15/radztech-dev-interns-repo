@@ -28,6 +28,10 @@ export function isLikelyChartData(payload) {
   if (payload.glChart && (Array.isArray(payload.rep) || payload.rep === undefined)) {
     return true;
   }
+  // GL API may omit glChart; recognize by rep (array) + GL-style fields (begAmt, endAmt, dt1, etc.).
+  if (Array.isArray(payload.rep) && (payload.begAmt != null || payload.endAmt != null || payload.dt1 != null || payload.tDr != null || payload.tCr != null)) {
+    return true;
+  }
   if (Array.isArray(payload.rep) && payload.rep.length > 0) {
     const first = payload.rep[0];
     const hasDebit = first.Dr != null || first.dr != null || first.amountDr != null || first.amount_dr != null || first.debit != null || first.Debit != null || first.tDr != null;
@@ -553,10 +557,11 @@ export function buildStockCardRunningBalanceChart(apiData) {
   // Normalize nested .data.rep, .graph.rep or .items (graph API may return { graph: { rep: [...] } } or { data: { rep: [...] } })
   const rep = apiData.rep ?? apiData.graph?.rep ?? apiData.data?.rep;
   const items = apiData.items ?? apiData.graph?.items ?? apiData.data?.items;
-  // GL graph/report: allow empty or missing rep (summary-only) with beg/end amounts.
+  // GL graph/report: allow empty or missing rep (summary-only) with beg/end amounts (API may omit glChart).
   const repArray = Array.isArray(rep) ? rep : [];
-  if (apiData.glChart && repArray.length === 0) {
-    const builtEmpty = fromGLEmptyRepFormat({ ...apiData, rep: repArray });
+  const isGLResponse = apiData.glChart === true || (Array.isArray(apiData.rep) && (apiData.begAmt != null || apiData.endAmt != null || apiData.dt1 != null));
+  if (isGLResponse && repArray.length === 0) {
+    const builtEmpty = fromGLEmptyRepFormat({ ...apiData, rep: repArray, glChart: true });
     if (builtEmpty) return builtEmpty;
   }
   if (Array.isArray(rep) && rep.length > 0) {
@@ -569,7 +574,7 @@ export function buildStockCardRunningBalanceChart(apiData) {
     const hasPeriod = (first.YrMo ?? first.YrWk ?? first.period) != null;
     // Prefer period-based path when data is clearly period-aggregated (YrMo/YrWk) so we don't get an empty chart.
     // Use YrMo for x-axis (monthly buckets: "Jan 2025", "Feb 2025") when present; tDr/tCr/runBal → y-axis.
-    if (hasPeriod && (hasDebit || hasCredit || hasBal) && apiData.glChart) {
+    if (hasPeriod && (hasDebit || hasCredit || hasBal) && isGLResponse) {
       const itemsFromRep = rep.map((r) => ({
         ...r,
         period: r.YrMo ?? r.YrWk ?? r.period,
@@ -582,7 +587,7 @@ export function buildStockCardRunningBalanceChart(apiData) {
     }
     if (hasDate && (hasDebit || hasCredit || hasBal)) return fromGLRepFormat({ ...apiData, rep });
     // GL weekly/monthly summary format (YrWk/YrMo, tDr/tCr, runBal) without explicit dates.
-    if (apiData.glChart) {
+    if (isGLResponse) {
       const itemsFromRep = rep.map((r) => ({
         ...r,
         period: r.YrMo ?? r.YrWk ?? r.period,
@@ -594,7 +599,7 @@ export function buildStockCardRunningBalanceChart(apiData) {
       if (builtFromRep) return builtFromRep;
     }
   }
-  if (apiData.glChart && Array.isArray(items)) return fromItemsFormatGL({ ...apiData, items });
+  if (isGLResponse && Array.isArray(items)) return fromItemsFormatGL({ ...apiData, items });
   if (Array.isArray(apiData.items)) return fromItemsFormat(apiData);
   if (Array.isArray(items)) return fromItemsFormat({ ...apiData, items });
   if (Array.isArray(apiData.data) && apiData.config) return fromDataConfigFormat(apiData);

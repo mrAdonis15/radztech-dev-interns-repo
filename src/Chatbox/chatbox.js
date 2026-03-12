@@ -19,6 +19,13 @@ import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 
 import { sendMessage } from "./api/services/chatService.js";
 import {
+  saveChatHistory,
+  fetchChatHistoryBySessionId,
+  getChatHistoryList,
+  mapServerHistoryItem,
+  normalizeToDisplayMessages,
+} from "./api/services/chatHistoryService.js";
+import {
   getInitialMessages,
   getDefaultPanelPosition,
   PANEL_WIDTH,
@@ -31,9 +38,11 @@ import {
   formatTime,
   saveMessages,
   loadHistory,
+  saveHistoryToStorage,
   addToHistory,
   updateHistoryItem,
   deleteHistoryItem,
+  getTitleFromMessages,
   ChatHeader,
   UlapAIMainHeader,
 } from "./chatboxUtils.js";
@@ -69,6 +78,20 @@ export default function Chatbox({ defaultOpen = false }) {
 
   const theme = useChatboxTheme(rootRef);
 
+  const syncSessionIdToUrl = (sid) => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (sid && String(sid).trim()) {
+      url.searchParams.set("session_id", String(sid).trim());
+    } else {
+      url.searchParams.delete("session_id");
+    }
+    const next = url.pathname + (url.search || "");
+    if (window.location.pathname + (window.location.search || "") !== next) {
+      window.history.replaceState(null, "", next);
+    }
+  };
+
   useEffect(() => {
     if (!isOpen || !bodyRef.current) return;
     const raf = requestAnimationFrame(() => {
@@ -91,17 +114,24 @@ export default function Chatbox({ defaultOpen = false }) {
   useEffect(() => {
     const hasUserMessage = messages.some((m) => m.sender === "me");
     if (!hasUserMessage || viewingHistoryId != null) return;
+    const title = getTitleFromMessages(messages);
     if (currentConversationId) {
-      updateHistoryItem(currentConversationId, messages);
+      updateHistoryItem(currentConversationId, messages, sessionId ?? undefined);
       setHistory(loadHistory());
+      if (sessionId) {
+        saveChatHistory(sessionId, { title, messages }).catch(() => {});
+      }
     } else {
-      const next = addToHistory(messages);
+      const next = addToHistory(messages, sessionId ?? undefined);
       if (next.length > 0) {
         setCurrentConversationId(next[0].id);
         setHistory(next);
+        if (sessionId) {
+          saveChatHistory(sessionId, { title, messages }).catch(() => {});
+        }
       }
     }
-  }, [messages, viewingHistoryId, currentConversationId]);
+  }, [messages, viewingHistoryId, currentConversationId, sessionId]);
 
   // Click/touch outside to close emoji picker
   useEffect(() => {
@@ -233,7 +263,10 @@ export default function Chatbox({ defaultOpen = false }) {
       .then((reply) => {
         const isChart = reply && reply.type === "chart";
         const text = reply?.text ?? "";
-        if (reply?.session_id != null) setSessionId(reply.session_id);
+        if (reply?.session_id != null) {
+          setSessionId(reply.session_id);
+          syncSessionIdToUrl(reply.session_id);
+        }
         if (isChart) setIsExpanded(true);
         const receivedTime = formatTime();
         setMessages((prev) =>
@@ -288,15 +321,27 @@ export default function Chatbox({ defaultOpen = false }) {
     setViewingHistoryId(null);
     setCurrentConversationId(null);
     setSessionId(null);
+    syncSessionIdToUrl(null);
     setHistory(loadHistory());
     localStorage.removeItem("session_id");
   };
 
   const handleSelectHistoryChat = (item) => {
-    setMessages(item.messages || []);
     setViewingHistoryId(item.id);
     setCurrentConversationId(null);
-    setSessionId(null);
+    const sid = item.sessionId ?? null;
+    setSessionId(sid);
+    syncSessionIdToUrl(sid);
+    if (sid) {
+      fetchChatHistoryBySessionId(sid)
+        .then((apiMessages) => {
+          const toShow = apiMessages?.length > 0 ? apiMessages : item.messages || [];
+          setMessages(normalizeToDisplayMessages(toShow));
+        })
+        .catch(() => setMessages(normalizeToDisplayMessages(item.messages || [])));
+    } else {
+      setMessages(normalizeToDisplayMessages(item.messages || []));
+    }
   };
 
   const handleDeleteHistoryChat = (id) => {
@@ -306,8 +351,29 @@ export default function Chatbox({ defaultOpen = false }) {
   const historyMenuOpen = Boolean(optionsMenuAnchor);
 
   const handleOpenHistoryMenu = (anchorEl) => {
-    setHistory(loadHistory());
+    const local = loadHistory();
+    setHistory(local);
     setOptionsMenuAnchor(anchorEl);
+    getChatHistoryList()
+      .then((raw) => {
+        const serverItems = (raw || [])
+          .map((item, i) => mapServerHistoryItem(item, i))
+          .filter(Boolean);
+        if (serverItems.length === 0) return;
+        const bySession = new Map(serverItems.map((h) => [h.sessionId || h.id, h]));
+        const merged = [...serverItems];
+        local.forEach((item) => {
+          const sid = item.sessionId || item.id;
+          if (sid && !bySession.has(sid)) {
+            bySession.set(sid, item);
+            merged.push(item);
+          }
+        });
+        merged.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        setHistory(merged.slice(0, 50));
+        saveHistoryToStorage(merged.slice(0, 50));
+      })
+      .catch(() => {});
   };
 
   const handleCloseHistoryMenu = () => {

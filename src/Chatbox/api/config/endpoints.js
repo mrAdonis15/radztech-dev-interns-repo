@@ -17,7 +17,8 @@ export const endpoints = {
   },
   gemini: {
     chat: path("api", "ai", "gemini"),
-    chats: path("genai","chat"),
+    chats: path("genai", "chat"),
+    chatHistory: path("genai", "chat-history"),
   },
   reports: {
     gl: path("reports", "gl"),
@@ -43,6 +44,15 @@ export function getGeminiApiKey() {
 
 export function getLegacyUrls() {
   const base = process.env.REACT_APP_API_BASE || "";
+  const genaiBase = base.replace(/\/api\/?$/, "") || base;
+  const explicitChatHistory =
+    typeof process !== "undefined" && process.env?.REACT_APP_CHAT_HISTORY_URL
+      ? String(process.env.REACT_APP_CHAT_HISTORY_URL).trim()
+      : "";
+  // Use relative path when no base URL so dev server proxy (e.g. to clone.ulap.biz) is used and CORS is avoided
+  const chatHistoryUrl =
+    explicitChatHistory ||
+    (genaiBase ? genaiBase + path("genai", "chat-history") : path("genai", "chat-history"));
   const flat = {
     login: base + path("api", "login"),
     logout: base + path("api", "logout"),
@@ -51,6 +61,8 @@ export function getLegacyUrls() {
     businesses: base + path("api", "businesses"),
     reportsGl: base + path("reports", "gl"),
     reportsGlGraph: base + path("reports", "gl", "graph"),
+    genaiChat: genaiBase + path("genai", "chat"),
+    genaiChatHistory: chatHistoryUrl,
   };
   return flat;
 }
