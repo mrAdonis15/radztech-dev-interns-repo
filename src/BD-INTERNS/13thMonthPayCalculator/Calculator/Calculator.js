@@ -21,10 +21,11 @@ function formatDate(d) {
 }
 
 function formatCurrency(n) {
-  return new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
+  const formatted = new Intl.NumberFormat("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(n);
+  return `P${formatted}`;
 }
 
 const MAX_AMOUNT = 1e12; // 1 trillion
@@ -172,7 +173,7 @@ function Calculator() {
             />
             {maxWeekdays > 0 && (
               <span className="form-hint">
-                Max {maxWeekdays} weekdays in selected period
+                Based on {maxWeekdays} workdays in selected period
               </span>
             )}
           </div>
