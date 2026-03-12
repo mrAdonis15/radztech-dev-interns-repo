@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useRef } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Box from "@material-ui/core/Box";
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
@@ -20,12 +20,18 @@ function getBasicAuthHeader(Username, Password) {
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isMountedRef = useRef(true);
   const [Username, setUsername] = useState("");
   const [Password, setPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const safeSetState = (setter, value) => {
+    if (isMountedRef.current) setter(value);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,7 +85,7 @@ export default function Login() {
         } else {
           msg = "Login failed. Please check your credentials and try again.";
         }
-        setError(msg);
+        safeSetState(setError, msg);
         return;
       }
 
@@ -90,18 +96,35 @@ export default function Login() {
         }
         sessionStorage.setItem("logoutUsername", Username.trim());
         sessionStorage.setItem("logoutPassword", Password);
-        // Redirect to Biz selection UI after login; from there user goes to Chatbox
-        navigate("/select-biz", { replace: true });
+        // If they were sent to login from Chatbox (e.g. /Chatbox?session_id=xxx), go to select-biz with that destination so after selecting biz they land on Chatbox with session_id
+        let from = location.state?.from;
+        if (!from && typeof sessionStorage !== "undefined") {
+          const saved = sessionStorage.getItem("chatboxReturnUrl");
+          if (saved && saved.startsWith("/Chatbox")) {
+            const search = saved.includes("?") ? saved.slice(saved.indexOf("?")) : "";
+            from = { pathname: "/Chatbox", search };
+          }
+          try {
+            sessionStorage.removeItem("chatboxReturnUrl");
+          } catch (_) {}
+        }
+        isMountedRef.current = false;
+        if (from && (from.pathname === "/Chatbox" || (typeof from === "string" && from.startsWith("/Chatbox")))) {
+          navigate("/select-biz", { replace: true, state: { from } });
+        } else {
+          navigate("/select-biz", { replace: true });
+        }
       } else {
-        setError(data?.message || "Login successful. Redirecting...");
+        safeSetState(setError, data?.message || "Login successful. Redirecting...");
       }
     } catch (err) {
-      setError(
+      safeSetState(
+        setError,
         err.message ||
           "Login failed. Please check your credentials and try again."
       );
     } finally {
-      setLoading(false);
+      safeSetState(setLoading, false);
     }
   };
 

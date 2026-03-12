@@ -45,10 +45,14 @@ export function getGeminiApiKey() {
 export function getLegacyUrls() {
   const base = process.env.REACT_APP_API_BASE || "";
   const genaiBase = base.replace(/\/api\/?$/, "") || base;
-  const chatHistoryUrl =
+  const explicitChatHistory =
     typeof process !== "undefined" && process.env?.REACT_APP_CHAT_HISTORY_URL
       ? String(process.env.REACT_APP_CHAT_HISTORY_URL).trim()
-      : genaiBase + path("genai", "chat-history");
+      : "";
+  // Use relative path when no base URL so dev server proxy (e.g. to clone.ulap.biz) is used and CORS is avoided
+  const chatHistoryUrl =
+    explicitChatHistory ||
+    (genaiBase ? genaiBase + path("genai", "chat-history") : path("genai", "chat-history"));
   const flat = {
     login: base + path("api", "login"),
     logout: base + path("api", "logout"),

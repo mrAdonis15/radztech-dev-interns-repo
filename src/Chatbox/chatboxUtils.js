@@ -126,10 +126,13 @@ export function loadHistory() {
   }
 }
 
-function saveHistory(history) {
+export function saveHistoryToStorage(history) {
   try {
     localStorage.setItem(CHAT_HISTORY_STORAGE_KEY, JSON.stringify(history));
   } catch (_) {}
+}
+function saveHistory(history) {
+  saveHistoryToStorage(history);
 }
 
 const MAX_TITLE_LEN = 42;

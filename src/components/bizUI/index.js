@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, useLocation } from "react-router-dom";
 import Box from "@material-ui/core/Box";
 import Typography from "@material-ui/core/Typography";
 import Grid from "@material-ui/core/Grid";
@@ -162,6 +162,8 @@ function BizListContent({ bizList, selectingId, onSelectBiz, onContinue, onRefre
 
 export default function BizUI() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isMountedRef = React.useRef(true);
   const [bizList, setBizList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectingId, setSelectingId] = useState(null);
@@ -176,9 +178,15 @@ export default function BizUI() {
     businessService
       .selectBiz(token)
       .then((res) => parseBizList(res.data != null ? res.data : res.text))
-      .then(setBizList)
-      .catch(() => setError("Failed to load businesses"))
-      .finally(() => setLoading(false));
+      .then((list) => {
+        if (isMountedRef.current) setBizList(list);
+      })
+      .catch(() => {
+        if (isMountedRef.current) setError("Failed to load businesses");
+      })
+      .finally(() => {
+        if (isMountedRef.current) setLoading(false);
+      });
   }, [token]);
 
   useEffect(
@@ -188,6 +196,12 @@ export default function BizUI() {
     [loadBizList]
   );
 
+  const getChatboxPath = useCallback(() => {
+    const from = location.state?.from;
+    const search = from?.search || "";
+    return "/Chatbox" + search;
+  }, [location.state]);
+
   const handleSelectBiz = function (biz) {
     const code = getBizCode(biz);
     if (!token || code == null) return;
@@ -195,6 +209,7 @@ export default function BizUI() {
     businessService
       .setBiz(token, code)
       .then(function (response) {
+        if (!isMountedRef.current) return;
         let parsedData = response.data;
         if (parsedData == null && response.text?.trim()) {
           try {
@@ -223,14 +238,19 @@ export default function BizUI() {
           const logo = biz?.image ?? biz?.logo ?? biz?.logoUrl ?? biz?.business?.logo ?? null;
           localStorage.setItem("selectedBiz", JSON.stringify({ biz: { name, ixBiz: code, image: logo } }));
         }
-        navigate("/Chatbox", { replace: true });
+        isMountedRef.current = false;
+        navigate(getChatboxPath(), { replace: true });
       })
-      .catch(() => setError("Failed to select business"))
-      .finally(() => setSelectingId(null));
+      .catch(() => {
+        if (isMountedRef.current) setError("Failed to select business");
+      })
+      .finally(() => {
+        if (isMountedRef.current) setSelectingId(null);
+      });
   };
 
   const handleContinue = function () {
-    return navigate("/Chatbox", { replace: true });
+    return navigate(getChatboxPath(), { replace: true });
   };
 
   if (!token) return <Navigate to="/login" replace />;
