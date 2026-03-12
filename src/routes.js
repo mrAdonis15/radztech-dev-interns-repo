@@ -25,6 +25,7 @@ import AGR from "./AGR";
 //BD routes
 
 //13th Month Pay Calculator
+import CalculatorLayout from "./BD-INTERNS/13thMonthPayCalculator/Layout/Layout";
 import Calculator from "./BD-INTERNS/13thMonthPayCalculator/Calculator/Calculator";
 import aboutCalculator from "./BD-INTERNS/13thMonthPayCalculator/About/About";
 
@@ -136,14 +137,14 @@ const routes = [
   },
 
   //BD routes
-  //13th Month Pay Calculator
+  //13th Month Pay Calculator (Layout provides nav + main container; Layout.css is applied here)
   {
     path: "/BDCalculator",
-    element: Calculator,
-  },
-  {
-    path: "/BDCalculator/About",
-    element: aboutCalculator,
+    element: CalculatorLayout,
+    children: [
+      { index: true, element: Calculator },
+      { path: "About", element: aboutCalculator },
+    ],
   },
   //Product Finder
   {
