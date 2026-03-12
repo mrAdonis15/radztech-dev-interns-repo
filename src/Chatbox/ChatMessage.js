@@ -6,6 +6,8 @@ import radzLogo from "./Assets/SHARED] Radztech Interns Logo - 32.png";
 import ChartRenderer from "./chartRenderer";
 
 function ChatMessageInner({ msg }) {
+  console.log("msg", msg);
+
   const isMe = msg.sender === "me";
   const isTyping = msg.text === "...";
   const isChart = msg.type === "chart";
