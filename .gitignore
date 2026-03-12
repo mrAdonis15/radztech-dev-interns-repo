@@ -4,3 +4,12 @@ node_modules
 frontend/
 package.json
 package-lock.json
+.gitignore
+node_modules copy
+.env copy
+.env.local copy
+frontend/ copy
+package.json copy
+package-lock.json copy
+.gitignore copy
+
