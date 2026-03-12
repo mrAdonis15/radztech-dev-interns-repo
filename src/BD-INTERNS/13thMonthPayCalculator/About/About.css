@@ -1,0 +1,64 @@
+.about {
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.about h1 {
+  font-size: 1.85rem;
+  background: linear-gradient(135deg, #e55a00 0%, #ff6b35 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.about section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.35rem 1.75rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 8px 32px rgba(229, 90, 0, 0.1);
+  border: 1px solid rgba(255, 107, 53, 0.15);
+  transition: all 0.3s ease;
+}
+
+.about section:hover {
+  box-shadow: 0 12px 40px rgba(229, 90, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.about h2 {
+  font-size: 1.1rem;
+  color: #e55a00;
+  margin: 0 0 0.75rem 0;
+  font-weight: 600;
+}
+
+.about p {
+  margin: 0 0 0.75rem 0;
+  line-height: 1.65;
+  color: #4a3728;
+}
+
+.about p:last-child {
+  margin-bottom: 0;
+}
+
+.about ul {
+  margin: 0 0 0.75rem 0;
+  padding-left: 1.5rem;
+  color: #4a3728;
+}
+
+.formula {
+  background: linear-gradient(90deg, #fff5ee 0%, #ffe8d9 100%);
+  border-left: 4px solid #ff6b35;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  border-radius: 0 10px 10px 0;
+}

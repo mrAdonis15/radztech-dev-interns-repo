@@ -1,4 +1,3 @@
-
 import DefaultLayout from "./layouts/DefaultLayout";
 import ChatboxLayout from "./layouts/ChatboxLayout";
 import Login from "./Login/Login";
@@ -23,8 +22,23 @@ import SqlFormatter from "./components/SQL Formatter/SqlFormatter";
 import Timelogstest from "./components/Adam/components/timelogstest";
 import AGR from "./AGR";
 
-const ChatboxPage = () => <Chatbox defaultOpen />;
+//BD routes
 
+//13th Month Pay Calculator
+import Calculator from "./BD-INTERNS/13thMonthPayCalculator/Calculator/Calculator";
+import aboutCalculator from "./BD-INTERNS/13thMonthPayCalculator/About/About";
+
+//Product Finder
+import PFHero from "./BD-INTERNS/Product-Finder/Hero/Hero";
+import PFQuestionnaire from "./BD-INTERNS/Product-Finder/Questionnaire/Questionnaire";
+import PFResults from "./BD-INTERNS/Product-Finder/Result/Result";
+import PFPricing from "./BD-INTERNS/Product-Finder/Pricing/Pricing";
+import PFCheckout from "./BD-INTERNS/Product-Finder/Checkout/Checkout";
+import PFReciept from "./BD-INTERNS/Product-Finder/Receipt/Receipt";
+import PFContactUs from "./BD-INTERNS/Product-Finder/ContactUs/ContactUs";
+import PaymentComplete from "./BD-INTERNS/Product-Finder/PaymentComplete/PaymentComplete";
+
+const ChatboxPage = () => <Chatbox defaultOpen />;
 
 const routes = [
   {
@@ -119,6 +133,50 @@ const routes = [
   {
     path: "/AGR",
     element: AGR,
+  },
+
+  //BD routes
+  //13th Month Pay Calculator
+  {
+    path: "/BDCalculator",
+    element: Calculator,
+  },
+  {
+    path: "/BDCalculator/About",
+    element: aboutCalculator,
+  },
+  //Product Finder
+  {
+    path: "/ProductFinder",
+    element: PFHero,
+  },
+  {
+    path: "/ProductFinder/Questionnaire",
+    element: PFQuestionnaire,
+  },
+  {
+    path: "/ProductFinder/Results",
+    element: PFResults,
+  },
+  {
+    path: "/ProductFinder/Pricing",
+    element: PFPricing,
+  },
+  {
+    path: "/ProductFinder/Checkout",
+    element: PFCheckout,
+  },
+  {
+    path: "/ProductFinder/Receipt",
+    element: PFReciept,
+  },
+  {
+    path: "/ProductFinder/ContactUs",
+    element: PFContactUs,
+  },
+  {
+    path: "/ProductFinder/PaymentComplete",
+    element: PaymentComplete,
   },
 ];
 
