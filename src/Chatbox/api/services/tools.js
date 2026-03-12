@@ -707,7 +707,7 @@ export const tools = [
       {
         name: "sc_graph",
         description:
-          "Get stock card graph data (running balance, IN, OUT by period). Use when the user asks to graph/chart/plot stock card or running balance. For q, use the product displayLabel from search_prod (e.g. 'CLICK160 Black (Code: ACB160CBTN-MGB)') or the description when the user chose from the list (e.g. 'the first one' → use that item's displayLabel). When the user asks for a specific year (e.g. '2026', 'stock card for 2026'), pass that year in the year parameter so the chart shows the requested year.",
+          "Show stock card graph in the chat (running balance, IN, OUT by period). Call this whenever the user asks for a stock card graph, chart, or running balance so the graph appears directly in the chat. For q, use the product displayLabel from search_prod (e.g. 'CLICK160 Black (Code: ACB160CBTN-MGB)') or the description when the user chose from the list. When the user asks for a specific year (e.g. '2026', 'stock card for 2026'), pass that year in the year parameter.",
         parameters: {
           type: "object",
           properties: {
