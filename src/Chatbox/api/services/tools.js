@@ -514,7 +514,6 @@ export const functions = {
       type: "chart",
     };
   },
-
   get_prod_img: async (args) => {
     const headers = getHeaders();
 
@@ -527,9 +526,11 @@ export const functions = {
 
       console.log(response.data);
 
-      const img = response.data;
+      const images = response.data;
 
-      return img;
+      const avatarImg = images.find((img) => img.filename.includes("avatar"));
+
+      return avatarImg || images;
     } catch (err) {
       return {
         status: "error",
@@ -799,7 +800,8 @@ export const tools = [
       },
       {
         name: "get_prod_img",
-        description: "Returns the link of of the product image.",
+        description:
+          "Return the product description first, followed by the product image in Markdown format. The image must appear below the description.",
         parameters: {
           type: "object",
           properties: {
