@@ -118,11 +118,7 @@ export async function sendToGemini(
   let toolResult = null;
   let toolName = null;
 
-  // Use only session_id from chat (React state); do not read from localStorage
-  let session_id =
-    sessionId != null && typeof sessionId === "string" && sessionId.trim() !== ""
-      ? sessionId.trim()
-      : null;
+  let session_id = localStorage.getItem("session_id");
 
   try {
     // genai/chat API expects { session_id?, parts: [{ text }], tools } (same as Postman)
@@ -150,7 +146,9 @@ export async function sendToGemini(
       toolName = name;
       toolResult = result;
 
-      if (response.data.session_id) session_id = response.data.session_id;
+      if (!session_id) {
+        session_id = response.data.session_id;
+      }
 
       const resultPayload = {
         session_id,

@@ -23,6 +23,8 @@ export const endpoints = {
   reports: {
     gl: path("reports", "gl"),
     glGraph: path("reports", "gl", "graph"),
+    sc: path("reports", "inv", "sc"),
+    scGraph: path("reports", "inv", "sc", "graph"),
   },
 };
 
@@ -61,6 +63,8 @@ export function getLegacyUrls() {
     businesses: base + path("api", "businesses"),
     reportsGl: base + path("reports", "gl"),
     reportsGlGraph: base + path("reports", "gl", "graph"),
+    reportsSc: base + path("reports", "inv", "sc"),
+    reportsScGraph: base + path("reports", "inv", "sc", "graph"),
     genaiChat: genaiBase + path("genai", "chat"),
     genaiChatHistory: chatHistoryUrl,
   };
