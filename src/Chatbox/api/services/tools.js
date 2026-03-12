@@ -332,6 +332,29 @@ export const functions = {
       type: "chart",
     };
   },
+
+  get_prod_img: async (args) => {
+    const headers = getHeaders();
+
+    try {
+      const url = `${BASE_URL}/images/prod/${args.ixProd}`;
+
+      const response = await axios.get(url, {
+        headers: headers,
+      });
+
+      console.log(response.data);
+
+      const img = response.data;
+
+      return img;
+    } catch (err) {
+      return {
+        status: "error",
+        message: err.response?.data || err.message,
+      };
+    }
+  },
 };
 
 /** Gemini function declarations (tool schema) sent to the AI. */
@@ -487,6 +510,20 @@ export const tools = [
             },
           },
           required: ["chartType", "data", "options"],
+        },
+      },
+      {
+        name: "get_prod_img",
+        description: "Returns the link of of the product image.",
+        parameters: {
+          type: "object",
+          properties: {
+            ixProd: {
+              type: "integer",
+              description: "The id of the product",
+            },
+          },
+          required: ["ixProd"],
         },
       },
     ],
