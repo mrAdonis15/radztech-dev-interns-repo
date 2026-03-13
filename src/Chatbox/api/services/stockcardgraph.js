@@ -338,9 +338,11 @@ function fromItemsFormatGL(apiData) {
   if (!valid.length) return null;
   const rowData = onePointPerRow(valid);
   const periods = valid.map((i) => getPeriod(i)).filter(Boolean);
+  const requestedYear = resolveYear(apiData, periods, new Date().getFullYear());
   const years = [...new Set(periods.map((p) => getYearFromPeriod(p)).filter(Number.isFinite))];
   const singleYear = years.length === 1 ? years[0] : null;
-  const title = singleYear != null ? `YEAR ${singleYear}` : "General Ledger";
+  const titleYear = Number.isFinite(requestedYear) ? requestedYear : singleYear;
+  const title = titleYear != null ? `YEAR ${titleYear}` : "General Ledger";
   return makeGLChartWithLabels(rowData.labels, title, rowData.inData, rowData.outData, rowData.runBalData);
 }
 

@@ -365,7 +365,8 @@ export const functions = {
         headers,
       );
       const raw = response.data;
-      const apiData = { ...raw, glChart: true };
+      const requestedYear = params.dt1 ? parseInt(String(params.dt1).slice(0, 4), 10) : undefined;
+      const apiData = { ...raw, glChart: true, dt1: params.dt1, year: Number.isFinite(requestedYear) ? requestedYear : undefined };
       const config = getGraphConfig(apiData);
       if (!config || !config.labels || !config.datasets?.length) {
         return {
@@ -451,7 +452,8 @@ export const functions = {
         params,
         headers,
       );
-      const apiData = response.data;
+      const requestedYear = params.dt1 ? parseInt(String(params.dt1).slice(0, 4), 10) : undefined;
+      const apiData = { ...response.data, dt1: params.dt1, year: Number.isFinite(requestedYear) ? requestedYear : undefined };
       const config = getGraphConfig(apiData);
       if (!config || !config.labels || !config.datasets?.length) {
         return {
