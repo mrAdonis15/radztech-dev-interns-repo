@@ -1,4 +1,3 @@
-
 import DefaultLayout from "./layouts/DefaultLayout";
 import ChatboxLayout from "./layouts/ChatboxLayout";
 import Login from "./Login/Login";
@@ -23,8 +22,25 @@ import SqlFormatter from "./components/SQL Formatter/SqlFormatter";
 import Timelogstest from "./components/Adam/components/timelogstest";
 import AGR from "./AGR";
 
-const ChatboxPage = () => <Chatbox defaultOpen />;
+//BD routes
 
+//13th Month Pay Calculator
+import CalculatorLayout from "./BD-INTERNS/13thMonthPayCalculator/Layout/Layout";
+import Calculator from "./BD-INTERNS/13thMonthPayCalculator/Calculator/Calculator";
+import aboutCalculator from "./BD-INTERNS/13thMonthPayCalculator/About/About";
+
+//Product Finder
+import ProductFinderLayout from "./BD-INTERNS/Product-Finder/Layout/Layout";
+import PFHero from "./BD-INTERNS/Product-Finder/Hero/Hero";
+import PFQuestionnaire from "./BD-INTERNS/Product-Finder/Questionnaire/Questionnaire";
+import PFResults from "./BD-INTERNS/Product-Finder/Result/Result";
+import PFPricing from "./BD-INTERNS/Product-Finder/Pricing/Pricing";
+import PFCheckout from "./BD-INTERNS/Product-Finder/Checkout/Checkout";
+import PFReciept from "./BD-INTERNS/Product-Finder/Receipt/Receipt";
+import PFContactUs from "./BD-INTERNS/Product-Finder/ContactUs/ContactUs";
+import PaymentComplete from "./BD-INTERNS/Product-Finder/PaymentComplete/PaymentComplete";
+
+const ChatboxPage = () => <Chatbox defaultOpen />;
 
 const routes = [
   {
@@ -119,6 +135,32 @@ const routes = [
   {
     path: "/AGR",
     element: AGR,
+  },
+
+  //BD routes
+  //13th Month Pay Calculator (Layout provides nav + main container; Layout.css is applied here)
+  {
+    path: "/BDCalculator",
+    element: CalculatorLayout,
+    children: [
+      { index: true, element: Calculator },
+      { path: "About", element: aboutCalculator },
+    ],
+  },
+  //Product Finder (Navbar only on these pages)
+  {
+    path: "/ProductFinder",
+    element: ProductFinderLayout,
+    children: [
+      { index: true, element: PFHero },
+      { path: "Questionnaire", element: PFQuestionnaire },
+      { path: "Results", element: PFResults },
+      { path: "Pricing", element: PFPricing },
+      { path: "Checkout", element: PFCheckout },
+      { path: "Receipt", element: PFReciept },
+      { path: "ContactUs", element: PFContactUs },
+      { path: "PaymentComplete", element: PaymentComplete },
+    ],
   },
 ];
 

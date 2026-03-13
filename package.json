@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@google/genai": "^1.44.0",
     "@google/generative-ai": "^0.24.1",
     "@material-ui/core": "^4.12.4",
     "@material-ui/data-grid": "^4.0.0-alpha.37",
@@ -22,6 +23,7 @@
     "numeral": "^2.0.6",
     "re-resizable": "^6.9.17",
     "react": "^16.14.0",
+    "react-barcode": "^1.6.1",
     "react-dom": "^16.14.0",
     "react-hook-form": "^7.71.2",
     "react-icons": "^5.2.1",
