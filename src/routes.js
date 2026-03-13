@@ -30,6 +30,7 @@ import Calculator from "./BD-INTERNS/13thMonthPayCalculator/Calculator/Calculato
 import aboutCalculator from "./BD-INTERNS/13thMonthPayCalculator/About/About";
 
 //Product Finder
+import ProductFinderLayout from "./BD-INTERNS/Product-Finder/Layout/Layout";
 import PFHero from "./BD-INTERNS/Product-Finder/Hero/Hero";
 import PFQuestionnaire from "./BD-INTERNS/Product-Finder/Questionnaire/Questionnaire";
 import PFResults from "./BD-INTERNS/Product-Finder/Result/Result";
@@ -146,38 +147,20 @@ const routes = [
       { path: "About", element: aboutCalculator },
     ],
   },
-  //Product Finder
+  //Product Finder (Navbar only on these pages)
   {
     path: "/ProductFinder",
-    element: PFHero,
-  },
-  {
-    path: "/ProductFinder/Questionnaire",
-    element: PFQuestionnaire,
-  },
-  {
-    path: "/ProductFinder/Results",
-    element: PFResults,
-  },
-  {
-    path: "/ProductFinder/Pricing",
-    element: PFPricing,
-  },
-  {
-    path: "/ProductFinder/Checkout",
-    element: PFCheckout,
-  },
-  {
-    path: "/ProductFinder/Receipt",
-    element: PFReciept,
-  },
-  {
-    path: "/ProductFinder/ContactUs",
-    element: PFContactUs,
-  },
-  {
-    path: "/ProductFinder/PaymentComplete",
-    element: PaymentComplete,
+    element: ProductFinderLayout,
+    children: [
+      { index: true, element: PFHero },
+      { path: "Questionnaire", element: PFQuestionnaire },
+      { path: "Results", element: PFResults },
+      { path: "Pricing", element: PFPricing },
+      { path: "Checkout", element: PFCheckout },
+      { path: "Receipt", element: PFReciept },
+      { path: "ContactUs", element: PFContactUs },
+      { path: "PaymentComplete", element: PaymentComplete },
+    ],
   },
 ];
 
