@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import {
   Container,
   Typography,
@@ -7,6 +7,7 @@ import {
   Button,
   makeStyles,
 } from "@material-ui/core";
+import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
 import PhoneIcon from "@material-ui/icons/Phone";
 import ChatBubbleOutlineIcon from "@material-ui/icons/ChatBubbleOutline";
@@ -37,6 +38,18 @@ const useStyles = makeStyles((theme) => ({
   inner: {
     maxWidth: 1100,
     margin: "0 auto",
+  },
+  topBar: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    marginBottom: theme.spacing(3),
+  },
+  backBtn: {
+    fontFamily: theme.typography.body1.fontFamily,
+    textTransform: "none",
+    fontSize: "0.9rem",
+    transition: "color 0.2s ease, background-color 0.2s ease",
   },
   header: {
     textAlign: "center",
@@ -131,12 +144,24 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Pricing() {
   const classes = useStyles();
+  const navigate = useNavigate();
   const [billingPeriod, setBillingPeriod] = useState("monthly"); // 'monthly' | 'annual'
 
   return (
     <div className={classes.wrapper}>
       <Container maxWidth="lg" disableGutters>
         <Box className={classes.inner}>
+          <Box className={classes.topBar}>
+            <Button
+              component="button"
+              onClick={() => navigate(-1)}
+              startIcon={<ArrowBackIcon />}
+              className={classes.backBtn}
+              color="primary"
+            >
+              Back
+            </Button>
+          </Box>
           <header className={classes.header}>
             <Typography component="h1" className={classes.title}>
               Choose the right plan for your business

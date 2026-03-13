@@ -1,0 +1,6 @@
+/* Reserve space for fixed navbar (toolbar height 60px) so content does not overlap */
+.product-finder-main {
+  padding-top: 60px;
+  min-height: 100vh;
+  box-sizing: border-box;
+}

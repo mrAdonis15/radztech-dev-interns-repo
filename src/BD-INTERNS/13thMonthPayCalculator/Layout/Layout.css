@@ -2,15 +2,8 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  /* Vertical gradient: lighter orange/light brown (left) → darker brown (right) */
-  background: linear-gradient(
-    to right,
-    #f5e6dc 0%,
-    #e8c4a8 30%,
-    #c4956a 60%,
-    #8b5a3c 85%,
-    #5c3d2e 100%
-  );
+  /* F7B272 → DB6700 gradient */
+  background: linear-gradient(to right, #f7b272 0%, #db6700 100%);
   background-attachment: fixed;
 }
 

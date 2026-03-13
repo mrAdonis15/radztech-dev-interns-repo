@@ -28,8 +28,10 @@
 .calculator-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  gap: 2.25rem;
   align-items: start;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 @media (max-width: 768px) {
@@ -43,14 +45,37 @@
   }
 }
 
-/* ----- Left panel: form (no card, part of main container) ----- */
+/* ----- Left panel: form ----- */
 .calculator-form {
-  background: transparent;
-  padding: 0;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 1.75rem;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.form-section {
+  margin-bottom: 1.75rem;
+}
+
+.form-section:last-child {
+  margin-bottom: 0;
+}
+
+.form-section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  margin: 0 0 0.875rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .form-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .form-group:last-of-type {
@@ -59,12 +84,12 @@
 
 .form-group label {
   display: block;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: #2d2d2d;
+  color: #374151;
   margin-bottom: 0.375rem;
   letter-spacing: 0.01em;
-  font-family: Georgia, "Times New Roman", Times, serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .form-group input {
@@ -94,42 +119,237 @@
   box-shadow: 0 0 0 2px rgba(196, 90, 34, 0.2);
 }
 
+.form-select {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #1a1a1a;
+  background: #fff;
+  box-sizing: border-box;
+  cursor: pointer;
+  appearance: auto;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-select:hover {
+  border-color: #d1d5db;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #c45a22;
+  box-shadow: 0 0 0 2px rgba(196, 90, 34, 0.2);
+}
+
 .form-hint {
   display: block;
   font-size: 0.75rem;
-  color: #888;
-  margin-top: 0.35rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.form-hint-standalone {
+  margin-top: 0;
+  padding: 0.75rem 0;
+}
+
+.form-label-inline {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #2d2d2d;
+  margin-bottom: 0.5rem;
+  font-family: Georgia, "Times New Roman", Times, serif;
+}
+
+.salary-mode-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #2d2d2d;
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.radio-label input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #c45a22;
+  cursor: pointer;
+}
+
+.form-label-block {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.monthly-salaries-year-block {
+  margin-bottom: 1.25rem;
+}
+
+.monthly-salaries-year-block:last-child {
+  margin-bottom: 0;
+}
+
+.monthly-salaries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.25rem 0;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.monthly-salary-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  min-height: 2.5rem;
+}
+
+.monthly-salary-row:not(:last-child) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.monthly-salary-row-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #374151;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.monthly-salary-row input {
+  min-width: 0;
+  width: 120px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 540px) {
+  .monthly-salary-row {
+    grid-template-columns: 1fr;
+  }
+
+  .monthly-salary-row input {
+    width: 100%;
+  }
+}
+
+.monthly-salaries-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem 0.75rem;
+}
+
+.monthly-salary-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.monthly-salary-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.monthly-salary-cell input {
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 540px) {
+  .monthly-salaries-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.form-group-checkbox {
+  margin-bottom: 1rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #2d2d2d;
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.checkbox-label input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #c45a22;
+  cursor: pointer;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.875rem;
+  gap: 1rem;
+}
+
+.form-row-half .form-group {
+  margin-bottom: 0;
+}
+
+.form-row-half {
+  margin-bottom: 1rem;
 }
 
 @media (max-width: 540px) {
   .form-row {
     grid-template-columns: 1fr;
   }
+
+  .form-row-half {
+    margin-bottom: 1rem;
+  }
 }
 
 .btn-reset {
-  margin-top: 1.25rem;
+  margin-top: 1rem;
   padding: 0.5rem 0;
   background: none;
   border: none;
-  border-radius: 0;
+  border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 500;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   cursor: pointer;
-  color: #888;
-  transition: color 0.15s ease;
+  color: #6b7280;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
 .btn-reset:hover {
-  color: #555;
+  color: #374151;
+  background: rgba(0, 0, 0, 0.04);
 }
 
 /* ----- Right panel: nested results card ----- */
@@ -140,12 +360,12 @@
 }
 
 .receipt-paper {
-  background: #fff;
-  border-radius: 12px;
-  padding: 1.5rem 1.5rem;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 16px;
+  padding: 1.75rem;
   max-width: 340px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e8e8e8;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: #1a1a1a;
 }
@@ -205,6 +425,54 @@
 .receipt-line-deduct span:last-child {
   color: #b91c1c;
   font-weight: 600;
+}
+
+.receipt-per-month {
+  margin: 0.75rem 0;
+  padding: 0.5rem 0;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.receipt-per-month-title {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+}
+
+.receipt-per-month-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.receipt-per-month-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.25rem 0;
+  font-size: 0.75rem;
+}
+
+.receipt-per-month-label {
+  flex: 1;
+  color: #374151;
+}
+
+.receipt-per-month-days {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.receipt-per-month-amount {
+  text-align: right;
+  min-width: 10ch;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: #1a1a1a;
 }
 
 .receipt-divider {
@@ -385,6 +653,10 @@
 
   .receipt-line span:last-child {
     min-width: 11ch;
+  }
+
+  .receipt-per-month {
+    display: none !important;
   }
 
   .receipt-divider {
