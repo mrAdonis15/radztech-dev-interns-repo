@@ -10,6 +10,11 @@ import {
   Chip,
   Menu,
   MenuItem,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@material-ui/core";
 import data from "./data.json";
 import React, { useState, useRef } from "react";
@@ -96,69 +101,61 @@ const getBodyCellStyle = (align) => ({
   textOverflow: "ellipsis",
 });
 
-const COLUMNS = [
-  { header: "No.", key: null, align: "right" },
-  { header: "Name", key: "Name", align: "left" },
-  { header: "AR 4266", key: "ar_4266", align: "right" },
-  { header: "AR 4267", key: "ar_4267", align: "right" },
-  { header: "AR 4268", key: "ar_4268", align: "right" },
-  { header: "AR TOTAL", key: "ar_total", align: "right" },
-  { header: "Bal Detailed", key: "balDetailed", align: "right" },
-  { header: "Bal Detailed 4266", key: "balDetailed_4266", align: "right" },
-  { header: "Bal Detailed 4267", key: "balDetailed_4267", align: "right" },
-  { header: "Bal Detailed 4268", key: "balDetailed_4268", align: "right" },
-  { header: "Coll Current", key: "collCurrent", align: "right" },
-  { header: "Due Date", key: "dueDate", align: "left" },
-  { header: "Due Total", key: "dueTotal", align: "right" },
-  { header: "Date", key: "jDate", align: "left" },
-  { header: "Sim Description", key: "simDescription", align: "left" },
-  { header: "Terms Days", key: "termsDays", align: "right" },
-  { header: "Sked Current 4266", key: "sked_current_4266", align: "right" },
-  { header: "Sked Percent 4266", key: "sked_percent_4266", align: "right" },
-  { header: "Sked Total 4266", key: "sked_total_4266", align: "right" },
-  { header: "Sked Current 4268", key: "sked_current_4268", align: "right" },
-  { header: "Sked Percent 4268", key: "sked_percent_4268", align: "right" },
-  { header: "Sked Total 4268", key: "sked_total_4268", align: "right" },
-  { header: "Sked Current 4267", key: "sked_current_4267", align: "right" },
-  { header: "Sked Percent 4267", key: "sked_percent_4267", align: "right" },
-  { header: "Sked Total 4267", key: "sked_total_4267", align: "right" },
-  { header: "Sked Desc", key: "sked_desc", align: "left" },
-  { header: "Sked Date", key: "sked_date", align: "left" },
-  { header: "Sked Total", key: "sked_total", align: "right" },
-  { header: "Due Current Sked", key: "dueCurrentSked", align: "right" },
-  { header: "Coll Period", key: "collPeriod", align: "right" },
-  { header: "Sked Rebate", key: "sked_rebate", align: "right" },
-  { header: "Due Current", key: "dueCurrent", align: "right" },
-  { header: "GAC", key: "gac", align: "left" },
-  { header: "Bal DP", key: "_balDP", align: "right" },
-  { header: "Past Due", key: "pastDue", align: "right" },
-  { header: "Coll Past Due", key: "collPastDue", align: "right" },
-  { header: "Coll Advance", key: "collAdvance", align: "right" },
-  { header: "Coll Rebate Current", key: "collRebateCurrent", align: "right" },
-  { header: "Coll Rebate Advance", key: "collRebateAdvance", align: "right" },
-  { header: "Bal Ending", key: "balEnding", align: "right" },
-  { header: "Orig Coll Values", key: "origCollValues", align: "left" },
-  { header: "Past Due 30", key: "pastDue30", align: "right" },
-  { header: "Past Due 60", key: "pastDue60", align: "right" },
-  { header: "Past Due 90", key: "pastDue90", align: "right" },
-  { header: "Past Due 120", key: "pastDue120", align: "right" },
-  { header: "Past Due Else", key: "pastDueElse", align: "right" },
-  { header: "Total Collection", key: "totalCollection", align: "right" },
-  { header: "Eff Numerator", key: "eff_numerator", align: "right" },
-  { header: "Eff Denominator", key: "eff_denominator", align: "right" },
-  { header: "Expected Output", key: "expected_output", align: "left" },
-  { header: "Expected Output GT", key: "expected_output_gt", align: "left" },
-  { header: "Expected Output LT", key: "expected_output_lt", align: "left" },
-  {
-    header: "Expected Output Starts With",
-    key: "expected_output_startswith",
-    align: "left",
-  },
-  { header: "Eff Notes", key: "eff_notes", align: "left" },
-  { header: "Errors", key: "errors", align: "left" },
-  { header: "Warnings", key: "warnings", align: "left" },
-  { header: "Result", key: "result", align: "left" },
+// Fixed AGR column order: header label → JSON key (same order as required display)
+const AGR_COLUMN_ORDER = [
+  { header: "Customer", key: "Name" },
+  { header: "Address", key: "Address" },
+  { header: "Contact Number", key: "profile_contactNo" },
+  { header: "Collector", key: "sAccSub2" },
+  { header: "Salesman", key: "sAccSub3" },
+  { header: "Agent", key: "sAccSub4" },
+  { header: "DP", key: "ar_4266" },
+  { header: "P", key: "ar_4267" },
+  { header: "FC", key: "ar_4268" },
+  { header: "Total", key: "ar_total" },
+  { header: "OR", key: "sumOR" },
+  { header: "OR FC", key: "sumOR_FC" },
+  { header: "CM", key: "sumCM" },
+  { header: "JV", key: "sumJV" },
+  { header: "REPO", key: "sumREPO" },
+  { header: "Balance DP", key: "balDetailed_4266" },
+  { header: "Balance P", key: "balDetailed_4267" },
+  { header: "Balance FC", key: "balDetailed_4268" },
+  { header: "Balance Total", key: "balDetailed" },
+  { header: "Sked Current", key: "skedCurrent" },
+  { header: "Sked Values", key: "skedValues" },
+  { header: "Schedule Desc", key: "sked_desc" },
+  { header: "Schedule Due Date", key: "sked_date" },
+  { header: "Current Due", key: "dueTotal" },
+  { header: "Past Due", key: "pastDue" },
+  { header: "1 - 30", key: "pastDue30" },
+  { header: "31 - 60", key: "pastDue60" },
+  { header: "61 - 90", key: "pastDue90" },
+  { header: "91 - 120", key: "pastDue120" },
+  { header: "121+", key: "pastDueElse" },
+  { header: "Collection for the Period", key: "collPeriod" },
+  { header: "Current Collection", key: "collCurrent" },
+  { header: "Advanced Collection", key: "collAdvance" },
+  { header: "Past Due Collection", key: "collPastDue" },
+  { header: "Current Collection - Rebate", key: "collRebateCurrent" },
+  { header: "Advanced Collection - Rebate", key: "collRebateAdvance" },
+  { header: "Pretermination", key: "preterm" },
+  { header: "Preterm Past Due", key: "pretermPastDue" },
+  { header: "Preterm Rebate", key: "pretermRebate" },
+  { header: "End Receivable DP", key: "balEndDetailed_4266" },
+  { header: "End Receivable P", key: "balEndDetailed_4267" },
+  { header: "End Receivable FC", key: "balEndDetailed_4268" },
+  { header: "Total End Receivable", key: "balEndDetailed" },
+  { header: "Collected", key: "totalCollection" },
+  { header: "Target", key: "target" },
+  { header: "Efficiency", key: "efficiency" },
+  { header: "Efficiency Notes", key: "eff_notes" },
 ];
+
+// Map of known column keys to header labels (for getHeaderFromKey / error menu)
+const COLUMN_HEADER_LABELS = Object.fromEntries(
+  AGR_COLUMN_ORDER.map(({ header, key }) => [key, header])
+);
 
 const formatNumber = (value) => {
   if (value === null || value === undefined || value === "") return "--";
@@ -180,12 +177,86 @@ const isNumeric = (value) => {
 //FORMATTINGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
 const DATE_COLUMN_KEYS = ["dueDate", "jDate", "sked_date"];
 const STRING_COLUMN_KEYS = ["sked_desc", "simDescription"];
-const PLAIN_NUMBER_COLUMN_KEYS = [];
+const PLAIN_NUMBER_COLUMN_KEYS = ["profile_contactNo"];
 const PERCENT_COLUMN_KEYS = [
   "sked_percent_4267",
   "sked_percent_4268",
   "sked_percent_4266",
 ];
+
+// Derive a readable header from a column key
+const getHeaderFromKey = (key) => {
+  if (!key) return "";
+  if (COLUMN_HEADER_LABELS[key]) return COLUMN_HEADER_LABELS[key];
+  // Fallback: turn snake_case / camelCase into spaced and capitalized words
+  const withSpaces = String(key)
+    .replace(/_/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+  return withSpaces.replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
+// Infer alignment based on sampled values (numeric => right, otherwise left)
+const inferAlignForKey = (key, rows) => {
+  if (!key) return "left";
+  for (let i = 0; i < rows.length; i += 1) {
+    const value = rows[i] && rows[i][key];
+    if (value === null || value === undefined || value === "") continue;
+    return isNumeric(value) ? "right" : "left";
+  }
+  return "left";
+};
+
+// Build column definitions: fixed AGR order first, then any extra keys from data.
+const buildColumnsFromRows = (rows) => {
+  const baseColumns = [
+    { header: "No.", key: null, align: "right" },
+    ...AGR_COLUMN_ORDER.map(({ header, key }) => ({
+      header,
+      key,
+      align: key ? inferAlignForKey(key, rows || []) : "left",
+    })),
+  ];
+
+  if (!Array.isArray(rows) || !rows.length) {
+    return baseColumns;
+  }
+
+  const orderedKeys = new Set(AGR_COLUMN_ORDER.map((c) => c.key).filter(Boolean));
+  const extraKeys = [];
+  rows.forEach((row) => {
+    if (!row || typeof row !== "object") return;
+    Object.keys(row).forEach((key) => {
+      if (!orderedKeys.has(key) && !extraKeys.includes(key)) {
+        extraKeys.push(key);
+      }
+    });
+  });
+
+  return [
+    ...baseColumns,
+    ...extraKeys.map((key) => ({
+      header: getHeaderFromKey(key),
+      key,
+      align: inferAlignForKey(key, rows),
+    })),
+  ];
+};
+
+// Get cell value from row; derive sked_desc / sked_date from skedValues when missing
+const getCellValue = (row, key) => {
+  if (!key) return undefined;
+  const raw = row[key];
+  if (raw !== undefined && raw !== null && raw !== "") return raw;
+  if (key === "sked_desc" && row.skedValues) {
+    const parts = String(row.skedValues).split("|");
+    return parts[2] !== undefined ? parts[2].trim() : raw;
+  }
+  if (key === "sked_date" && row.skedValues) {
+    const parts = String(row.skedValues).split("|");
+    return parts[0] !== undefined ? parts[0].trim() : raw;
+  }
+  return raw;
+};
 
 const formatDate = (value) => {
   if (value === null || value === undefined || value === "") return "--";
@@ -199,6 +270,25 @@ const formatDate = (value) => {
 
 const formatCell = (value, colKey) => {
   if (value === null || value === undefined || value === "") return "--";
+
+  // Special handling for pipe-delimited schedule strings like:
+  // "2026-02-01|3855.0000|Installment 13 - Feb"
+  if (typeof value === "string" && value.includes("|")) {
+    const parts = value.split("|").map((p) => p.trim());
+    // For skedValues: date | amount | description
+    if (colKey === "skedValues") {
+      const [date, amount, desc] = parts;
+      return [date, amount, desc].filter(Boolean).join(" – ");
+    }
+    // For skedCurrent: amount | rebate
+    if (colKey === "skedCurrent") {
+      const [amount, rebate] = parts;
+      return [amount, rebate && `Rebate: ${rebate}`]
+        .filter(Boolean)
+        .join(" – ");
+    }
+  }
+
   if (typeof value === "object") return JSON.stringify(value);
   if (typeof value === "boolean") return String(value);
   if (DATE_COLUMN_KEYS.includes(colKey)) return formatDate(value);
@@ -245,16 +335,48 @@ function getErrorLocations(rows) {
   return locations;
 }
 
+function getChanges(original, current, getHeaderFromKeyFn) {
+  const changes = [];
+  const len = Math.max(original?.length ?? 0, current?.length ?? 0);
+  for (let i = 0; i < len; i += 1) {
+    const o = original?.[i] ?? {};
+    const c = current?.[i] ?? {};
+    const allKeys = new Set([...Object.keys(o), ...Object.keys(c)]);
+    for (const key of allKeys) {
+      const ov = o[key];
+      const cv = c[key];
+      if (JSON.stringify(ov) !== JSON.stringify(cv)) {
+        changes.push({
+          rowIndex: i,
+          rowNumber: i + 1,
+          key,
+          header: getHeaderFromKeyFn(key),
+          oldVal: ov,
+          newVal: cv,
+        });
+      }
+    }
+  }
+  return changes;
+}
+
 export function TableAGR() {
   const classes = useStyles();
+  // Support both the old API shape (data.items[0].data) and the new JSON shape (data.data)
   const rows =
-    data.items && data.items[0] && data.items[0].data ? data.items[0].data : [];
+    (data.items && data.items[0] && data.items[0].data) ||
+    (Array.isArray(data.data) ? data.data : []) ||
+    [];
 
   const { setValue, watch } = useForm({
     defaultValues: { errorFocus: null },
   });
   const errorFocus = watch("errorFocus");
   const rowRefs = useRef({});
+  const originalRowsRef = useRef(null);
+  if (originalRowsRef.current === null && rows.length > 0) {
+    originalRowsRef.current = JSON.parse(JSON.stringify(rows));
+  }
 
   //for editable cells po ito
   const [tableData, setTableData] = useState(rows);
@@ -264,6 +386,9 @@ export function TableAGR() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedData, setSelectedData] = useState(null);
   const [selectedColumnName, setSelectedColumnName] = useState("");
+  const [resultModalOpen, setResultModalOpen] = useState(false);
+  const [resultJson, setResultJson] = useState("");
+  const [resultChanges, setResultChanges] = useState([]);
 
   const paginatedRows = tableData.slice(
     page * ROWS_PER_PAGE,
@@ -290,6 +415,9 @@ export function TableAGR() {
 
   const errorLocations = getErrorLocations(tableData);
 
+  const errorCount = data.count?.error ?? errorLocations.length;
+  const okCount = data.count?.ok ?? Math.max(rows.length - errorCount, 0);
+
   const [errorMenuAnchor, setErrorMenuAnchor] = useState(null);
 
   const openErrorMenu = (e) => {
@@ -313,8 +441,7 @@ export function TableAGR() {
   };
 
   const getColumnHeader = (fieldKey) => {
-    const col = COLUMNS.find((c) => c.key === fieldKey);
-    return col ? col.header : fieldKey;
+    return getHeaderFromKey(fieldKey);
   };
 
   //double click function po ito
@@ -329,6 +456,33 @@ export function TableAGR() {
     );
   };
   const handleCellEditBlur = () => setEditingCell(null);
+
+  const handleSubmit = () => {
+    const original = originalRowsRef.current ?? [];
+    const changes = getChanges(original, tableData, getHeaderFromKey);
+    setResultChanges(changes);
+    const payload = {
+      data: tableData,
+      dt1: data.dt1 ?? "2025-1-01T00:00:00+08:00",
+      dt2: data.dt2 ?? "2025-1-31T23:59:59+08:00",
+    };
+    setResultJson(JSON.stringify(payload, null, 2));
+    setResultModalOpen(true);
+  };
+
+  const handleCopyResult = () => {
+    navigator.clipboard.writeText(resultJson);
+  };
+
+  const handleDownloadResult = () => {
+    const blob = new Blob([resultJson], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "data.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div
@@ -365,13 +519,11 @@ export function TableAGR() {
         >
           <Chip
             icon={<ErrorIcon style={{ fontSize: 20, color: "#f44336" }} />}
-            label={`${data.count.error} Error${data.count.error !== 1 ? "s" : ""}`}
+            label={`${errorCount} Error${errorCount !== 1 ? "s" : ""}`}
             onClick={openErrorMenu}
             onDelete={errorLocations.length ? openErrorMenu : undefined}
-            deleteIcon={
-              errorLocations.length ? <ArrowDropDownIcon /> : undefined
-            }
-            disabled={!data.count.error}
+            deleteIcon={errorLocations.length ? <ArrowDropDownIcon /> : undefined}
+            disabled={!errorCount}
             size="small"
             variant="outlined"
             color="secondary"
@@ -404,7 +556,7 @@ export function TableAGR() {
           </Menu>
           <Chip
             icon={<SuccessIcon style={{ fontSize: 20, color: "#4caf50" }} />}
-            label={`${data.count.ok} OK`}
+            label={`${okCount} OK`}
             size="small"
             variant="outlined"
             style={{
@@ -412,6 +564,16 @@ export function TableAGR() {
               color: "#2e7d32",
             }}
           />
+          <div style={{ marginLeft: "auto" }}>
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={handleSubmit}
+            >
+              Submit
+            </Button>
+          </div>
         </div>
 
         <TableContainer
@@ -430,7 +592,7 @@ export function TableAGR() {
           <Table stickyHeader size="small" className={classes.table}>
             <TableHead>
               <TableRow>
-                {COLUMNS.map((col, i) => (
+                {buildColumnsFromRows(tableData).map((col, i) => (
                   <TableCell
                     key={i}
                     style={headerCellStyle}
@@ -469,9 +631,9 @@ export function TableAGR() {
                         : undefined,
                     }}
                   >
-                    {COLUMNS.map((col, i) => {
+                    {buildColumnsFromRows(tableData).map((col, i) => {
                       const value =
-                        col.key === null ? rowIndex + 1 : agr[col.key];
+                        col.key === null ? rowIndex + 1 : getCellValue(agr, col.key);
 
                       const display =
                         col.key === null
@@ -608,6 +770,88 @@ export function TableAGR() {
         data={selectedData}
         columnName={selectedColumnName}
       />
+      <Dialog
+        open={resultModalOpen}
+        onClose={() => setResultModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{ style: { maxHeight: "80vh" } }}
+      >
+        <DialogTitle>Result – Updated JSON</DialogTitle>
+        <DialogContent>
+          {resultChanges.length > 0 ? (
+            <>
+              <div style={{ marginBottom: 16 }}>
+                <strong>Napalitan ({resultChanges.length} change{resultChanges.length !== 1 ? "s" : ""})</strong>
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  background: "#fff8e1",
+                  border: "1px solid #ffc107",
+                  borderRadius: 8,
+                  padding: 12,
+                  marginBottom: 16,
+                  maxHeight: 200,
+                  overflow: "auto",
+                }}
+              >
+                <ul style={{ margin: 0, paddingLeft: 20 }}>
+                  {resultChanges.map((ch, idx) => (
+                    <li key={`${ch.rowIndex}-${ch.key}-${idx}`} style={{ marginBottom: 6 }}>
+                      <strong>Row {ch.rowNumber}</strong> · <strong>{ch.header}</strong>:{" "}
+                      <span style={{ color: "#c62828" }}>
+                        {ch.oldVal === undefined || ch.oldVal === null || ch.oldVal === ""
+                          ? "(empty)"
+                          : typeof ch.oldVal === "object"
+                            ? JSON.stringify(ch.oldVal)
+                            : String(ch.oldVal)}
+                      </span>
+                      {" → "}
+                      <span style={{ color: "#2e7d32" }}>
+                        {ch.newVal === undefined || ch.newVal === null || ch.newVal === ""
+                          ? "(empty)"
+                          : typeof ch.newVal === "object"
+                            ? JSON.stringify(ch.newVal)
+                            : String(ch.newVal)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          ) : (
+            <div style={{ marginBottom: 16, color: "#666" }}>
+              Walang napalitan – same pa rin ang data kumpara sa original.
+            </div>
+          )}
+          <div style={{ marginBottom: 8 }}>
+            <strong>Updated JSON</strong>
+          </div>
+          <pre
+            style={{
+              fontSize: 12,
+              overflow: "auto",
+              background: "#f5f5f5",
+              padding: 16,
+              borderRadius: 8,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-all",
+            }}
+          >
+            {resultJson}
+          </pre>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCopyResult} color="primary">
+            Copy
+          </Button>
+          <Button onClick={handleDownloadResult} color="primary" variant="contained">
+            Download data.json
+          </Button>
+          <Button onClick={() => setResultModalOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }
