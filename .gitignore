@@ -1,9 +1,11 @@
 node_modules
+package.json
 .env
+.env.example
+@package.json
+@package-lock.json
 .env.local
 frontend/
-package.json
-package-lock.json
 .gitignore
 node_modules copy
 .env copy
