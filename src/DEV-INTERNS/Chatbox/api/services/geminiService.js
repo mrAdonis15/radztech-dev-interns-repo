@@ -49,11 +49,6 @@ export async function sendToGemini(userMessage) {
         if (!functions[name]) throw new Error(`Function ${name} not defined`);
         const result = await functions[name](args || {});
 
-        if (result?.type === "chart") {
-          console.log("chart-data", result);
-          return result;
-        }
-
         const resultPayload = {
           session_id,
           message: JSON.stringify(result),
@@ -66,6 +61,11 @@ export async function sendToGemini(userMessage) {
             headers,
           },
         );
+
+        if (result?.type === "chart") {
+          console.log("chart-data", result);
+          return result;
+        }
       }
     }
 
