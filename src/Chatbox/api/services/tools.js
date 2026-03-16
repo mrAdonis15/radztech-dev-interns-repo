@@ -365,7 +365,8 @@ export const functions = {
         headers,
       );
       const raw = response.data;
-      const apiData = { ...raw, glChart: true };
+      const requestedYear = params.dt1 ? parseInt(String(params.dt1).slice(0, 4), 10) : undefined;
+      const apiData = { ...raw, glChart: true, dt1: params.dt1, year: Number.isFinite(requestedYear) ? requestedYear : undefined };
       const config = getGraphConfig(apiData);
       if (!config || !config.labels || !config.datasets?.length) {
         return {
@@ -451,7 +452,8 @@ export const functions = {
         params,
         headers,
       );
-      const apiData = response.data;
+      const requestedYear = params.dt1 ? parseInt(String(params.dt1).slice(0, 4), 10) : undefined;
+      const apiData = { ...response.data, dt1: params.dt1, year: Number.isFinite(requestedYear) ? requestedYear : undefined };
       const config = getGraphConfig(apiData);
       if (!config || !config.labels || !config.datasets?.length) {
         return {
@@ -513,6 +515,30 @@ export const functions = {
       ...args,
       type: "chart",
     };
+  },
+  get_prod_img: async (args) => {
+    const headers = getHeaders();
+
+    try {
+      const url = `${BASE_URL}/images/prod/${args.ixProd}`;
+
+      const response = await axios.get(url, {
+        headers: headers,
+      });
+
+      console.log(response.data);
+
+      const images = response.data;
+
+      const avatarImg = images.find((img) => img.filename.includes("avatar"));
+
+      return avatarImg || images;
+    } catch (err) {
+      return {
+        status: "error",
+        message: err.response?.data || err.message,
+      };
+    }
   },
 };
 
@@ -772,6 +798,21 @@ export const tools = [
             },
           },
           required: ["chartType", "data", "options"],
+        },
+      },
+      {
+        name: "get_prod_img",
+        description:
+          "Return the product description first, followed by the product image in Markdown format. The image must appear below the description.",
+        parameters: {
+          type: "object",
+          properties: {
+            ixProd: {
+              type: "integer",
+              description: "The id of the product",
+            },
+          },
+          required: ["ixProd"],
         },
       },
     ],
