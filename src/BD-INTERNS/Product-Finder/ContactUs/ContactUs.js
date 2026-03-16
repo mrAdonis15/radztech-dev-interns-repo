@@ -1,26 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
   Box,
   Button,
   TextField,
-  FormControl,
-  FormLabel,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  MenuItem,
   makeStyles,
 } from '@material-ui/core';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
-
-const PLANS = [
-  { id: 'starter', name: 'Starter' },
-  { id: 'professional', name: 'Professional' },
-  { id: 'enterprise', name: 'Enterprise' },
-];
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -60,7 +48,7 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(1),
   },
   title: {
-    fontFamily: theme.typography.fontFamily,
+    fontFamily: theme.typography.h1.fontFamily,
     fontWeight: 700,
     fontSize: '2rem',
     color: '#1a1a1a',
@@ -89,7 +77,7 @@ const useStyles = makeStyles((theme) => ({
     gap: theme.spacing(0.5),
   },
   fieldLabel: {
-    fontFamily: theme.typography.fontFamily,
+    fontFamily: theme.typography.body1.fontFamily,
     fontSize: '0.8rem',
     fontWeight: 600,
     color: '#444',
@@ -120,51 +108,19 @@ const useStyles = makeStyles((theme) => ({
     transition: 'background-color 0.25s ease, transform 0.2s ease, box-shadow 0.2s ease',
     '&:hover': { transform: 'translateY(-1px)' },
   },
-  intentGroup: {
-    marginBottom: theme.spacing(1),
-  },
-  intentLabel: {
-    fontFamily: theme.typography.fontFamily,
-    fontWeight: 600,
-    fontSize: '0.85rem',
-    marginBottom: theme.spacing(0.75),
-    color: '#444',
-  },
-  radioLabel: {
-    fontFamily: theme.typography.body1.fontFamily,
-    fontSize: '0.9rem',
-  },
 }));
-
-const INTENT_DEMO = 'demo';
-const INTENT_INQUIRY = 'inquiry';
 
 const ContactUs = () => {
   const classes = useStyles();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const planParam = searchParams.get('plan');
-
-  const [intent, setIntent] = useState(INTENT_DEMO);
-  const [plan, setPlan] = useState(planParam || '');
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  useEffect(() => {
-    if (planParam && PLANS.some((p) => p.id === planParam)) {
-      setPlan(planParam);
-    }
-  }, [planParam]);
-
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (intent === INTENT_DEMO) {
-      window.alert("Thank you! We'll reach out to schedule your demo. (Demo)");
-    } else {
-      window.alert('Thank you! We will get back to you soon. (Inquiry)');
-    }
+    window.alert('Thank you! We will get back to you soon.');
   };
 
   return (
@@ -186,49 +142,12 @@ const ContactUs = () => {
           Contact Us
         </Typography>
         <Typography variant="body1" className={classes.subtitle}>
-          Book a demo or reach out—we&apos;re here to help.
+          Reach out—we&apos;re here to help.
         </Typography>
       </Box>
 
       <Box className={classes.content} component="section" aria-labelledby="contact-heading">
         <form onSubmit={handleSubmit} className={`${classes.form} ${classes.formSection}`}>
-          <FormControl component="fieldset" className={classes.intentGroup}>
-            <FormLabel className={classes.intentLabel}>What would you like to do?</FormLabel>
-            <RadioGroup row value={intent} onChange={(e) => setIntent(e.target.value)}>
-              <FormControlLabel
-                value={INTENT_DEMO}
-                control={<Radio color="primary" size="small" />}
-                label={<span className={classes.radioLabel}>Book a demo</span>}
-              />
-              <FormControlLabel
-                value={INTENT_INQUIRY}
-                control={<Radio color="primary" size="small" />}
-                label={<span className={classes.radioLabel}>General inquiry</span>}
-              />
-            </RadioGroup>
-          </FormControl>
-
-          {intent === INTENT_DEMO && (
-            <Box className={classes.fieldWrap}>
-              <Typography className={classes.fieldLabel}>Interested plan</Typography>
-              <TextField
-                select
-                variant="outlined"
-                fullWidth
-                value={plan}
-                onChange={(e) => setPlan(e.target.value)}
-                className={classes.input}
-              >
-                <MenuItem value="">Select a plan</MenuItem>
-                {PLANS.map((p) => (
-                  <MenuItem key={p.id} value={p.id}>
-                    {p.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Box>
-          )}
-
           <Box className={classes.fieldWrap}>
             <Typography className={classes.fieldLabel}>Name</Typography>
             <TextField variant="outlined" fullWidth required className={classes.input} placeholder="Enter your name" />
@@ -249,11 +168,7 @@ const ContactUs = () => {
               multiline
               rows={3}
               className={classes.input}
-              placeholder={
-                intent === INTENT_DEMO
-                  ? 'Tell us about your payroll needs or preferred demo date...'
-                  : 'How can we help?'
-              }
+              placeholder="How can we help?"
             />
           </Box>
           <Button
@@ -262,7 +177,7 @@ const ContactUs = () => {
             color="primary"
             className={classes.submitBtn}
           >
-            {intent === INTENT_DEMO ? 'Book a demo' : 'Send inquiry'}
+            Send message
           </Button>
         </form>
       </Box>

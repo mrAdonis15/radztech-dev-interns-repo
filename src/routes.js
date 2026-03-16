@@ -27,7 +27,6 @@ import AGR from "./AGR";
 //13th Month Pay Calculator
 import CalculatorLayout from "./BD-INTERNS/13thMonthPayCalculator/Layout/Layout";
 import Calculator from "./BD-INTERNS/13thMonthPayCalculator/Calculator/Calculator";
-import aboutCalculator from "./BD-INTERNS/13thMonthPayCalculator/About/About";
 
 //Product Finder
 import ProductFinderLayout from "./BD-INTERNS/Product-Finder/Layout/Layout";
@@ -142,10 +141,7 @@ const routes = [
   {
     path: "/BDCalculator",
     element: CalculatorLayout,
-    children: [
-      { index: true, element: Calculator },
-      { path: "About", element: aboutCalculator },
-    ],
+    children: [{ index: true, element: Calculator }],
   },
   //Product Finder (Navbar only on these pages)
   {
