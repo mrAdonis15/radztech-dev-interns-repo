@@ -1,35 +1,31 @@
 import DefaultLayout from "./layouts/DefaultLayout";
-import ChatboxLayout from "./layouts/ChatboxLayout";
-import Login from "./Login/Login";
-import BizUI from "./components/bizUI";
-import DisplayPage from "./components/Kurt/pages/DisplayPage";
-import Graphs from "./components/HistoricalGraph/pages/graphs";
-import Jayson from "./components/Adam/components/jsontask";
-import AdvancedSettings from "./components/Merlvin/AdvancedSettings";
-import JsonData from "./components/Brayan/JsonData";
-import ChatboxGC from "./ChatboxGC/ChatbboxGC";
-import EvaluationLayout from "./Evaluation/Navbar";
-import Applicant from "./Evaluation/Applicant";
-import Category from "./Evaluation/Category";
-import Criteria from "./Evaluation/Criteria";
-import Evaluation from "./Evaluation/Evaluation";
-import ListofApplicants from "./Evaluation/ListofApplicants";
-import UlapChatBot from "./components/Marth/UlapChatbot";
-import Chatbox from "./Chatbox/chatbox";
-import MenuDisplay from "./components/Merlvin/MenuDisplay";
-import ImageCompressor from "./ImageCompress/ImageCompressor";
-import SqlFormatter from "./components/SQL Formatter/SqlFormatter";
-import Timelogstest from "./components/Adam/components/timelogstest";
-import AGR from "./AGR";
+import ChatboxLayout from "./DEV-INTERNS/Chatbox/Layout";
+import Login from "./Auth/Login/Login";
+import BizUI from "./Auth/selectBIZ";
+import DisplayPage from "./DEV-INTERNS/uiJSON/Kurt/pages/DisplayPage";
+import Graphs from "./DEV-INTERNS/HistoricalGraph/pages/graphs";
+import Jayson from "./DEV-INTERNS/uiJSON/Adam/components/jsontask";
+import AdvancedSettings from "./DEV-INTERNS/uiJSON/Merlvin/AdvancedSettings";
+import JsonData from "./DEV-INTERNS/uiJSON/Brayan/JsonData";
+import ChatboxGC from "./DEV-INTERNS/ChatboxGC/ChatbboxGC";
+import EvaluationLayout from "./DEV-INTERNS/Evaluation/Navbar";
+import Applicant from "./DEV-INTERNS/Evaluation/Applicant";
+import Category from "./DEV-INTERNS/Evaluation/Category";
+import Criteria from "./DEV-INTERNS/Evaluation/Criteria";
+import Evaluation from "./DEV-INTERNS/Evaluation/Evaluation";
+import ListofApplicants from "./DEV-INTERNS/Evaluation/ListofApplicants";
+import UlapChatBot from "./DEV-INTERNS/uiJSON/Marth/UlapChatbot";
+import Chatbox from "./DEV-INTERNS/Chatbox/Layout/chatbox";
+import MenuDisplay from "./DEV-INTERNS/uiJSON/Merlvin/MenuDisplay";
+import ImageCompressor from "./DEV-INTERNS/ImageCompress/ImageCompressor";
+import SqlFormatter from "./DEV-INTERNS/SQL Formatter/SqlFormatter";
+import Timelogstest from "./DEV-INTERNS/uiJSON/Adam/components/timelogstest";
+import AGR from "./DEV-INTERNS/AGR";
 
-//BD routes
-
-//13th Month Pay Calculator
+// BD routes
 import CalculatorLayout from "./BD-INTERNS/13thMonthPayCalculator/Layout/Layout";
 import Calculator from "./BD-INTERNS/13thMonthPayCalculator/Calculator/Calculator";
 import aboutCalculator from "./BD-INTERNS/13thMonthPayCalculator/About/About";
-
-//Product Finder
 import ProductFinderLayout from "./BD-INTERNS/Product-Finder/Layout/Layout";
 import PFHero from "./BD-INTERNS/Product-Finder/Hero/Hero";
 import PFQuestionnaire from "./BD-INTERNS/Product-Finder/Questionnaire/Questionnaire";
@@ -136,9 +132,7 @@ const routes = [
     path: "/AGR",
     element: AGR,
   },
-
-  //BD routes
-  //13th Month Pay Calculator (Layout provides nav + main container; Layout.css is applied here)
+  // BD routes
   {
     path: "/BDCalculator",
     element: CalculatorLayout,
@@ -147,7 +141,6 @@ const routes = [
       { path: "About", element: aboutCalculator },
     ],
   },
-  //Product Finder (Navbar only on these pages)
   {
     path: "/ProductFinder",
     element: ProductFinderLayout,

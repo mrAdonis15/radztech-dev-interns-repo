@@ -1,0 +1,114 @@
+import React, { memo } from "react";
+import ReactMarkdown from "react-markdown";
+import Avatar from "@material-ui/core/Avatar";
+import Typography from "@material-ui/core/Typography";
+import radzLogo from "../Assets/SHARED] Radztech Interns Logo - 32.png";
+import ChartRenderer from "./chartRenderer";
+
+const markdownImgComponent = {
+  img: ({ node, alt, ...props }) => (
+    <span className="chat-message-image">
+      <img {...props} alt={alt || ""} />
+    </span>
+  ),
+};
+
+function ChatMessageInner({ msg }) {
+  console.log("msg", msg);
+
+  const isMe = msg.sender === "me";
+  const isTyping = msg.text === "...";
+  const isChart = msg.type === "chart";
+
+  let chart = {};
+
+  if (isChart) chart = msg.data;
+
+  console.log(chart.options);
+
+  if (isMe) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          width: "100%",
+          justifyContent: "flex-end",
+        }}
+      >
+        <div className="message-content right" style={{ marginRight: 8 }}>
+          <div className="chat-bubbleRight">
+            <Typography variant="body2" className="bubble-text right">
+              {msg.text}
+            </Typography>
+          </div>
+          <Typography
+            variant="caption"
+            className="bubble-time right"
+            style={{ marginTop: 6 }}
+          >
+            {msg.time}
+          </Typography>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        width: "100%",
+        justifyContent: "flex-start",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          marginLeft: 16,
+          flex: 1,
+          minWidth: 0,
+        }}
+        // className={showChart ? "message-with-chart" : ""}
+      >
+        <Avatar src={radzLogo} className="reply-icon" />
+        <div className="message-content left" style={{ marginLeft: 8 }}>
+          {isChart ? (
+            <div
+              className={"chat-bubbleLeft" + (isTyping ? " chat-typing" : "")}
+            >
+              <ChartRenderer
+                type={chart.chartType}
+                data={chart.data}
+                options={chart.options}
+              />
+            </div>
+          ) : (
+            <div
+              className={"chat-bubbleLeft" + (isTyping ? " chat-typing" : "")}
+            >
+              <Typography
+                component="div"
+                variant="body2"
+                className={
+                  "bubble-text left" + (isTyping ? " chat-typing-text" : "")
+                }
+              >
+                <ReactMarkdown components={markdownImgComponent}>{msg.text}</ReactMarkdown>
+              </Typography>
+            </div>
+          )}
+          <Typography
+            variant="caption"
+            className="bubble-time left"
+            style={{ marginTop: 6, marginLeft: 4 }}
+          >
+            {msg.time}
+          </Typography>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default memo(ChatMessageInner);
