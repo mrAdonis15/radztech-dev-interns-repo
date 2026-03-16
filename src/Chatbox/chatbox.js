@@ -110,6 +110,27 @@ export default function Chatbox({ defaultOpen = false }) {
     saveMessages(messages);
   }, [messages]);
 
+  // Restore conversation from session_id in URL on mount (e.g. after page reload)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    const sid = url.searchParams.get("session_id");
+    if (!sid || !sid.trim()) return;
+    setSessionId(sid.trim());
+    setViewingHistoryId(`session-${sid.trim()}`);
+    fetchChatHistoryBySessionId(sid.trim())
+      .then((apiMessages) => {
+        if (apiMessages && apiMessages.length > 0) {
+          setMessages(normalizeToDisplayMessages(apiMessages));
+          const hasChart = apiMessages.some((m) => m.type === "chart");
+          if (hasChart) setIsExpanded(true);
+        }
+      })
+      .catch(() => {});
+    // Run only once on mount when URL has session_id
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Auto-save to chat history when there's a conversation (not when viewing a saved chat)
   useEffect(() => {
     const hasUserMessage = messages.some((m) => m.sender === "me");

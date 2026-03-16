@@ -69,7 +69,6 @@ function ChatMessageInner({ msg }) {
           flex: 1,
           minWidth: 0,
         }}
-        // className={showChart ? "message-with-chart" : ""}
       >
         <Avatar src={radzLogo} className="reply-icon" />
         <div className="message-content left" style={{ marginLeft: 8 }}>
