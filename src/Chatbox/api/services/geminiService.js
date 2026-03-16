@@ -71,7 +71,27 @@ export async function sendToGemini(userMessage) {
 
     const text = response?.data?.text;
 
-    return { type: "text", text: text || FALL_BACK_MSG };
+    // If the model returns structured JSON with type: "img", surface it as an image payload.
+    if (typeof text === "string") {
+      try {
+        const parsed = JSON.parse(text);
+        if (
+          parsed &&
+          parsed.type === "img" &&
+          Array.isArray(parsed.images)
+        ) {
+          return {
+            type: "img",
+            images: parsed.images,
+            session_id,
+          };
+        }
+      } catch {
+        // fall through to plain text handling
+      }
+    }
+
+    return { type: "text", text: text || FALL_BACK_MSG, session_id };
   } catch (err) {
     console.error("Gemini error:", err);
     const status = err.response?.status;

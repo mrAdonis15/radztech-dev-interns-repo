@@ -7,7 +7,7 @@ const FALLBACK_MESSAGE = "Sorry, something went wrong. Please try again.";
  * @param {Array<{ sender: string, text: string }>} [messageHistory]
  * @param {AbortSignal} [signal] - Optional abort signal to cancel the request.
  * @param {string} [sessionId] - Optional session id from a previous response (continues conversation).
- * @returns {Promise<{ type: "text" | "chart", text: string, data?: object, session_id?: string }>}
+ * @returns {Promise<{ type: "text" | "chart" | "img", text?: string, images?: string[], data?: object, session_id?: string }>}
  */
 export async function sendMessage(
   userMessage,

@@ -177,6 +177,29 @@ function chartDataFromTextIfAny(text) {
 }
 
 /**
+ * Try to build image message data from a JSON text payload.
+ * Expects shape like: { type: "img", images: string[] }.
+ * @param {string} text
+ * @returns {{ images: string[] } | null}
+ */
+function imgDataFromTextIfAny(text) {
+  if (!text || typeof text !== "string") return null;
+  if (!isFunctionResponseText(text)) return null;
+  try {
+    const parsed = JSON.parse(text);
+    if (!parsed || typeof parsed !== "object") return null;
+    if (parsed.type !== "img" || !Array.isArray(parsed.images)) return null;
+    const images = parsed.images.filter(
+      (u) => typeof u === "string" && u.trim().length > 0,
+    );
+    if (images.length === 0) return null;
+    return { images };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Map API history format to app message format.
  * API: { parts: [{ text?, function_call?, function_response?, ... }], role: "user"|"model" } -> App: { id, sender, text, time } or { id, sender, type: "chart", data, time }
  * Uses last part with non-empty text; for model with only function_call shows placeholder.
@@ -194,10 +217,11 @@ function mapHistoryPartsToMessages(apiMessages) {
       const withText = parts.filter((p) => p != null && p.text != null && String(p.text).trim() !== "");
       const textPart = withText.length > 0 ? withText[withText.length - 1] : null;
       const text = textPart ? String(textPart.text).trim() : "";
-      // If this user entry is actually chart JSON, emit a chart message instead of raw JSON text.
+      // If this user entry is actually structured JSON (chart/img), emit a typed message instead of raw JSON text.
       if (isFunctionResponseText(text)) {
         const chartData = chartDataFromTextIfAny(text);
-        if (chartData) {
+        const imgData = chartData ? null : imgDataFromTextIfAny(text);
+        if (chartData || imgData) {
           // If the immediately previous entry already produced a chart (e.g. via chart_renderer),
           // skip to avoid creating a duplicate chart message.
           const prev = index > 0 ? apiMessages[index - 1] : null;
@@ -212,14 +236,25 @@ function mapHistoryPartsToMessages(apiMessages) {
                 p.function_call.name === "chart_renderer",
             );
           if (!prevHasChartRenderer) {
-            result.push({
-              id: crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}-${index}`,
-              sender: "bot",
-              type: "chart",
-              data: chartData,
-              text: "",
-              time: timeStr,
-            });
+            if (chartData) {
+              result.push({
+                id: crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}-${index}`,
+                sender: "bot",
+                type: "chart",
+                data: chartData,
+                text: "",
+                time: timeStr,
+              });
+            } else if (imgData) {
+              result.push({
+                id: crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}-${index}`,
+                sender: "bot",
+                type: "img",
+                data: imgData,
+                text: "",
+                time: timeStr,
+              });
+            }
           }
         }
         return;
@@ -262,6 +297,18 @@ function mapHistoryPartsToMessages(apiMessages) {
           sender: "bot",
           type: "chart",
           data: chartFromText,
+          text: "",
+          time: timeStr,
+        });
+        return;
+      }
+      const imgFromText = imgDataFromTextIfAny(text);
+      if (imgFromText) {
+        result.push({
+          id: crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}-${index}`,
+          sender: "bot",
+          type: "img",
+          data: imgFromText,
           text: "",
           time: timeStr,
         });

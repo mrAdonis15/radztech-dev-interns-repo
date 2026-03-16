@@ -283,6 +283,7 @@ export default function Chatbox({ defaultOpen = false }) {
     )
       .then((reply) => {
         const isChart = reply && reply.type === "chart";
+        const isImg = reply && reply.type === "img";
         const text = reply?.text ?? "";
         if (reply?.session_id != null) {
           setSessionId(reply.session_id);
@@ -300,6 +301,14 @@ export default function Chatbox({ defaultOpen = false }) {
                     data: reply,
                     text,
                     time: receivedTime,
+                  }
+                : isImg
+                  ? {
+                      ...msg,
+                      type: "img",
+                      data: { images: reply.images || [] },
+                      text: "",
+                      time: receivedTime,
                   }
                 : { ...msg, text, time: receivedTime }
               : msg,

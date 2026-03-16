@@ -528,11 +528,34 @@ export const functions = {
 
       console.log(response.data);
 
-      const images = response.data;
+      const images = Array.isArray(response.data) ? response.data : [];
+      const avatarImg = images.find(
+        (img) =>
+          img &&
+          typeof img.filename === "string" &&
+          img.filename.includes("active_prod_avatar"),
+      );
+      const allUrls = images
+        .map((img) => img && img.url)
+        .filter((u) => typeof u === "string" && u.length > 0);
 
-      const avatarImg = images.find((img) => img.filename.includes("avatar"));
+      let selectedUrls = [];
 
-      return avatarImg || images;
+      // If the model requested all images, return them all.
+      if (args && args.includeAll) {
+        selectedUrls = allUrls;
+      } else if (avatarImg && typeof avatarImg.url === "string") {
+        // Default: use active_prod_avatar.jpg when available.
+        selectedUrls = [avatarImg.url];
+      } else if (allUrls.length > 0) {
+        // Fallback: first image in the list.
+        selectedUrls = [allUrls[0]];
+      }
+
+      return {
+        type: "img",
+        images: selectedUrls,
+      };
     } catch (err) {
       return {
         status: "error",
@@ -803,13 +826,18 @@ export const tools = [
       {
         name: "get_prod_img",
         description:
-          "Return the product description first, followed by the product image in Markdown format. The image must appear below the description.",
+          "Get product images for a product. When the tool returns a list of product image URLs, determine the default image by using 'active_prod_avatar.jpg' if it exists in the list; otherwise use the first image. If the user requests other images, include them as well by setting includeAll=true. After processing the list, return the images using the following object format: { type: 'img', images: [] }, where images contains the selected image URL(s). Do not return the raw list from the tool.",
         parameters: {
           type: "object",
           properties: {
             ixProd: {
               type: "integer",
               description: "The id of the product",
+            },
+            includeAll: {
+              type: "boolean",
+              description:
+                "If true, return all image URLs in the images array instead of just the default one.",
             },
           },
           required: ["ixProd"],
