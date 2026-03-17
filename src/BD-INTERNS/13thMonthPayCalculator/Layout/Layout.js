@@ -24,9 +24,11 @@ const useStyles = makeStyles((theme) => ({
     borderBottom: "1px solid #eee",
     background: "#fff",
     boxShadow: "0 1px 8px rgba(0, 0, 0, 0.06)",
+    fontFamily: '"Roboto", sans-serif',
   },
   navLink: {
     color: "#666",
+    fontFamily: '"Roboto", sans-serif',
     textDecoration: "none",
     fontSize: "0.875rem",
     fontWeight: 500,
@@ -47,6 +49,7 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(2, 2.5),
     boxSizing: "border-box",
     background: "transparent",
+    fontFamily: '"Roboto", sans-serif',
     [theme.breakpoints.down("sm")]: {
       marginLeft: theme.spacing(1.5),
       marginRight: theme.spacing(1.5),

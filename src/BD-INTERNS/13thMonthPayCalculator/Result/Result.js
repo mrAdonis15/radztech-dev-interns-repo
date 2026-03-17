@@ -37,10 +37,12 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(4, 2),
   },
   noStateText: {
+    fontFamily: '"Roboto", sans-serif',
     marginBottom: theme.spacing(2),
     color: "#555",
   },
   link: {
+    fontFamily: '"Roboto", sans-serif',
     color: "#DB6700",
     fontWeight: 600,
     textDecoration: "none",
@@ -88,6 +90,7 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(1.5),
   },
   submitBtn: {
+    fontFamily: '"Roboto", sans-serif',
     backgroundColor: "#DB6700",
     color: "#fff",
     textTransform: "none",
@@ -108,12 +111,14 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(1.5),
   },
   breakdownLine: {
+    fontFamily: '"Roboto", sans-serif',
     display: "flex",
     justifyContent: "space-between",
     fontSize: "0.875rem",
     marginBottom: theme.spacing(0.5),
   },
   breakdownTotal: {
+    fontFamily: '"Roboto", sans-serif',
     marginTop: theme.spacing(1),
     paddingTop: theme.spacing(1),
     borderTop: "1px solid #eee",
@@ -134,6 +139,7 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(1),
   },
   contactBody: {
+    fontFamily: '"Roboto", sans-serif',
     fontSize: "0.875rem",
     color: "#444",
     lineHeight: 1.6,
@@ -309,7 +315,7 @@ export default function Result() {
             </div>
             {dailyRate > 0 && (
               <Typography
-                style={{ fontSize: "0.75rem", color: "#888", marginTop: 8 }}
+                style={{ fontFamily: '"Roboto", sans-serif', fontSize: "0.75rem", color: "#888", marginTop: 8 }}
               >
                 Daily rate: {formatCurrency(dailyRate)}/day
               </Typography>
@@ -335,7 +341,7 @@ export default function Result() {
               How this was computed
             </Typography>
             {salaryMode === "single" ? (
-              <Typography style={{ fontSize: "0.8125rem", color: "#444" }}>
+              <Typography style={{ fontFamily: '"Roboto", sans-serif', fontSize: "0.8125rem", color: "#444" }}>
                 You selected <strong>Fixed Monthly Salary</strong>. We prorated
                 your monthly basic salary from {startDate || "your start date"}{" "}
                 to {endDate || "your calculation date"}, subtracted any unpaid
@@ -343,7 +349,7 @@ export default function Result() {
                 formula: 13th Month Pay = Total Basic Salary Earned ÷ 12.
               </Typography>
             ) : (
-              <Typography style={{ fontSize: "0.8125rem", color: "#444" }}>
+              <Typography style={{ fontFamily: '"Roboto", sans-serif', fontSize: "0.8125rem", color: "#444" }}>
                 You selected <strong>Variable Monthly Salary</strong>. We used
                 the monthly amounts you entered for each month in the year,
                 prorated for your employment period, deducted unpaid days based

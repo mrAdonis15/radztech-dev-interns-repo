@@ -147,6 +147,7 @@ function getYearsInRange(start, end) {
 
 const useStyles = makeStyles((theme) => ({
   root: {
+    fontFamily: '"Roboto", sans-serif',
     animation: "$fadeIn 0.35s ease",
   },
   "@keyframes fadeIn": {
@@ -246,6 +247,7 @@ const useStyles = makeStyles((theme) => ({
     gap: theme.spacing(0.5),
   },
   monthlyCellLabel: {
+    fontFamily: '"Roboto", sans-serif',
     fontSize: "0.6875rem",
     fontWeight: 500,
     color: "#888",
@@ -259,17 +261,20 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   formHint: {
+    fontFamily: '"Roboto", sans-serif',
     fontSize: "0.75rem",
     color: "#888",
     marginTop: theme.spacing(0.5),
   },
   formHintStandalone: {
+    fontFamily: '"Roboto", sans-serif',
     marginTop: 0,
     padding: theme.spacing(0.5, 0),
     fontSize: "0.8125rem",
     color: "#666",
   },
   btnReset: {
+    fontFamily: '"Roboto", sans-serif',
     marginTop: theme.spacing(1.25),
     textTransform: "none",
     fontSize: "0.8125rem",
@@ -280,6 +285,7 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   btnAddAllowance: {
+    fontFamily: '"Roboto", sans-serif',
     textTransform: "none",
     fontSize: "0.8125rem",
     color: "#DB6700",
@@ -290,6 +296,7 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   btnRemoveAllowance: {
+    fontFamily: '"Roboto", sans-serif',
     textTransform: "none",
     fontSize: "0.75rem",
     color: "#888",

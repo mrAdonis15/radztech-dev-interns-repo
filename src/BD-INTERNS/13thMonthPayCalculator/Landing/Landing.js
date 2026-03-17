@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
-import { Box, Typography, Button, makeStyles } from "@material-ui/core";
+import { Box, Typography, Button, TextField, makeStyles } from "@material-ui/core";
 import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
 import DescriptionIcon from "@material-ui/icons/Description";
 import PeopleIcon from "@material-ui/icons/People";
 import FunctionsIcon from "@material-ui/icons/Functions";
+import ContactMailIcon from "@material-ui/icons/ContactMail";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -36,6 +37,7 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(3),
   },
   cta: {
+    fontFamily: '"Roboto", sans-serif',
     backgroundColor: "#DB6700",
     color: "#fff",
     padding: theme.spacing(1.5, 3),
@@ -89,20 +91,54 @@ const useStyles = makeStyles((theme) => ({
   },
   contactTitle: {
     fontFamily: '"Fira Sans", sans-serif',
-    fontSize: "1rem",
-    fontWeight: 600,
-    marginBottom: theme.spacing(1),
+    fontSize: "1.25rem",
+    fontWeight: 700,
+    color: "#1a1a1a",
+    marginBottom: theme.spacing(1.5),
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(1),
   },
   contactBody: {
     fontFamily: '"Roboto", sans-serif',
     fontSize: "0.9rem",
     color: "#444",
     lineHeight: 1.6,
+    marginBottom: theme.spacing(2),
+  },
+  contactForm: {
+    display: "flex",
+    flexDirection: "column",
+    gap: theme.spacing(2),
+  },
+  contactField: {
+    "& .MuiOutlinedInput-root": {
+      backgroundColor: "#fff",
+      borderRadius: 8,
+      fontFamily: '"Roboto", sans-serif',
+    },
+    "& .MuiInputLabel-outlined": {
+      fontFamily: '"Roboto", sans-serif',
+    },
   },
 }));
 
+const SUPPORT_EMAIL = "support@radztech.ph";
+
 export default function Landing() {
   const classes = useStyles();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleContactSubmit = (e) => {
+    e.preventDefault();
+    const subject = encodeURIComponent("13th Month Pay – Need help");
+    const body = encodeURIComponent(
+      `Hi,\n\n${message || "(No message provided)"}\n\n---\nName: ${name || "(not provided)"}\nEmail: ${email || "(not provided)"}`
+    );
+    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
+  };
 
   return (
     <Box className={classes.root}>
@@ -203,15 +239,58 @@ export default function Landing() {
       </Box>
 
       <Box className={classes.contactSection}>
-        <Typography className={classes.contactTitle}>
-          Need help with your 13th month pay?
+        <Typography className={classes.contactTitle} component="h2">
+          <ContactMailIcon style={{ color: "#DB6700" }} />
+          Contact Us
         </Typography>
-        <Typography className={classes.contactBody}>
+        <Typography className={classes.contactBody} component="div">
+          <strong>Need help with your 13th month pay?</strong>
+          <br />
+          <br />
           If you&apos;re not sure how 13th month pay applies to your company or role,
-          our team can help you review your situation. Email us at{" "}
-          <a href="mailto:support@radztech.ph">support@radztech.ph</a> and we&apos;ll
+          our team can help you review your situation. Send us a message and we&apos;ll
           walk you through the rules and common edge cases.
         </Typography>
+        <form className={classes.contactForm} onSubmit={handleContactSubmit} noValidate>
+          <TextField
+            className={classes.contactField}
+            variant="outlined"
+            fullWidth
+            size="small"
+            label="Your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter your name"
+          />
+          <TextField
+            className={classes.contactField}
+            variant="outlined"
+            fullWidth
+            size="small"
+            type="email"
+            label="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="your@email.com"
+            required
+          />
+          <TextField
+            className={classes.contactField}
+            variant="outlined"
+            fullWidth
+            multiline
+            minRows={4}
+            size="small"
+            label="Message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Tell us about your situation or question regarding 13th month pay..."
+            required
+          />
+          <Button type="submit" variant="contained" className={classes.cta} fullWidth>
+            Send message
+          </Button>
+        </form>
       </Box>
     </Box>
   );

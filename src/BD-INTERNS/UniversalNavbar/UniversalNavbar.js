@@ -26,6 +26,7 @@ const useStyles = makeStyles((theme) => ({
     background: "#fff",
     color: "#1a1a1a",
     boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+    fontFamily: '"Roboto", sans-serif',
     "@media print": { display: "none !important" },
   },
   toolbar: {
@@ -63,6 +64,7 @@ const useStyles = makeStyles((theme) => ({
     [theme.breakpoints.up("md")]: { display: "flex" },
   },
   navLink: {
+    fontFamily: '"Fira Sans", sans-serif',
     color: "#1a1a1a",
     textDecoration: "none",
     fontSize: "0.9375rem",
@@ -89,6 +91,7 @@ const useStyles = makeStyles((theme) => ({
     gap: theme.spacing(1.5),
   },
   btnLogin: {
+    fontFamily: '"Roboto", sans-serif',
     background: "#DB6700",
     color: "#fff",
     textTransform: "none",
@@ -99,6 +102,7 @@ const useStyles = makeStyles((theme) => ({
     "&:hover": { background: "#C45D00" },
   },
   btnRegister: {
+    fontFamily: '"Roboto", sans-serif',
     border: "2px solid #DB6700",
     color: "#DB6700",
     textTransform: "none",
@@ -115,8 +119,10 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(2),
     borderTop: "1px solid #eee",
     background: "#fff",
+    fontFamily: '"Roboto", sans-serif',
   },
   mobileLink: {
+    fontFamily: '"Roboto", sans-serif',
     display: "block",
     padding: theme.spacing(1.25, 0),
     color: "#1a1a1a",
@@ -127,6 +133,9 @@ const useStyles = makeStyles((theme) => ({
   },
   mobileDropdown: {
     paddingLeft: theme.spacing(2),
+  },
+  menuItem: {
+    fontFamily: '"Roboto", sans-serif',
   },
 }));
 
@@ -276,6 +285,7 @@ export default function UniversalNavbar() {
             component={RouterLink}
             to={item.path}
             onClick={closeAllMenus}
+            className={classes.menuItem}
           >
             {item.label}
           </MenuItem>
@@ -288,7 +298,7 @@ export default function UniversalNavbar() {
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         transformOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <MenuItem onClick={closeAllMenus}>Coming soon</MenuItem>
+        <MenuItem onClick={closeAllMenus} className={classes.menuItem}>Coming soon</MenuItem>
       </Menu>
       <Menu
         anchorEl={featuresAnchor}
@@ -297,7 +307,7 @@ export default function UniversalNavbar() {
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         transformOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <MenuItem onClick={closeAllMenus}>Coming soon</MenuItem>
+        <MenuItem onClick={closeAllMenus} className={classes.menuItem}>Coming soon</MenuItem>
       </Menu>
       <Menu
         anchorEl={resourcesAnchor}
@@ -312,6 +322,7 @@ export default function UniversalNavbar() {
             component={RouterLink}
             to={item.path}
             onClick={closeAllMenus}
+            className={classes.menuItem}
           >
             {item.label}
           </MenuItem>
