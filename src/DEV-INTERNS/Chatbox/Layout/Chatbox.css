@@ -1098,22 +1098,147 @@
   margin: 0.15em 0;
 }
 
-/* Images in chat: no bubble, constrained size, no overlap */
-.chat-message-image {
-  display: block;
-  margin-top: 8px;
-  background: transparent;
+/* Single fixed-size container for AI response images */
+.chat-message-image-container {
+  display: inline-block;
+  width: 280px;
+  height: 280px;
+  margin: 4px 0;
   border-radius: 8px;
   overflow: hidden;
-  max-width: 100%;
+  background: transparent;
 }
-.chat-message-image img,
+.chat-message-image-container .chat-message-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.chat-message-image-container .chat-message-image img,
+.chat-message-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 8px;
+}
+
+/* Image-only message: no bubble; product images grid (max 10) */
+.chat-message-image-only {
+  background: transparent;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  max-width: min(100%, 660px);
+}
+.chat-message-image-only .bubble-text,
+.chat-message-image-only .bubble-text > *,
+.chat-message-image-only p {
+  margin: 0;
+  padding: 0;
+  display: contents;
+}
+.chat-message-image-only .chat-message-image-container {
+  margin: 0;
+  width: 100%;
+  min-height: 200px;
+  height: 200px;
+}
+.chat-message-image-only .chat-image-thumb-button {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+.chat-message-image-only .chat-image-thumb-button:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+/* Clickable thumbnails for zoom */
+.chat-image-thumb-button {
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+/* Zoom overlay: fixed responsive size, not tied to image */
+.chat-image-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.chat-image-overlay-content {
+  background: #111;
+  border-radius: 12px;
+  padding: 12px;
+  width: min(70vw, 900px);
+  height: min(70vh, 700px);
+  display: flex;
+  flex-direction: column;
+}
+.chat-image-overlay-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.chat-image-overlay-toolbar button {
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #333;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+}
+.chat-image-overlay-toolbar button:hover {
+  background: #555;
+}
+.chat-image-overlay-zoom {
+  color: #fff;
+  font-size: 12px;
+}
+.chat-image-overlay-body {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.chat-image-overlay-body img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.15s ease-out;
+}
+
+/* Images inside bubble (text + image) */
+.chat-bubbleLeft .chat-message-image-container,
+.chat-bubbleRight .chat-message-image-container {
+  display: inline-block;
+  width: 280px;
+  height: 280px;
+  margin: 6px 0;
+}
 .chat-bubbleLeft img,
 .chat-bubbleRight img {
   max-width: 100%;
   width: auto;
   height: auto;
-  max-height: min(70vh, 420px);
+  max-height: 280px;
   object-fit: contain;
   display: block;
   border-radius: 8px;

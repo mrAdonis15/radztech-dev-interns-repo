@@ -177,6 +177,35 @@ function chartDataFromTextIfAny(text) {
 }
 
 /**
+ * Try to build image message data from JSON text. Expects { type: "img", images: string[] }.
+ */
+function imgDataFromTextIfAny(text) {
+  if (!text || typeof text !== "string") return null;
+  if (!isFunctionResponseText(text)) return null;
+  try {
+    const parsed = JSON.parse(text);
+    if (!parsed || typeof parsed !== "object") return null;
+    if (parsed.type !== "img" || !Array.isArray(parsed.images)) return null;
+    const images = parsed.images.filter(
+      (u) => typeof u === "string" && u.trim().length > 0,
+    );
+    if (images.length === 0) return null;
+    return { images };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Try to get image message data from a part's function_response (string).
+ * Same shape as imgDataFromTextIfAny for consistency with chart recovery.
+ */
+function imgDataFromFunctionResponse(part) {
+  if (!part || typeof part.function_response !== "string") return null;
+  return imgDataFromTextIfAny(part.function_response);
+}
+
+/**
  * Map API history format to app message format.
  * API: { parts: [{ text?, function_call?, function_response?, ... }], role: "user"|"model" } -> App: { id, sender, text, time } or { id, sender, type: "chart", data, time }
  * Uses last part with non-empty text; for model with only function_call shows placeholder.
@@ -191,15 +220,26 @@ function mapHistoryPartsToMessages(apiMessages) {
   apiMessages.forEach((entry, index) => {
     const parts = entry.parts || [];
     if (entry.role === "user") {
+      const funcResponseImg = parts.map(imgDataFromFunctionResponse).find(Boolean);
+      if (funcResponseImg) {
+        result.push({
+          id: crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}-${index}`,
+          sender: "bot",
+          type: "img",
+          data: funcResponseImg,
+          text: "",
+          time: timeStr,
+        });
+      }
       const withText = parts.filter((p) => p != null && p.text != null && String(p.text).trim() !== "");
       const textPart = withText.length > 0 ? withText[withText.length - 1] : null;
       const text = textPart ? String(textPart.text).trim() : "";
-      // If this user entry is actually chart JSON, emit a chart message instead of raw JSON text.
+      if (funcResponseImg && !text) return;
+      // If this user entry is structured JSON (chart/img), emit a typed message.
       if (isFunctionResponseText(text)) {
         const chartData = chartDataFromTextIfAny(text);
-        if (chartData) {
-          // If the immediately previous entry already produced a chart (e.g. via chart_renderer),
-          // skip to avoid creating a duplicate chart message.
+        const imgData = chartData ? null : imgDataFromTextIfAny(text);
+        if (chartData || imgData) {
           const prev = index > 0 ? apiMessages[index - 1] : null;
           const prevHasChartRenderer =
             prev &&
@@ -212,14 +252,25 @@ function mapHistoryPartsToMessages(apiMessages) {
                 p.function_call.name === "chart_renderer",
             );
           if (!prevHasChartRenderer) {
-            result.push({
-              id: crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}-${index}`,
-              sender: "bot",
-              type: "chart",
-              data: chartData,
-              text: "",
-              time: timeStr,
-            });
+            if (chartData) {
+              result.push({
+                id: crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}-${index}`,
+                sender: "bot",
+                type: "chart",
+                data: chartData,
+                text: "",
+                time: timeStr,
+              });
+            } else if (imgData) {
+              result.push({
+                id: crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}-${index}`,
+                sender: "bot",
+                type: "img",
+                data: imgData,
+                text: "",
+                time: timeStr,
+              });
+            }
           }
         }
         return;
@@ -251,6 +302,16 @@ function mapHistoryPartsToMessages(apiMessages) {
           return;
         }
       }
+      // get_prod_img: skip placeholder so the next user entry's function_response will emit the img (same idea as chart).
+      const prodImgPart = parts.find(
+        (p) => p != null && p.function_call != null && p.function_call.name === "get_prod_img",
+      );
+      if (prodImgPart) {
+        const nextEntry = apiMessages[index + 1];
+        const nextParts = nextEntry && nextEntry.role === "user" ? (nextEntry.parts || []) : [];
+        const imgFromNext = nextParts.map(imgDataFromFunctionResponse).find(Boolean);
+        if (imgFromNext) return;
+      }
       // Otherwise, see if the model text itself is chart JSON.
       const withText = parts.filter((p) => p != null && p.text != null && String(p.text).trim() !== "");
       const textPart = withText.length > 0 ? withText[withText.length - 1] : null;
@@ -262,6 +323,18 @@ function mapHistoryPartsToMessages(apiMessages) {
           sender: "bot",
           type: "chart",
           data: chartFromText,
+          text: "",
+          time: timeStr,
+        });
+        return;
+      }
+      const imgFromText = imgDataFromTextIfAny(text);
+      if (imgFromText) {
+        result.push({
+          id: crypto.randomUUID ? crypto.randomUUID() : `msg-${Date.now()}-${index}`,
+          sender: "bot",
+          type: "img",
+          data: imgFromText,
           text: "",
           time: timeStr,
         });
@@ -284,12 +357,18 @@ function mapHistoryPartsToMessages(apiMessages) {
 
 /**
  * Fetch chat history by session_id and return messages in app format.
+ * If the server returns app-format messages (e.g. saved with type/data for chart/img), return as-is
+ * so chart and image messages are preserved. Otherwise map from API format (parts/role) like charts.
  * @param {string} sessionId
  * @param {AbortSignal} [signal]
- * @returns {Promise<Array<{ id: string, sender: string, text: string, time: string }>>}
+ * @returns {Promise<Array<{ id: string, sender: string, text: string, time: string, type?: string, data?: object }>>}
  */
 export async function fetchChatHistoryBySessionId(sessionId, signal = undefined) {
   const raw = await getChatHistoryBySessionId(sessionId, signal);
+  if (!Array.isArray(raw) || raw.length === 0) return [];
+  if (!isApiHistoryEntry(raw[0])) {
+    return raw;
+  }
   return mapHistoryPartsToMessages(raw);
 }
 
