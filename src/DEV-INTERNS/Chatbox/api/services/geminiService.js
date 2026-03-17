@@ -49,6 +49,18 @@ export async function sendToGemini(userMessage) {
         if (!functions[name]) throw new Error(`Function ${name} not defined`);
         const result = await functions[name](args || {});
 
+        if (result?.type === "chart") {
+          console.log("chart-data", result);
+          return result;
+        }
+        if (result?.type === "img" && Array.isArray(result?.images)) {
+          return {
+            type: "img",
+            images: result.images.slice(0, 10),
+            session_id,
+          };
+        }
+
         const resultPayload = {
           session_id,
           message: JSON.stringify(result),
@@ -61,17 +73,22 @@ export async function sendToGemini(userMessage) {
             headers,
           },
         );
-
-        if (result?.type === "chart") {
-          console.log("chart-data", result);
-          return result;
-        }
       }
     }
 
     const text = response?.data?.text;
 
-    return { type: "text", text: text || FALL_BACK_MSG };
+    if (typeof text === "string") {
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed && parsed.type === "img" && Array.isArray(parsed.images)) {
+          return { type: "img", images: parsed.images, session_id };
+        }
+      } catch {
+        /* use text */
+      }
+    }
+    return { type: "text", text: text || FALL_BACK_MSG, session_id };
   } catch (err) {
     console.error("Gemini error:", err);
     const status = err.response?.status;

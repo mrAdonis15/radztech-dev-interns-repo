@@ -518,26 +518,78 @@ export const functions = {
     };
   },
   get_prod_img: async (args) => {
+    const MAX_IMAGES = 10;
     const headers = getHeaders();
-
+    const ixProd = args?.ixProd;
+    const basePath = `${BASE_URL}/images/prod/${encodeURIComponent(ixProd)}`;
     try {
-      const url = `${BASE_URL}/images/prod/${args.ixProd}`;
+      const url = `${BASE_URL}/images/prod/${ixProd}`;
+      const response = await axios.get(url, { headers });
 
-      const response = await axios.get(url, {
-        headers: headers,
-      });
+      const raw = response.data;
+      let list = Array.isArray(raw) ? raw : [];
+      if (!Array.isArray(list) && raw && typeof raw === "object") {
+        list = raw.images || raw.files || raw.data || raw.gallery || [];
+        if (!Array.isArray(list)) list = [];
+        if (list.length === 0 && (raw.primary || raw.default)) {
+          list = [raw.primary || raw.default].concat(raw.gallery || raw.others || []);
+        }
+      }
 
-      console.log(response.data);
+      const toUrl = (img) => {
+        if (img == null) return null;
+        if (typeof img === "string" && img.trim()) return img.trim();
+        if (typeof img !== "object") return null;
+        const urlStr = img.url || img.src || img.path || img.imageUrl;
+        if (typeof urlStr === "string" && urlStr.trim()) return urlStr.trim();
+        const name = img.filename || img.file || img.name;
+        if (typeof name === "string" && name.trim()) {
+          return `${basePath}/${encodeURIComponent(name.trim())}`;
+        }
+        return null;
+      };
 
-      const images = response.data;
+      const seen = new Set();
+      const allUrls = [];
+      for (const img of list) {
+        const u = toUrl(img);
+        if (u && !seen.has(u)) {
+          seen.add(u);
+          allUrls.push(u);
+        }
+      }
 
-      const avatarImg = images.find((img) => img.filename.includes("avatar"));
+      const avatarImg = list.find(
+        (img) =>
+          img &&
+          typeof img === "object" &&
+          (() => {
+            const name = (img.filename || img.file || img.name) || "";
+            return typeof name === "string" && (name === "active_prod_avatar.jpg" || name.toLowerCase().includes("active_prod_avatar"));
+          })(),
+      );
+      const defaultUrl = avatarImg ? toUrl(avatarImg) : allUrls[0] || null;
+      const restUrls = allUrls.filter((u) => u !== defaultUrl);
 
-      return avatarImg || images;
+      const includeAll = args && args.includeAll === true;
+      const anotherOnly = args && args.anotherOnly === true;
+      let selectedUrls = [];
+      if (anotherOnly) {
+        selectedUrls = restUrls.length > 0 ? [restUrls[0]] : [];
+      } else if (includeAll) {
+        selectedUrls = [...(defaultUrl ? [defaultUrl] : []), ...restUrls].slice(0, MAX_IMAGES);
+      } else {
+        selectedUrls = defaultUrl ? [defaultUrl] : [];
+      }
+
+      return {
+        type: "img",
+        images: selectedUrls,
+      };
     } catch (err) {
       return {
         status: "error",
-        message: err.response?.data || err.message,
+        message: err.response?.data?.message || err.message,
       };
     }
   },
@@ -804,13 +856,23 @@ export const tools = [
       {
         name: "get_prod_img",
         description:
-          "Return the product description first, followed by the product image in Markdown format. The image must appear below the description.",
+          "Get product images. Default: return only the avatar (active_prod_avatar.jpg or first image). When user asks for 'another one', 'provide another image', 'one more' use anotherOnly=true (returns exactly one other image). When user explicitly asks for 'all images', 'show all images', 'lahat ng images' use includeAll=true (returns avatar plus all others, max 10). Return only { type: 'img', images: [] }. Do not return the raw list.",
         parameters: {
           type: "object",
           properties: {
             ixProd: {
               type: "integer",
-              description: "The id of the product",
+              description: "The product id (ixProd).",
+            },
+            anotherOnly: {
+              type: "boolean",
+              description:
+                "If true, return exactly one other image (not the avatar). Use only when user asks for another one, one more, or provide another image.",
+            },
+            includeAll: {
+              type: "boolean",
+              description:
+                "If true, return all images (avatar + others, max 10). Use only when user explicitly asks for all images or show all.",
             },
           },
           required: ["ixProd"],
