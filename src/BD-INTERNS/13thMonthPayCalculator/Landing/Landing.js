@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
-import { Box, Typography, Button, TextField, makeStyles } from "@material-ui/core";
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  makeStyles,
+} from "@material-ui/core";
 import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
 import DescriptionIcon from "@material-ui/icons/Description";
 import PeopleIcon from "@material-ui/icons/People";
@@ -77,7 +83,11 @@ const useStyles = makeStyles((theme) => ({
   list: {
     margin: 0,
     paddingLeft: theme.spacing(2.5),
-    "& li": { marginBottom: theme.spacing(0.5) },
+    fontFamily: '"Roboto", sans-serif',
+    "& li": {
+      marginBottom: theme.spacing(0.5),
+      fontFamily: '"Roboto", sans-serif',
+    },
   },
   contactSection: {
     marginTop: theme.spacing(5),
@@ -135,7 +145,7 @@ export default function Landing() {
     e.preventDefault();
     const subject = encodeURIComponent("13th Month Pay – Need help");
     const body = encodeURIComponent(
-      `Hi,\n\n${message || "(No message provided)"}\n\n---\nName: ${name || "(not provided)"}\nEmail: ${email || "(not provided)"}`
+      `Hi,\n\n${message || "(No message provided)"}\n\n---\nName: ${name || "(not provided)"}\nEmail: ${email || "(not provided)"}`,
     );
     window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
   };
@@ -168,13 +178,13 @@ export default function Landing() {
         </Typography>
         <Box className={classes.card}>
           <Typography className={classes.sectionBody}>
-            Under Presidential Decree No. 851, eligible employees in the
-            private sector are entitled to 13th month pay—a benefit equal to
-            one-twelfth (1/12) of their total basic salary earned within the
-            calendar year. It must be paid not later than December 24 each
-            year. Many employers pay it in one lump sum; others split it (e.g.,
-            mid-year and year-end). Our calculator helps you estimate your
-            entitlement based on your salary and employment period.
+            Under Presidential Decree No. 851, eligible employees in the private
+            sector are entitled to 13th month pay—a benefit equal to one-twelfth
+            (1/12) of their total basic salary earned within the calendar year.
+            It must be paid not later than December 24 each year. Many employers
+            pay it in one lump sum; others split it (e.g., mid-year and
+            year-end). Our calculator helps you estimate your entitlement based
+            on your salary and employment period.
           </Typography>
         </Box>
       </Box>
@@ -206,22 +216,20 @@ export default function Landing() {
         </Typography>
         <Box className={classes.card}>
           <Typography className={classes.sectionBody} component="div">
-            <strong>Formula:</strong> 13th Month Pay = Total Basic Salary
-            Earned in the year ÷ 12
-            <br />
-            <br />
             Only <strong>basic salary</strong> counts—fixed or variable pay for
             work performed, cash value of vacation/sick/maternity leave within
             the legal minimum, and other regular compensation. Excluded:
-            cost-of-living allowance, profit-sharing, overtime, premium pay,
-            and similar items unless your employer treats them as basic. Unpaid
-            absences may be deducted from total basic before dividing by 12.
+            cost-of-living allowance, profit-sharing, overtime, premium pay, and
+            similar items unless your employer treats them as basic. Unpaid
+            absences may be deducted from total basic.
           </Typography>
           <ul className={classes.list}>
             <li>Enter your monthly salary (or variable amounts per month).</li>
             <li>Set your employment period (start and end dates).</li>
             <li>Add any allowances your employer includes in 13th month.</li>
-            <li>Optionally enter unpaid days to get a more accurate estimate.</li>
+            <li>
+              Optionally enter unpaid days to get a more accurate estimate.
+            </li>
           </ul>
         </Box>
       </Box>
@@ -247,11 +255,15 @@ export default function Landing() {
           <strong>Need help with your 13th month pay?</strong>
           <br />
           <br />
-          If you&apos;re not sure how 13th month pay applies to your company or role,
-          our team can help you review your situation. Send us a message and we&apos;ll
-          walk you through the rules and common edge cases.
+          If you&apos;re not sure how 13th month pay applies to your company or
+          role, our team can help you review your situation. Send us a message
+          and we&apos;ll walk you through the rules and common edge cases.
         </Typography>
-        <form className={classes.contactForm} onSubmit={handleContactSubmit} noValidate>
+        <form
+          className={classes.contactForm}
+          onSubmit={handleContactSubmit}
+          noValidate
+        >
           <TextField
             className={classes.contactField}
             variant="outlined"
@@ -287,7 +299,12 @@ export default function Landing() {
             placeholder="Tell us about your situation or question regarding 13th month pay..."
             required
           />
-          <Button type="submit" variant="contained" className={classes.cta} fullWidth>
+          <Button
+            type="submit"
+            variant="contained"
+            className={classes.cta}
+            fullWidth
+          >
             Send message
           </Button>
         </form>

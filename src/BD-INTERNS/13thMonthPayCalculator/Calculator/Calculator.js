@@ -26,6 +26,13 @@ import {
 } from "../utils/thirteenthMonthCalc";
 import "../Calculator/Calculator.css";
 
+function formatCurrency(n) {
+  return `P${new Intl.NumberFormat("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(n))}`;
+}
+
 const MONTH_NAMES = [
   "January",
   "February",
@@ -74,7 +81,7 @@ const FAQ_ITEMS = [
   {
     question: "How is 13th month pay computed?",
     answer:
-      "The formula is: 13th Month Pay = Total Basic Salary Earned during the year ÷ 12. For employees who worked less than 12 months, only the basic salary actually earned from January 1 (or date of hiring) to December 31 (or date of separation) is used, then divided by 12. Unpaid absences may be deducted on a per-day basis using the applicable daily rate.",
+      "For employees who worked less than 12 months, only the basic salary actually earned from January 1 (or date of hiring) to December 31 (or date of separation) is used. Unpaid absences may be deducted on a per-day basis using the applicable daily rate.",
   },
   {
     question: 'What are "allowances" in this calculator?',
@@ -479,7 +486,7 @@ function Calculator() {
       )
     : monthlyNum > 0;
 
-  const handleGetFullResult = useCallback(() => {
+  const handleViewFullResult = useCallback(() => {
     const startStr =
       salaryMode === "single" ? startDate : formatDate(getYearStart());
     const endStr = salaryMode === "single" ? endDate : formatDate(getYearEnd());
@@ -816,44 +823,95 @@ function Calculator() {
                 <div className="receipt-sub">Estimate</div>
               </div>
               <div className="receipt-body">
-                <p
-                  style={{
-                    fontSize: "0.875rem",
-                    color: "#555",
-                    marginBottom: 16,
-                  }}
-                >
-                  Fill in your salary details on the left, then click the button
-                  below to compute your 13th month pay and see the full
-                  breakdown.
-                </p>
-                <div className="receipt-actions">
-                  <Button
-                    type="button"
-                    variant="contained"
-                    color="primary"
-                    onClick={handleGetFullResult}
-                    disabled={!hasAnySalary || totalFor13th <= 0}
-                    style={{
-                      textTransform: "none",
-                      fontWeight: 600,
-                      minWidth: 180,
-                    }}
-                  >
-                    Compute my 13th month pay
-                  </Button>
-                </div>
-                {hasAnySalary && totalFor13th > 0 && (
+                {!hasAnySalary || totalFor13th <= 0 ? (
                   <p
                     style={{
-                      fontSize: "0.75rem",
-                      color: "#888",
-                      marginTop: 12,
+                      fontSize: "0.875rem",
+                      color: "#555",
+                      marginBottom: 0,
                     }}
                   >
-                    You&apos;ll be asked for your email on the next step before
-                    we show the full computation.
+                    Fill in your salary details on the left to see your 13th
+                    month pay estimate.
                   </p>
+                ) : (
+                  <>
+                    <div className="receipt-line">
+                      <span>Basic salary earned</span>
+                      <span>{formatCurrency(totalBasicEarned)}</span>
+                    </div>
+                    {allowanceEntries
+                      .filter(
+                        (e) =>
+                          (parseFloat(String(e.amount).replace(/,/g, "")) ||
+                            0) > 0,
+                      )
+                      .map((e, i) => (
+                        <div key={i} className="receipt-line">
+                          <span>{e.type || "Allowance"}</span>
+                          <span>
+                            +
+                            {formatCurrency(
+                              parseFloat(String(e.amount).replace(/,/g, "")) ||
+                                0,
+                            )}
+                          </span>
+                        </div>
+                      ))}
+                    {Number(unpaidDeduction) > 0 && (
+                      <div className="receipt-line receipt-line-deduct">
+                        <span>Unpaid absence deduction</span>
+                        <span>-{formatCurrency(unpaidDeduction)}</span>
+                      </div>
+                    )}
+                    <div className="receipt-line">
+                      <span>Total for 13th month</span>
+                      <span>{formatCurrency(totalFor13th)}</span>
+                    </div>
+                    <hr className="receipt-divider" />
+                    <div className="receipt-total">
+                      <span>13TH MONTH PAY</span>
+                      <span>{formatCurrency(thirteenthMonth)}</span>
+                    </div>
+                    {dailyRate > 0 && (
+                      <p
+                        style={{
+                          fontFamily: '"Roboto", sans-serif',
+                          fontSize: "0.75rem",
+                          color: "#888",
+                          marginTop: 8,
+                          marginBottom: 0,
+                        }}
+                      >
+                        Daily rate: {formatCurrency(dailyRate)}/day
+                      </p>
+                    )}
+                    <p
+                      style={{
+                        fontFamily: '"Roboto", sans-serif',
+                        fontSize: "0.8125rem",
+                        marginTop: 12,
+                        marginBottom: 0,
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={handleViewFullResult}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          padding: 0,
+                          font: "inherit",
+                          color: "#DB6700",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          textDecoration: "underline",
+                        }}
+                      >
+                        View full breakdown
+                      </button>
+                    </p>
+                  </>
                 )}
               </div>
             </div>

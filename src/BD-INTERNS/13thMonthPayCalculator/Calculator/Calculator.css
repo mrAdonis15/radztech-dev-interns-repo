@@ -9,6 +9,7 @@
 }
 
 .calculator-title {
+  font-family: "Fira Sans", sans-serif;
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0 0 1.5rem;
@@ -109,7 +110,7 @@
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 0.9375rem;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Roboto", sans-serif;
   color: #1a1a1a;
   background: #fff;
   box-sizing: border-box;
@@ -133,7 +134,7 @@
   font-size: 0.75rem;
   color: #6b7280;
   margin-top: 0.5rem;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Roboto", sans-serif;
 }
 
 .form-hint-standalone {
@@ -147,7 +148,7 @@
   font-weight: 600;
   color: #2d2d2d;
   margin-bottom: 0.5rem;
-  font-family: Georgia, "Times New Roman", Times, serif;
+  font-family: "Roboto", sans-serif;
 }
 
 .salary-mode-toggle {
@@ -164,7 +165,7 @@
   font-weight: 500;
   color: #2d2d2d;
   cursor: pointer;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Roboto", sans-serif;
 }
 
 .radio-label input {
@@ -180,7 +181,7 @@
   font-weight: 600;
   color: #374151;
   margin-bottom: 0.5rem;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Roboto", sans-serif;
 }
 
 .monthly-salaries-year-block {
@@ -223,7 +224,7 @@
   font-size: 0.75rem;
   font-weight: 500;
   color: #6b7280;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Roboto", sans-serif;
 }
 
 .monthly-salary-cell input {
@@ -249,7 +250,7 @@
   font-weight: 500;
   color: #2d2d2d;
   cursor: pointer;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Roboto", sans-serif;
 }
 
 .checkbox-label input {
@@ -291,7 +292,7 @@
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 500;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Roboto", sans-serif;
   cursor: pointer;
   color: #6b7280;
   transition: color 0.15s ease, background 0.15s ease;
@@ -414,6 +415,7 @@
 }
 
 .receipt-per-month-item {
+  font-family: "Roboto", sans-serif;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -423,16 +425,19 @@
 }
 
 .receipt-per-month-label {
+  font-family: "Roboto", sans-serif;
   flex: 1;
   color: #374151;
 }
 
 .receipt-per-month-days {
+  font-family: "Roboto", sans-serif;
   color: #9ca3af;
   font-weight: 400;
 }
 
 .receipt-per-month-amount {
+  font-family: "Roboto", sans-serif;
   text-align: right;
   min-width: 10ch;
   font-variant-numeric: tabular-nums;
@@ -452,6 +457,7 @@
 }
 
 .receipt-calculation-formula {
+  font-family: "Roboto", sans-serif;
   font-size: 0.8125rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -460,6 +466,7 @@
 }
 
 .receipt-calculation-label {
+  font-family: "Roboto", sans-serif;
   font-size: 0.6875rem;
   color: #6b7280;
 }
@@ -521,7 +528,7 @@
   border-radius: 8px;
   font-size: 0.8125rem;
   font-weight: 600;
-  font-family: inherit;
+  font-family: "Roboto", sans-serif;
   cursor: pointer;
   transition: background 0.15s ease, opacity 0.15s ease;
   background: #DB6700;
