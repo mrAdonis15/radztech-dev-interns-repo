@@ -1,0 +1,130 @@
+/* Choose App - pick Chatbox or AGR after select-biz; design matches select biz */
+
+.choose-app-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+}
+
+.choose-app-root-content {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Same content wrap as select biz */
+.choose-app-content-wrap {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.choose-app-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+@media (max-width: 960px) {
+  .choose-app-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .choose-app-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Card layout like select biz: icon area on top, details below */
+.choose-app-card {
+  width: 100%;
+  max-width: 330px;
+  min-height: 180px;
+  border-radius: 20px !important;
+  overflow: hidden;
+  background: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+}
+
+.choose-app-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06) !important;
+}
+
+.choose-app-card-action {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  height: 100% !important;
+}
+
+/* Top section: icon left-aligned in circle (same as select biz card) */
+.choose-app-card-icon-container {
+  width: 100%;
+  height: 100px;
+  min-height: 100px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 16px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.choose-app-card-icon-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #FF7704;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.choose-app-card-icon {
+  font-size: 40px !important;
+  color: #ffffff !important;
+}
+
+/* Bottom section: label + description (same as select biz card details) */
+.choose-app-card-details {
+  padding: 14px 16px !important;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  box-sizing: border-box;
+  background: #ffffff;
+}
+
+.choose-app-card-label {
+  font-weight: 700 !important;
+  color: #212121 !important;
+  font-size: 1rem !important;
+  line-height: 1.35 !important;
+  margin-bottom: 6px !important;
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+.choose-app-card-desc {
+  color: #616161 !important;
+  font-size: 0.85rem !important;
+  line-height: 1.45 !important;
+  font-family: "Poppins", sans-serif !important;
+  margin-bottom: 2px !important;
+}
