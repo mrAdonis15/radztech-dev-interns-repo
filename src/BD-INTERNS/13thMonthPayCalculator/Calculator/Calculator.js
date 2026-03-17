@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from "react";
-import Barcode from "react-barcode";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -27,46 +27,74 @@ import {
 import "../Calculator/Calculator.css";
 
 const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 const MONTH_SHORT = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 
 const FAQ_ITEMS = [
   {
     question: "Who is eligible for 13th month pay?",
-    answer: "Rank-and-file employees in the private sector who worked at least one (1) month during the calendar year are entitled to 13th month pay. This includes regular, probationary, and casual employees. Excluded under Presidential Decree No. 851 (as amended) are: government employees and those of government-owned and -controlled corporations; employers’ household helpers and persons in the personal service of another; and managerial employees as defined under the law. Some employers voluntarily extend the benefit to excluded groups.",
+    answer:
+      "Rank-and-file employees in the private sector who worked at least one (1) month during the calendar year are entitled to 13th month pay. This includes regular, probationary, and casual employees. Excluded under Presidential Decree No. 851 (as amended) are: government employees and those of government-owned and -controlled corporations; employers’ household helpers and persons in the personal service of another; and managerial employees as defined under the law. Some employers voluntarily extend the benefit to excluded groups.",
   },
   {
     question: "When must 13th month pay be paid?",
-    answer: "The full amount must be paid not later than December 24 of each year. An employer may give the full amount in one go or split it (e.g., mid-year and year-end), but the total must be settled by December 24. Failure to pay on time can result in penalties under labor laws.",
+    answer:
+      "The full amount must be paid not later than December 24 of each year. An employer may give the full amount in one go or split it (e.g., mid-year and year-end), but the total must be settled by December 24. Failure to pay on time can result in penalties under labor laws.",
   },
   {
     question: "What counts as basic salary for 13th month pay?",
-    answer: "Basic salary includes: (1) All remuneration for work performed, whether fixed or variable; (2) Cash value of vacation, sick, and maternity leave; (3) Other payments that are considered part of the regular compensation. Excluded from the computation are: cost-of-living allowances; profit-sharing and other bonuses (unless treated as part of basic salary); cash equivalent of unused leave credits beyond the legal minimum; overtime pay; premium for night/shift work; and other fringe benefits. If your employment contract or company policy treats certain allowances as part of basic salary, they may be included.",
+    answer:
+      "Basic salary includes: (1) All remuneration for work performed, whether fixed or variable; (2) Cash value of vacation, sick, and maternity leave; (3) Other payments that are considered part of the regular compensation. Excluded from the computation are: cost-of-living allowances; profit-sharing and other bonuses (unless treated as part of basic salary); cash equivalent of unused leave credits beyond the legal minimum; overtime pay; premium for night/shift work; and other fringe benefits. If your employment contract or company policy treats certain allowances as part of basic salary, they may be included.",
   },
   {
     question: "How is 13th month pay computed?",
-    answer: "The formula is: 13th Month Pay = Total Basic Salary Earned during the year ÷ 12. For employees who worked less than 12 months, only the basic salary actually earned from January 1 (or date of hiring) to December 31 (or date of separation) is used, then divided by 12. Unpaid absences may be deducted on a per-day basis using the applicable daily rate.",
+    answer:
+      "The formula is: 13th Month Pay = Total Basic Salary Earned during the year ÷ 12. For employees who worked less than 12 months, only the basic salary actually earned from January 1 (or date of hiring) to December 31 (or date of separation) is used, then divided by 12. Unpaid absences may be deducted on a per-day basis using the applicable daily rate.",
   },
   {
-    question: "What are \"allowances\" in this calculator?",
-    answer: "The \"Type of allowance\" and \"Amount\" fields let you add payments that your employer includes in the 13th month computation. Common examples: rice allowance, transportation allowance, or similar benefits that are considered part of your taxable compensation. Not all companies include these—check your company policy or HR. Only add allowances that your employer actually counts toward 13th month pay.",
+    question: 'What are "allowances" in this calculator?',
+    answer:
+      'The "Type of allowance" and "Amount" fields let you add payments that your employer includes in the 13th month computation. Common examples: rice allowance, transportation allowance, or similar benefits that are considered part of your taxable compensation. Not all companies include these—check your company policy or HR. Only add allowances that your employer actually counts toward 13th month pay.',
   },
   {
     question: "What if I have unpaid absences?",
-    answer: "Unpaid absences (e.g., undertime, unpaid leave, absences without leave) may be deducted from your total basic salary earned before dividing by 12. The calculator uses your effective daily rate (monthly basic ÷ 22, or prorated from variable monthly amounts) and multiplies by the number of unpaid days you enter. The result is an estimate; your employer may use a different divisor or policy.",
+    answer:
+      "Unpaid absences (e.g., undertime, unpaid leave, absences without leave) may be deducted from your total basic salary earned before dividing by 12. The calculator uses your effective daily rate (monthly basic ÷ 22, or prorated from variable monthly amounts) and multiplies by the number of unpaid days you enter. The result is an estimate; your employer may use a different divisor or policy.",
   },
   {
     question: "Is 13th month pay taxable?",
-    answer: "Yes. 13th month pay and other benefits (e.g., productivity bonus, Christmas bonus) totaling more than P90,000 in a year are subject to withholding tax on the excess. The first P90,000 of these benefits is tax-exempt. The calculator shows gross 13th month pay; net pay after tax depends on your total income and withholding rules.",
+    answer:
+      "Yes. 13th month pay and other benefits (e.g., productivity bonus, Christmas bonus) totaling more than P90,000 in a year are subject to withholding tax on the excess. The first P90,000 of these benefits is tax-exempt. The calculator shows gross 13th month pay; net pay after tax depends on your total income and withholding rules.",
   },
   {
     question: "Where is the law on 13th month pay?",
-    answer: "13th month pay is mandated by Presidential Decree No. 851 (December 16, 1975), as amended by Memorandum Order No. 28 (August 13, 1986) and clarified by the Department of Labor and Employment (DOLE). For official rules and updates, refer to DOLE and the Labor Code of the Philippines.",
+    answer:
+      "13th month pay is mandated by Presidential Decree No. 851 (December 16, 1975), as amended by Memorandum Order No. 28 (August 13, 1986) and clarified by the Department of Labor and Employment (DOLE). For official rules and updates, refer to DOLE and the Labor Code of the Philippines.",
   },
 ];
 
@@ -97,10 +125,6 @@ const getYearEnd = () => {
 
 function formatDate(d) {
   return d.toISOString().slice(0, 10);
-}
-
-function formatCurrency(n) {
-  return `P${new Intl.NumberFormat("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)}`;
 }
 
 const MAX_AMOUNT = 1e12;
@@ -162,7 +186,8 @@ const useStyles = makeStyles((theme) => ({
     padding: 1,
     borderRadius: 12,
     overflow: "hidden",
-    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(219, 103, 0, 0.15)",
+    boxShadow:
+      "0 4px 20px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(219, 103, 0, 0.15)",
   },
   sectionCardInner: {
     background: "#fff",
@@ -343,10 +368,28 @@ const useStyles = makeStyles((theme) => ({
     paddingBottom: theme.spacing(1.5),
     paddingLeft: 0,
   },
+  contactCard: {
+    marginTop: theme.spacing(2.5),
+    paddingTop: theme.spacing(1.75),
+    borderTop: "1px solid #eee",
+  },
+  contactTitle: {
+    fontFamily: '"Fira Sans", sans-serif',
+    fontSize: "0.9375rem",
+    fontWeight: 600,
+    marginBottom: theme.spacing(1),
+  },
+  contactBody: {
+    fontFamily: '"Roboto", sans-serif',
+    fontSize: "0.8125rem",
+    color: "#444",
+    lineHeight: 1.6,
+  },
 }));
 
 function Calculator() {
   const classes = useStyles();
+  const navigate = useNavigate();
   const [salaryMode, setSalaryMode] = useState("single");
   const [monthlySalary, setMonthlySalary] = useState("");
   const [monthlyAmountsByYear, setMonthlyAmountsByYear] = useState({});
@@ -356,16 +399,19 @@ function Calculator() {
   const [allowanceEntries, setAllowanceEntries] = useState([
     { id: 0, type: "", amount: "0" },
   ]);
-  const [copied, setCopied] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState(null);
   const [showPerMonth, setShowPerMonth] = useState(false);
 
   const monthlyNum = parseFloat(monthlySalary) || 0;
   const isPerMonthMode = salaryMode === "perMonth";
-  const currentYearStart = getYearStart();
-  const currentYearEnd = getYearEnd();
-  const start = isPerMonthMode ? currentYearStart : new Date(startDate);
-  const end = isPerMonthMode ? currentYearEnd : new Date(endDate);
+  const start = useMemo(
+    () => (isPerMonthMode ? getYearStart() : new Date(startDate)),
+    [isPerMonthMode, startDate],
+  );
+  const end = useMemo(
+    () => (isPerMonthMode ? getYearEnd() : new Date(endDate)),
+    [isPerMonthMode, endDate],
+  );
   const unpaid = Math.max(0, parseInt(unpaidDays, 10) || 0);
   const allowancesNum = allowanceEntries.reduce(
     (sum, e) => sum + (parseFloat(String(e.amount).replace(/,/g, "")) || 0),
@@ -410,30 +456,61 @@ function Calculator() {
     : singleResult;
   const totalFor13th = totalBasicEarned + allowancesNum;
   const thirteenthMonth = compute13thMonthPay(totalFor13th);
-  const earningsPerMonth = isPerMonthMode
-    ? perMonthResult.earningsPerMonth || []
-    : computeEarningsPerMonth(monthlyNum, start, end);
+  const earningsPerMonth = useMemo(
+    () =>
+      isPerMonthMode
+        ? perMonthResult.earningsPerMonth || []
+        : computeEarningsPerMonth(monthlyNum, start, end),
+    [isPerMonthMode, perMonthResult.earningsPerMonth, monthlyNum, start, end],
+  );
   const hasAnySalary = isPerMonthMode
     ? applicableMonths.some(
         ({ year, monthIndex }) =>
-          (parseFloat(String(getAmountsForYear(year)[monthIndex]).replace(/,/g, "")) || 0) > 0,
+          (parseFloat(
+            String(getAmountsForYear(year)[monthIndex]).replace(/,/g, ""),
+          ) || 0) > 0,
       )
     : monthlyNum > 0;
 
-  const receiptBarcodeValue =
-    hasAnySalary && totalFor13th > 0
-      ? `13M${formatDate(new Date()).replace(/-/g, "")}${Math.round(thirteenthMonth)}`
-      : "";
-
-  const handleCopy = useCallback(() => {
-    const text = formatCurrency(thirteenthMonth);
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      });
-    }
-  }, [thirteenthMonth]);
+  const handleGetFullResult = useCallback(() => {
+    const startStr =
+      salaryMode === "single" ? startDate : formatDate(getYearStart());
+    const endStr = salaryMode === "single" ? endDate : formatDate(getYearEnd());
+    navigate("/BDCalculator/result", {
+      state: {
+        thirteenthMonth,
+        totalBasicEarned,
+        totalFor13th,
+        dailyRate,
+        unpaidDeduction,
+        allowanceEntries: allowanceEntries.map((e) => ({
+          type: e.type,
+          amount: e.amount,
+        })),
+        earningsPerMonth: earningsPerMonth.map((m) => ({
+          label: m.label,
+          earned: m.earned,
+        })),
+        salaryMode,
+        startDate: startStr,
+        endDate: endStr,
+        unpaidDays,
+      },
+    });
+  }, [
+    navigate,
+    thirteenthMonth,
+    totalBasicEarned,
+    totalFor13th,
+    dailyRate,
+    unpaidDeduction,
+    allowanceEntries,
+    earningsPerMonth,
+    salaryMode,
+    startDate,
+    endDate,
+    unpaidDays,
+  ]);
 
   const handleReset = useCallback(() => {
     setSalaryMode("single");
@@ -457,7 +534,11 @@ function Calculator() {
   const addAllowanceEntry = useCallback(() => {
     setAllowanceEntries((prev) => [
       ...prev,
-      { id: prev.length > 0 ? Math.max(...prev.map((e) => e.id)) + 1 : 0, type: "", amount: "0" },
+      {
+        id: prev.length > 0 ? Math.max(...prev.map((e) => e.id)) + 1 : 0,
+        type: "",
+        amount: "0",
+      },
     ]);
   }, []);
 
@@ -485,291 +566,289 @@ function Calculator() {
       </Typography>
 
       <Box className={classes.layout}>
-        <Paper className={`${classes.formPaper} ${classes.sectionCard}`} elevation={0}>
+        <Paper
+          className={`${classes.formPaper} ${classes.sectionCard}`}
+          elevation={0}
+        >
           <div className={classes.sectionCardInner}>
-          <Box className={classes.formSection}>
-            <Typography className={classes.formSectionTitle}>Salary</Typography>
-            <Box className={classes.formGroup}>
-              <FormControl variant="outlined" fullWidth size="small">
-                <InputLabel id="salary-type-label">Type</InputLabel>
-                <Select
-                  labelId="salary-type-label"
-                  value={salaryMode === "single" ? "fixed" : "variable"}
-                  onChange={(e) =>
-                    setSalaryMode(e.target.value === "fixed" ? "single" : "perMonth")
-                  }
-                  label="Type"
-                >
-                  <MenuItem value="fixed">Fixed Monthly Salary</MenuItem>
-                  <MenuItem value="variable">Variable Monthly Salary</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-            {salaryMode === "single" && (
-              <Box className={classes.formGroup}>
-                <TextField
-                  label="Monthly amount (PHP)"
-                  type="number"
-                  inputProps={{ min: 0, max: MAX_AMOUNT, step: "0.01" }}
-                  placeholder="e.g. 25000"
-                  value={monthlySalary}
-                  onChange={(e) => setMonthlySalary(clampAmount(e.target.value))}
-                  variant="outlined"
-                  fullWidth
-                  size="small"
-                />
-              </Box>
-            )}
-          </Box>
-
-          <Box className={classes.formSection}>
-            <Typography className={classes.formSectionTitle}>Employment Period</Typography>
-            {salaryMode === "single" ? (
-              <Box className={classes.formRow}>
-                <TextField
-                  label="Start date"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  variant="outlined"
-                  fullWidth
-                  size="small"
-                  InputLabelProps={{ shrink: true }}
-                />
-                <TextField
-                  label="Calculation date"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  variant="outlined"
-                  fullWidth
-                  size="small"
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Box>
-            ) : (
-              <Typography className={`${classes.formHint} ${classes.formHintStandalone}`}>
-                January – December (full calendar year)
-              </Typography>
-            )}
-          </Box>
-
-          {salaryMode === "perMonth" && (
             <Box className={classes.formSection}>
               <Typography className={classes.formSectionTitle}>
-                Amount per month (PHP)
+                Salary
               </Typography>
-              <Box className={classes.monthlyGrid}>
-                {applicableMonths.map(({ year, monthIndex }) => (
-                  <Box key={`${year}-${monthIndex}`} className={classes.monthlyCell}>
-                    <Typography className={classes.monthlyCellLabel}>
-                      {MONTH_SHORT[monthIndex]}
-                    </Typography>
-                    <TextField
-                      type="number"
-                      inputProps={{ min: 0, max: MAX_AMOUNT, step: "0.01" }}
-                      placeholder="0"
-                      value={getAmountsForYear(year)[monthIndex]}
-                      onChange={(e) => setMonthlyAmount(year, monthIndex, e.target.value)}
-                      variant="outlined"
-                      size="small"
-                      className={classes.monthlyCellInput}
-                      fullWidth
-                    />
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          )}
-
-          <Box className={classes.formSection}>
-            <Typography className={classes.formSectionTitle}>Allowances</Typography>
-            {allowanceEntries.map((entry) => (
-              <Box
-                key={entry.id}
-                className={allowanceEntries.length > 1 ? classes.allowanceRow : classes.formRow}
-                style={{ marginBottom: 8 }}
-              >
-                <TextField
-                  label="Type of allowance"
-                  placeholder="e.g. rice, transportation"
-                  value={entry.type}
-                  onChange={(e) => updateAllowanceEntry(entry.id, "type", e.target.value)}
-                  variant="outlined"
-                  fullWidth
-                  size="small"
-                />
-                <TextField
-                  label="Amount"
-                  type="number"
-                  inputProps={{ min: 0, max: MAX_AMOUNT, step: "0.01" }}
-                  placeholder="0"
-                  value={entry.amount}
-                  onChange={(e) => updateAllowanceEntry(entry.id, "amount", e.target.value)}
-                  variant="outlined"
-                  fullWidth
-                  size="small"
-                />
-                {allowanceEntries.length > 1 && (
-                  <Button
-                    type="button"
-                    size="small"
-                    onClick={() => removeAllowanceEntry(entry.id)}
-                    className={classes.btnRemoveAllowance}
+              <Box className={classes.formGroup}>
+                <FormControl variant="outlined" fullWidth size="small">
+                  <InputLabel id="salary-type-label">Type</InputLabel>
+                  <Select
+                    labelId="salary-type-label"
+                    value={salaryMode === "single" ? "fixed" : "variable"}
+                    onChange={(e) =>
+                      setSalaryMode(
+                        e.target.value === "fixed" ? "single" : "perMonth",
+                      )
+                    }
+                    label="Type"
                   >
-                    Remove
-                  </Button>
-                )}
+                    <MenuItem value="fixed">Fixed Monthly Salary</MenuItem>
+                    <MenuItem value="variable">
+                      Variable Monthly Salary
+                    </MenuItem>
+                  </Select>
+                </FormControl>
               </Box>
-            ))}
-            <Button
-              type="button"
-              size="small"
-              onClick={addAllowanceEntry}
-              className={classes.btnAddAllowance}
-            >
-              + Add allowance
-            </Button>
-          </Box>
-
-          <Box className={classes.formSection}>
-            <Typography className={classes.formSectionTitle}>Other</Typography>
-            <Box className={classes.formRow}>
-              <TextField
-                label="Unpaid days"
-                type="number"
-                inputProps={{ min: 0, max: maxWeekdays, step: 1 }}
-                placeholder="0"
-                value={unpaidDays}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  if (v === "") {
-                    setUnpaidDays(v);
-                    return;
-                  }
-                  const n = parseInt(v, 10);
-                  if (Number.isNaN(n) || n < 0) return;
-                  setUnpaidDays(n > maxWeekdays ? String(maxWeekdays) : v);
-                }}
-                variant="outlined"
-                fullWidth
-                size="small"
-              />
+              {salaryMode === "single" && (
+                <Box className={classes.formGroup}>
+                  <TextField
+                    label="Monthly amount (PHP)"
+                    type="number"
+                    inputProps={{ min: 0, max: MAX_AMOUNT, step: "0.01" }}
+                    placeholder="e.g. 25000"
+                    value={monthlySalary}
+                    onChange={(e) =>
+                      setMonthlySalary(clampAmount(e.target.value))
+                    }
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                  />
+                </Box>
+              )}
             </Box>
-            {maxWeekdays > 0 && (
-              <Typography className={classes.formHint}>
-                Up to {maxWeekdays} workdays in period
+
+            <Box className={classes.formSection}>
+              <Typography className={classes.formSectionTitle}>
+                Employment Period
               </Typography>
+              {salaryMode === "single" ? (
+                <Box className={classes.formRow}>
+                  <TextField
+                    label="Start date"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                    InputLabelProps={{ shrink: true }}
+                  />
+                  <TextField
+                    label="Calculation date"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Box>
+              ) : (
+                <Typography
+                  className={`${classes.formHint} ${classes.formHintStandalone}`}
+                >
+                  January – December (full calendar year)
+                </Typography>
+              )}
+            </Box>
+
+            {salaryMode === "perMonth" && (
+              <Box className={classes.formSection}>
+                <Typography className={classes.formSectionTitle}>
+                  Amount per month (PHP)
+                </Typography>
+                <Box className={classes.monthlyGrid}>
+                  {applicableMonths.map(({ year, monthIndex }) => (
+                    <Box
+                      key={`${year}-${monthIndex}`}
+                      className={classes.monthlyCell}
+                    >
+                      <Typography className={classes.monthlyCellLabel}>
+                        {MONTH_SHORT[monthIndex]}
+                      </Typography>
+                      <TextField
+                        type="number"
+                        inputProps={{ min: 0, max: MAX_AMOUNT, step: "0.01" }}
+                        placeholder="0"
+                        value={getAmountsForYear(year)[monthIndex]}
+                        onChange={(e) =>
+                          setMonthlyAmount(year, monthIndex, e.target.value)
+                        }
+                        variant="outlined"
+                        size="small"
+                        className={classes.monthlyCellInput}
+                        fullWidth
+                      />
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
             )}
-            {salaryMode === "single" && (
-              <Box className={classes.formGroup} style={{ marginTop: 8 }}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={showPerMonth}
-                      onChange={(e) => setShowPerMonth(e.target.checked)}
-                      color="primary"
-                    />
+
+            <Box className={classes.formSection}>
+              <Typography className={classes.formSectionTitle}>
+                Allowances
+              </Typography>
+              {allowanceEntries.map((entry) => (
+                <Box
+                  key={entry.id}
+                  className={
+                    allowanceEntries.length > 1
+                      ? classes.allowanceRow
+                      : classes.formRow
                   }
-                  label="Show salary per month"
+                  style={{ marginBottom: 8 }}
+                >
+                  <TextField
+                    label="Type of allowance"
+                    placeholder="e.g. rice, transportation"
+                    value={entry.type}
+                    onChange={(e) =>
+                      updateAllowanceEntry(entry.id, "type", e.target.value)
+                    }
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                  />
+                  <TextField
+                    label="Amount"
+                    type="number"
+                    inputProps={{ min: 0, max: MAX_AMOUNT, step: "0.01" }}
+                    placeholder="0"
+                    value={entry.amount}
+                    onChange={(e) =>
+                      updateAllowanceEntry(entry.id, "amount", e.target.value)
+                    }
+                    variant="outlined"
+                    fullWidth
+                    size="small"
+                  />
+                  {allowanceEntries.length > 1 && (
+                    <Button
+                      type="button"
+                      size="small"
+                      onClick={() => removeAllowanceEntry(entry.id)}
+                      className={classes.btnRemoveAllowance}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </Box>
+              ))}
+              <Button
+                type="button"
+                size="small"
+                onClick={addAllowanceEntry}
+                className={classes.btnAddAllowance}
+              >
+                + Add allowance
+              </Button>
+            </Box>
+
+            <Box className={classes.formSection}>
+              <Typography className={classes.formSectionTitle}>
+                Other
+              </Typography>
+              <Box className={classes.formRow}>
+                <TextField
+                  label="Unpaid days"
+                  type="number"
+                  inputProps={{ min: 0, max: maxWeekdays, step: 1 }}
+                  placeholder="0"
+                  value={unpaidDays}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "") {
+                      setUnpaidDays(v);
+                      return;
+                    }
+                    const n = parseInt(v, 10);
+                    if (Number.isNaN(n) || n < 0) return;
+                    setUnpaidDays(n > maxWeekdays ? String(maxWeekdays) : v);
+                  }}
+                  variant="outlined"
+                  fullWidth
+                  size="small"
                 />
               </Box>
-            )}
-            <Button type="button" className={classes.btnReset} onClick={handleReset}>
-              Reset
-            </Button>
-          </Box>
+              {maxWeekdays > 0 && (
+                <Typography className={classes.formHint}>
+                  Up to {maxWeekdays} workdays in period
+                </Typography>
+              )}
+              {salaryMode === "single" && (
+                <Box className={classes.formGroup} style={{ marginTop: 8 }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={showPerMonth}
+                        onChange={(e) => setShowPerMonth(e.target.checked)}
+                        color="primary"
+                      />
+                    }
+                    label="Show salary per month"
+                  />
+                </Box>
+              )}
+              <Button
+                type="button"
+                className={classes.btnReset}
+                onClick={handleReset}
+              >
+                Reset
+              </Button>
+            </Box>
           </div>
         </Paper>
 
-        <section className={`calculator-results receipt ${classes.receiptWrap}`}>
+        <section
+          className={`calculator-results receipt ${classes.receiptWrap}`}
+        >
           <div className={`receipt-paper ${classes.sectionCard}`}>
             <div className="receipt-paper-inner">
-            <div className="receipt-header">
-              <h2 className="receipt-title">13TH MONTH PAY</h2>
-              <div className="receipt-sub">Estimate</div>
-            </div>
-            <div className="receipt-body">
-              <div className="receipt-line">
-                <span>Basic salary earned</span>
-                <span>{formatCurrency(totalBasicEarned)}</span>
+              <div className="receipt-header">
+                <h2 className="receipt-title">13TH MONTH PAY</h2>
+                <div className="receipt-sub">Estimate</div>
               </div>
-              {allowanceEntries
-                .filter((e) => (parseFloat(String(e.amount).replace(/,/g, "")) || 0) > 0)
-                .map((e) => (
-                  <div key={e.id} className="receipt-line">
-                    <span>{e.type ? e.type : "Allowance"}</span>
-                    <span>+{formatCurrency(parseFloat(String(e.amount).replace(/,/g, "")) || 0)}</span>
-                  </div>
-                ))}
-              {unpaid > 0 && (
-                <div className="receipt-line receipt-line-deduct">
-                  <span>Unpaid absence</span>
-                  <span>-{formatCurrency(unpaidDeduction)}</span>
-                </div>
-              )}
-              {(showPerMonth || isPerMonthMode) && earningsPerMonth.length > 0 && (
-                <div className="receipt-per-month">
-                  <div className="receipt-per-month-title">Salary per month</div>
-                  <ul className="receipt-per-month-list">
-                    {earningsPerMonth.map((m) => (
-                      <li key={`${m.year}-${m.month}`} className="receipt-per-month-item">
-                        <span className="receipt-per-month-label">
-                          {m.label}
-                          {m.daysWorked != null &&
-                            m.daysInMonth != null &&
-                            m.daysWorked < m.daysInMonth && (
-                              <span className="receipt-per-month-days">
-                                {" "}({m.daysWorked}/{m.daysInMonth} days)
-                              </span>
-                            )}
-                        </span>
-                        <span className="receipt-per-month-amount">
-                          {formatCurrency(m.earned)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              <div className="receipt-divider" aria-hidden="true" />
-              <div className="receipt-line receipt-total">
-                <span>13TH MONTH PAY</span>
-                <span>{formatCurrency(thirteenthMonth)}</span>
-              </div>
-              {receiptBarcodeValue && (
-                <div className="receipt-barcode">
-                  <Barcode
-                    value={receiptBarcodeValue}
-                    format="CODE128"
-                    width={1.2}
-                    height={36}
-                    displayValue={true}
-                    fontSize={10}
-                    margin={4}
-                  />
-                </div>
-              )}
-              {hasAnySalary && (
+              <div className="receipt-body">
+                <p
+                  style={{
+                    fontSize: "0.875rem",
+                    color: "#555",
+                    marginBottom: 16,
+                  }}
+                >
+                  Fill in your salary details on the left, then click the button
+                  below to compute your 13th month pay and see the full
+                  breakdown.
+                </p>
                 <div className="receipt-actions">
-                  <button
+                  <Button
                     type="button"
-                    className={`btn-copy ${copied ? "copied" : ""}`}
-                    onClick={handleCopy}
-                    title="Copy amount"
+                    variant="contained"
+                    color="primary"
+                    onClick={handleGetFullResult}
+                    disabled={!hasAnySalary || totalFor13th <= 0}
+                    style={{
+                      textTransform: "none",
+                      fontWeight: 600,
+                      minWidth: 180,
+                    }}
                   >
-                    {copied ? "Copied!" : "Copy"}
-                  </button>
+                    Compute my 13th month pay
+                  </Button>
                 </div>
-              )}
-            </div>
-            {hasAnySalary && (
-              <div className="receipt-footer">
-                {salaryMode === "single"
-                  ? `Daily rate: ${formatCurrency(dailyRate)}/day`
-                  : `Effective daily rate: ${formatCurrency(dailyRate)}/day`}
+                {hasAnySalary && totalFor13th > 0 && (
+                  <p
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "#888",
+                      marginTop: 12,
+                    }}
+                  >
+                    You&apos;ll be asked for your email on the next step before
+                    we show the full computation.
+                  </p>
+                )}
               </div>
-            )}
             </div>
           </div>
         </section>
@@ -777,43 +856,65 @@ function Calculator() {
 
       <Box className={`${classes.sectionBelow} ${classes.sectionCard}`}>
         <div className={classes.sectionCardInner}>
-        <Typography component="h2" className={classes.sectionTitle}>
-          Frequently Asked Questions
-        </Typography>
-        <Typography className={classes.faqIntro}>
-          Click a question to expand. Information is for general reference; refer to DOLE and your employer for official rules.
-        </Typography>
-        {FAQ_ITEMS.map((faq, index) => (
-          <Box key={index} className={classes.faqItem}>
-            <button
-              type="button"
-              className={classes.faqButton}
-              onClick={() => setExpandedFaq((prev) => (prev === index ? null : index))}
-              aria-expanded={expandedFaq === index}
-              aria-controls={`faq-panel-${index}`}
-              id={`faq-heading-${index}`}
-            >
-              <Typography component="span" className={classes.faqQuestion}>
-                {faq.question}
-              </Typography>
-              {expandedFaq === index ? (
-                <ExpandLessIcon className={classes.faqIcon} fontSize="small" />
-              ) : (
-                <ExpandMoreIcon className={classes.faqIcon} fontSize="small" />
-              )}
-            </button>
-            <Collapse in={expandedFaq === index} timeout="auto" unmountOnExit>
-              <div
-                id={`faq-panel-${index}`}
-                role="region"
-                aria-labelledby={`faq-heading-${index}`}
-                className={classes.faqAnswer}
+          <Typography component="h2" className={classes.sectionTitle}>
+            Frequently Asked Questions
+          </Typography>
+          <Typography className={classes.faqIntro}>
+            Click a question to expand. Information is for general reference;
+            refer to DOLE and your employer for official rules.
+          </Typography>
+          {FAQ_ITEMS.map((faq, index) => (
+            <Box key={index} className={classes.faqItem}>
+              <button
+                type="button"
+                className={classes.faqButton}
+                onClick={() =>
+                  setExpandedFaq((prev) => (prev === index ? null : index))
+                }
+                aria-expanded={expandedFaq === index}
+                aria-controls={`faq-panel-${index}`}
+                id={`faq-heading-${index}`}
               >
-                {faq.answer}
-              </div>
-            </Collapse>
+                <Typography component="span" className={classes.faqQuestion}>
+                  {faq.question}
+                </Typography>
+                {expandedFaq === index ? (
+                  <ExpandLessIcon
+                    className={classes.faqIcon}
+                    fontSize="small"
+                  />
+                ) : (
+                  <ExpandMoreIcon
+                    className={classes.faqIcon}
+                    fontSize="small"
+                  />
+                )}
+              </button>
+              <Collapse in={expandedFaq === index} timeout="auto" unmountOnExit>
+                <div
+                  id={`faq-panel-${index}`}
+                  role="region"
+                  aria-labelledby={`faq-heading-${index}`}
+                  className={classes.faqAnswer}
+                >
+                  {faq.answer}
+                </div>
+              </Collapse>
+            </Box>
+          ))}
+
+          <Box className={classes.contactCard}>
+            <Typography className={classes.contactTitle}>
+              Still have questions about your 13th month pay?
+            </Typography>
+            <Typography className={classes.contactBody}>
+              For edge cases (irregular schedules, multiple employers, complex
+              allowances), you can email our team at{" "}
+              <a href="mailto:support@radztech.ph">support@radztech.ph</a>. We
+              can help you interpret this estimate and understand how DOLE rules
+              apply to you.
+            </Typography>
           </Box>
-        ))}
         </div>
       </Box>
     </Box>

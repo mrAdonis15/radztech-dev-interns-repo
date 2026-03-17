@@ -1,6 +1,7 @@
 import React from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { Box, makeStyles } from "@material-ui/core";
+import UniversalNavbar from "src/BD-INTERNS/UniversalNavbar/UniversalNavbar";
 
 const useStyles = makeStyles((theme) => ({
   layout: {
@@ -65,10 +66,21 @@ function Layout() {
 
   return (
     <Box className={classes.layout}>
+      <UniversalNavbar />
       <nav className={classes.nav}>
         <NavLink
           to="/BDCalculator"
           end
+          className={({ isActive }) =>
+            isActive
+              ? `${classes.navLink} ${classes.navLinkActive}`
+              : classes.navLink
+          }
+        >
+          Home
+        </NavLink>
+        <NavLink
+          to="/BDCalculator/calculator"
           className={({ isActive }) =>
             isActive
               ? `${classes.navLink} ${classes.navLinkActive}`

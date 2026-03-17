@@ -1,6 +1,6 @@
-/* Reserve space for fixed navbar (toolbar height 60px) so content does not overlap */
+/* Reserve space for universal navbar + sub-nav (sticky) so content does not overlap */
 .product-finder-main {
-  padding-top: 60px;
+  padding-top: 0;
   min-height: 100vh;
   box-sizing: border-box;
   background-color: #FAFBFD;
