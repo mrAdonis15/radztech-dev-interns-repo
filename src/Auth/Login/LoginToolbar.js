@@ -117,7 +117,7 @@ class LoginToolbar extends Component {
     const { loggingOut } = this.state;
     const bizName = getBizName();
     const pathname = this.props.pathname || "";
-    const isBizContext = pathname.startsWith("/Chatbox") || pathname.startsWith("/ChatboxGC");
+    const isBizContext = pathname.startsWith("/Chatbox") || pathname.startsWith("/ChatboxGC") || pathname.startsWith("/AGR");
 
     return (
       <AppBar position="fixed" className="login-toolbar-appbar">

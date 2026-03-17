@@ -149,7 +149,7 @@ function BizListContent({ bizList, selectingId, onSelectBiz, onContinue, onRefre
           {restList.map(function (biz) {
             const id = getBizCode(biz) ?? Math.random();
             return (
-              <Grid item xs={12} sm={6} md={6} key={id} className="biz-ui-grid-item">
+              <Grid item xs={12} sm={6} md={3} lg={3} key={id} className="biz-ui-grid-item">
                 <BizCard biz={biz} onSelect={onSelectBiz} disabled={isSelecting} />
               </Grid>
             );
@@ -196,10 +196,9 @@ export default function BizUI() {
     [loadBizList]
   );
 
-  const getChatboxPath = useCallback(() => {
+  const getChooseAppState = useCallback(() => {
     const from = location.state?.from;
-    const search = from?.search || "";
-    return "/Chatbox" + search;
+    return from ? { from } : {};
   }, [location.state]);
 
   const handleSelectBiz = function (biz) {
@@ -239,7 +238,7 @@ export default function BizUI() {
           localStorage.setItem("selectedBiz", JSON.stringify({ biz: { name, ixBiz: code, image: logo } }));
         }
         isMountedRef.current = false;
-        navigate(getChatboxPath(), { replace: true });
+        navigate("/choose-app", { replace: true, state: getChooseAppState() });
       })
       .catch(() => {
         if (isMountedRef.current) setError("Failed to select business");
@@ -250,7 +249,7 @@ export default function BizUI() {
   };
 
   const handleContinue = function () {
-    return navigate(getChatboxPath(), { replace: true });
+    return navigate("/choose-app", { replace: true, state: getChooseAppState() });
   };
 
   if (!token) return <Navigate to="/login" replace />;

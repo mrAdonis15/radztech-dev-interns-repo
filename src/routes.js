@@ -2,6 +2,7 @@ import DefaultLayout from "./layouts/DefaultLayout";
 import ChatboxLayout from "./DEV-INTERNS/Chatbox/Layout";
 import Login from "./Auth/Login/Login";
 import BizUI from "./Auth/selectBIZ";
+import ChooseApp from "./Auth/ChooseApp";
 import DisplayPage from "./DEV-INTERNS/uiJSON/Kurt/pages/DisplayPage";
 import Graphs from "./DEV-INTERNS/HistoricalGraph/pages/graphs";
 import Jayson from "./DEV-INTERNS/uiJSON/Adam/components/jsontask";
@@ -46,6 +47,10 @@ const routes = [
   {
     path: "/select-biz",
     element: BizUI,
+  },
+  {
+    path: "/choose-app",
+    element: ChooseApp,
   },
   {
     path: "/Chatbox",

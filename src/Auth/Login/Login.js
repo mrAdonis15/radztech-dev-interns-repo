@@ -103,13 +103,15 @@ export default function Login() {
           if (saved && saved.startsWith("/Chatbox")) {
             const search = saved.includes("?") ? saved.slice(saved.indexOf("?")) : "";
             from = { pathname: "/Chatbox", search };
+          } else if (saved && saved.startsWith("/AGR")) {
+            from = { pathname: "/AGR" };
           }
           try {
             sessionStorage.removeItem("chatboxReturnUrl");
           } catch (_) {}
         }
         isMountedRef.current = false;
-        if (from && (from.pathname === "/Chatbox" || (typeof from === "string" && from.startsWith("/Chatbox")))) {
+        if (from && (from.pathname === "/Chatbox" || from.pathname === "/AGR" || (typeof from === "string" && (from.startsWith("/Chatbox") || from.startsWith("/AGR"))))) {
           navigate("/select-biz", { replace: true, state: { from } });
         } else {
           navigate("/select-biz", { replace: true });
