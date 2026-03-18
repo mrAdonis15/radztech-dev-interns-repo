@@ -1,9 +1,4 @@
-/**
- * Stock Card & General Ledger graph module.
- * Single source for building and graphical design of:
- * - Stock card: IN / OUT / Running Balance (blue / red / teal), monthly aggregation.
- * - General Ledger: Debit / Credit / Running Balance (blue bars up, red bars down, green line), "YEAR YYYY" title, monthly aggregation.
- */
+
 const IN_COLOR = "rgb(54, 162, 235)";
 const OUT_COLOR = "rgb(255, 99, 132)";
 const RUNBAL_COLOR = "rgb(75, 192, 192)";

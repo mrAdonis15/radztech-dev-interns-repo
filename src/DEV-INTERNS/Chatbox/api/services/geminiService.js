@@ -114,7 +114,7 @@ export async function sendToGemini(userMessage) {
       text =
         "Sorry, I'm having trouble processing your request. Please try again. " +
         (err.response?.data?.message || err.message || "").slice(0, 80);
-    }
+      }
     return {
       type: "text",
       text,
