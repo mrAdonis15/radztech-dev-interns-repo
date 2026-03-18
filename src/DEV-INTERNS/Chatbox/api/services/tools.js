@@ -1,4 +1,4 @@
-  import axios from "axios";
+import axios from "axios";
 import { getBizToken } from "../selectedBiz";
 import { getGraphConfig } from "./stockcardgraph.js";
 
@@ -161,8 +161,10 @@ function normalizeStockcardArgs(args) {
     dt1 = dt1 || `${useYear}-01-01T00:00:00+08:00`;
     dt2 = dt2 || `${useYear}-12-31T23:59:59+08:00`;
   } else {
-    if (!/T\d{2}:\d{2}/.test(dt1)) dt1 = `${String(dt1).replace(/Z$/, "").trim()}T00:00:00+08:00`;
-    if (!/T\d{2}:\d{2}/.test(dt2)) dt2 = `${String(dt2).replace(/Z$/, "").trim()}T23:59:59+08:00`;
+    if (!/T\d{2}:\d{2}/.test(dt1))
+      dt1 = `${String(dt1).replace(/Z$/, "").trim()}T00:00:00+08:00`;
+    if (!/T\d{2}:\d{2}/.test(dt2))
+      dt2 = `${String(dt2).replace(/Z$/, "").trim()}T23:59:59+08:00`;
     [dt1, dt2] = capDateRangeToMonths(dt1, dt2, 12);
   }
 
@@ -251,23 +253,45 @@ export const functions = {
         headers: headers,
       });
 
-      const data = response.data.items;
+      let branches = response.data.items;
+      const brchName = args.q || "";
 
-      const branches = data.filter((item) => item.sBrch === args.q);
-
-      if (branches.length > 1) {
-        return {
-          status: "error",
-          error: "multiple",
-          data: branches,
-        };
+      if (brchName) {
+        branches = branches.filter((brch) => brch.sBrch === args.q);
       }
 
-      console.log("branch", branches);
       return {
         status: "success",
-        data: branches[0],
+        data: branches,
       };
+    } catch (err) {
+      return {
+        status: "error",
+        message: err.response?.data || err.message,
+      };
+    }
+  },
+  search_sub_acc: async (args) => {
+    // console.log(args.q);
+    const headers = getHeaders();
+
+    try {
+      const url = `${BASE_URL}/lib/sub`;
+
+      const response = await axios.post(url, args, {
+        headers,
+      });
+
+      const data = checkItems(response.data.sub_list || []);
+
+      const subAccounts = {
+        ...data,
+        items: data,
+      };
+
+      console.log("subAccounts", subAccounts);
+
+      return subAccounts;
     } catch (err) {
       return {
         status: "error",
@@ -366,8 +390,15 @@ export const functions = {
         headers,
       );
       const raw = response.data;
-      const requestedYear = params.dt1 ? parseInt(String(params.dt1).slice(0, 4), 10) : undefined;
-      const apiData = { ...raw, glChart: true, dt1: params.dt1, year: Number.isFinite(requestedYear) ? requestedYear : undefined };
+      const requestedYear = params.dt1
+        ? parseInt(String(params.dt1).slice(0, 4), 10)
+        : undefined;
+      const apiData = {
+        ...raw,
+        glChart: true,
+        dt1: params.dt1,
+        year: Number.isFinite(requestedYear) ? requestedYear : undefined,
+      };
       const config = getGraphConfig(apiData);
       if (!config || !config.labels || !config.datasets?.length) {
         return {
@@ -400,7 +431,9 @@ export const functions = {
           responsive: true,
           title: {
             display: !!config.title,
-            text: config.title || "General Ledger (Debit / Credit / Running Balance)",
+            text:
+              config.title ||
+              "General Ledger (Debit / Credit / Running Balance)",
           },
           scales:
             chartType !== "pie"
@@ -415,7 +448,8 @@ export const functions = {
     } catch (err) {
       return {
         status: "error",
-        message: messageFor504(err) || err.response?.data?.message || err.message,
+        message:
+          messageFor504(err) || err.response?.data?.message || err.message,
       };
     }
   },
@@ -438,7 +472,8 @@ export const functions = {
     } catch (err) {
       return {
         status: "error",
-        message: messageFor504(err) || err.response?.data?.message || err.message,
+        message:
+          messageFor504(err) || err.response?.data?.message || err.message,
       };
     }
   },
@@ -453,8 +488,14 @@ export const functions = {
         params,
         headers,
       );
-      const requestedYear = params.dt1 ? parseInt(String(params.dt1).slice(0, 4), 10) : undefined;
-      const apiData = { ...response.data, dt1: params.dt1, year: Number.isFinite(requestedYear) ? requestedYear : undefined };
+      const requestedYear = params.dt1
+        ? parseInt(String(params.dt1).slice(0, 4), 10)
+        : undefined;
+      const apiData = {
+        ...response.data,
+        dt1: params.dt1,
+        year: Number.isFinite(requestedYear) ? requestedYear : undefined,
+      };
       const config = getGraphConfig(apiData);
       if (!config || !config.labels || !config.datasets?.length) {
         return {
@@ -506,7 +547,8 @@ export const functions = {
     } catch (err) {
       return {
         status: "error",
-        message: messageFor504(err) || err.response?.data?.message || err.message,
+        message:
+          messageFor504(err) || err.response?.data?.message || err.message,
       };
     }
   },
@@ -518,78 +560,84 @@ export const functions = {
     };
   },
   get_prod_img: async (args) => {
-    const MAX_IMAGES = 10;
     const headers = getHeaders();
     const ixProd = args?.ixProd;
-    const basePath = `${BASE_URL}/images/prod/${encodeURIComponent(ixProd)}`;
     try {
       const url = `${BASE_URL}/images/prod/${ixProd}`;
       const response = await axios.get(url, { headers });
 
-      const raw = response.data;
-      let list = Array.isArray(raw) ? raw : [];
-      if (!Array.isArray(list) && raw && typeof raw === "object") {
-        list = raw.images || raw.files || raw.data || raw.gallery || [];
-        if (!Array.isArray(list)) list = [];
-        if (list.length === 0 && (raw.primary || raw.default)) {
-          list = [raw.primary || raw.default].concat(raw.gallery || raw.others || []);
-        }
-      }
+      const data = response.data;
 
-      const toUrl = (img) => {
-        if (img == null) return null;
-        if (typeof img === "string" && img.trim()) return img.trim();
-        if (typeof img !== "object") return null;
-        const urlStr = img.url || img.src || img.path || img.imageUrl;
-        if (typeof urlStr === "string" && urlStr.trim()) return urlStr.trim();
-        const name = img.filename || img.file || img.name;
-        if (typeof name === "string" && name.trim()) {
-          return `${basePath}/${encodeURIComponent(name.trim())}`;
-        }
-        return null;
-      };
-
-      const seen = new Set();
-      const allUrls = [];
-      for (const img of list) {
-        const u = toUrl(img);
-        if (u && !seen.has(u)) {
-          seen.add(u);
-          allUrls.push(u);
-        }
-      }
-
-      const avatarImg = list.find(
-        (img) =>
-          img &&
-          typeof img === "object" &&
-          (() => {
-            const name = (img.filename || img.file || img.name) || "";
-            return typeof name === "string" && (name === "active_prod_avatar.jpg" || name.toLowerCase().includes("active_prod_avatar"));
-          })(),
-      );
-      const defaultUrl = avatarImg ? toUrl(avatarImg) : allUrls[0] || null;
-      const restUrls = allUrls.filter((u) => u !== defaultUrl);
-
-      const includeAll = args && args.includeAll === true;
-      const anotherOnly = args && args.anotherOnly === true;
-      let selectedUrls = [];
-      if (anotherOnly) {
-        selectedUrls = restUrls.length > 0 ? [restUrls[0]] : [];
-      } else if (includeAll) {
-        selectedUrls = [...(defaultUrl ? [defaultUrl] : []), ...restUrls].slice(0, MAX_IMAGES);
-      } else {
-        selectedUrls = defaultUrl ? [defaultUrl] : [];
-      }
-
-      return {
-        type: "img",
-        images: selectedUrls,
-      };
+      return data;
     } catch (err) {
       return {
         status: "error",
         message: err.response?.data?.message || err.message,
+      };
+    }
+  },
+
+  get_sl_report: async (args) => {
+    const headers = getHeaders();
+
+    try {
+      const url = `${BASE_URL}/reports/sl`;
+
+      const response = await axios.post(url, args, {
+        headers,
+      });
+
+      const sl = response.data;
+
+      const data = {
+        begAmt: sl.begAmt,
+        tDr: sl.tDr,
+        tCr: sl.tCr,
+        endAmt: sl.endAmt,
+      };
+
+      console.log("sl", data);
+
+      return {
+        status: "success",
+        data: data,
+      };
+    } catch (err) {
+      return {
+        status: "error",
+        message: err.response?.data || err.message,
+      };
+    }
+  },
+  get_sl_bal: async (args) => {
+    const headers = getHeaders();
+
+    try {
+      const url = `${BASE_URL}/reports/sl-bal`;
+
+      const response = await axios.post(url, args, {
+        headers,
+      });
+
+      const data = response.data;
+
+      const bal = {
+        tBeg: data.begAmt,
+        tDr: data.tDr,
+        tCr: data.tCr,
+        tEnd: data.tEnd,
+      };
+
+      console.log("sl", bal);
+
+      return {
+        status: "success",
+        data: bal,
+      };
+    } catch (err) {
+      return {
+        status: "error",
+        message: err.response?.data || err.message,
       };
     }
   },
@@ -602,7 +650,7 @@ export const tools = [
       {
         name: "search_prod",
         description:
-          "Use this to search for specific products. Use ProdCd to display multiple entries. If no items found on the first search, return the result immediately and do not search again.",
+          "Use this to search for specific products. Use ProdCd to display multiple entries. Use this only for searching products.",
         parameters: {
           type: "object",
           properties: {
@@ -616,32 +664,21 @@ export const tools = [
       },
       {
         name: "search_branch",
-        description: "Use this to search for specific branch.",
+        description:
+          "Use this to search for specific branch. Only use this for finding/listing branches.",
         parameters: {
           type: "object",
           properties: {
             q: {
               type: "string",
-              description: "The name/title of the branch.",
+              description:
+                "The name/title of the branch. Set it to null if user wants all branches.",
             },
           },
           required: ["q"],
         },
       },
-      {
-        name: "search_gl_acc",
-        description: "Use this to search specific gl account.",
-        parameters: {
-          type: "object",
-          properties: {
-            q: {
-              type: "string",
-              description: "The title of the account",
-            },
-          },
-          required: ["q"],
-        },
-      },
+
       {
         name: "get_prod_bal",
         description:
@@ -687,7 +724,7 @@ export const tools = [
       {
         name: "get_gl_report",
         description:
-          "Returns the general ledger report for descriptive responses.",
+          "Returns the general ledger (GL) report. Use this for high-level summaries of all financial transactions across accounts.",
         parameters: {
           type: "object",
           properties: {
@@ -751,11 +788,13 @@ export const tools = [
             acc_others: {
               type: "array",
               items: {},
-              description: "Optional list of other account filters. Default [].",
+              description:
+                "Optional list of other account filters. Default [].",
             },
             year: {
               type: "integer",
-              description: "Optional year; used to default dt1/dt2 to that year.",
+              description:
+                "Optional year; used to default dt1/dt2 to that year.",
             },
           },
           required: ["ixAcc", "dt1", "dt2", "acc_others"],
@@ -774,7 +813,8 @@ export const tools = [
             },
             ixWH: {
               type: "integer",
-              description: "The warehouse id (ixWH). Use 4282 if not specified.",
+              description:
+                "The warehouse id (ixWH). Use 4282 if not specified.",
             },
             dt1: {
               type: "string",
@@ -788,7 +828,8 @@ export const tools = [
             },
             year: {
               type: "integer",
-              description: "Optional year; used to default dt1/dt2 to that year.",
+              description:
+                "Optional year; used to default dt1/dt2 to that year.",
             },
           },
           required: ["ixProd"],
@@ -807,7 +848,8 @@ export const tools = [
             },
             ixWH: {
               type: "integer",
-              description: "The warehouse id (ixWH). Use 4282 if not specified.",
+              description:
+                "The warehouse id (ixWH). Use 4282 if not specified.",
             },
             dt1: {
               type: "string",
@@ -816,12 +858,12 @@ export const tools = [
             },
             dt2: {
               type: "string",
-              description:
-                "End date (e.g. %Y-%m-%d). Defaults to end of year.",
+              description: "End date (e.g. %Y-%m-%d). Defaults to end of year.",
             },
             year: {
               type: "integer",
-              description: "Optional year; used to default dt1/dt2 to that year.",
+              description:
+                "Optional year; used to default dt1/dt2 to that year.",
             },
           },
           required: ["ixProd"],
@@ -855,8 +897,7 @@ export const tools = [
       },
       {
         name: "get_prod_img",
-        description:
-          "Get product images. Default: return only the avatar (active_prod_avatar.jpg or first image). When user asks for 'another one', 'provide another image', 'one more' use anotherOnly=true (returns exactly one other image). When user explicitly asks for 'all images', 'show all images', 'lahat ng images' use includeAll=true (returns avatar plus all others, max 10). Return only { type: 'img', images: [] }. Do not return the raw list.",
+        description: "Returns the images of a product.",
         parameters: {
           type: "object",
           properties: {
@@ -864,18 +905,118 @@ export const tools = [
               type: "integer",
               description: "The product id (ixProd).",
             },
-            anotherOnly: {
-              type: "boolean",
-              description:
-                "If true, return exactly one other image (not the avatar). Use only when user asks for another one, one more, or provide another image.",
-            },
-            includeAll: {
-              type: "boolean",
-              description:
-                "If true, return all images (avatar + others, max 10). Use only when user explicitly asks for all images or show all.",
-            },
           },
           required: ["ixProd"],
+        },
+      },
+      {
+        name: "search_sub_acc",
+        description: "Use this to search specific sub account.",
+        parameters: {
+          type: "object",
+          properties: {
+            ixSubType: {
+              type: "integer",
+              description: "The subtype id of the account.",
+            },
+            q: {
+              type: "string",
+              description: "The title of the account",
+            },
+          },
+          required: ["ixSubType", "q"],
+        },
+      },
+      {
+        name: "get_sl_report",
+        description:
+          "Returns the subsidiary ledger (SL) report. Use this for detailed breakdown of transactions for a specific account (e.g. customer, collector, salesman, etc.).",
+        parameters: {
+          type: "object",
+          properties: {
+            ixAcc: {
+              type: "integer",
+              description: "The id of the gl account (ixAcc).",
+            },
+            ixSub1: {
+              type: "integer",
+              description: "The id of the sub account (ixSub).",
+            },
+            ixSub2: {
+              type: "integer",
+              description: "Additional sub account. Default is 0.",
+            },
+            ixSub3: {
+              type: "integer",
+              description: "Additional sub account. Default is 0.",
+            },
+            ixSub4: {
+              type: "integer",
+              description: "Additional sub account. Default is 0.",
+            },
+            ixSub5: {
+              type: "integer",
+              description: "Additional sub account. Default is 0.",
+            },
+            dt1: {
+              type: "string",
+              description:
+                "Start date (%Y-%m-%dT%H:%M:%S%z). Defaults to current month's start date.",
+            },
+            dt2: {
+              type: "string",
+              description:
+                "End date (%Y-%m-%dT%H:%M:%S%z). Defaults to current month's end date.",
+            },
+            lst_branch: {
+              type: "array",
+              items: {},
+              description:
+                "Optional list of branch. Do not use this if user did not specify branch/branches.",
+            },
+          },
+          required: [
+            "ixAcc",
+            "ixSub1",
+            "ixSub2",
+            "ixSub3",
+            "ixSub4",
+            "ixSub5",
+            "dt1",
+            "dt2",
+            "lst_branch",
+          ],
+        },
+      },
+      {
+        name: "get_sl_bal",
+        description:
+          "Returns the the balance of a speciefic general accounts. You can use this for directly getting the overall balance of an account",
+        parameters: {
+          type: "object",
+          properties: {
+            ixAcc: {
+              type: "integer",
+              description: "The id of the gl account (ixAcc).",
+            },
+
+            dt1: {
+              type: "string",
+              description:
+                "Start date (%Y-%m-%dT%H:%M:%S%z). Defaults to current month's start date.",
+            },
+            dt2: {
+              type: "string",
+              description:
+                "End date (%Y-%m-%dT%H:%M:%S%z). Defaults to current month's end date.",
+            },
+            sDate: {
+              type: "string",
+              description:
+                "The date range in text format (e.g. 'For the month ended Mar 31, 2026').",
+            },
+          },
+          required: ["ixAcc", "dt1", "dt2", "sDate"],
         },
       },
     ],
