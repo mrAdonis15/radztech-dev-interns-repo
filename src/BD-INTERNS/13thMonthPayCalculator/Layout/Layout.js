@@ -1,14 +1,14 @@
 import React from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { Box, makeStyles } from "@material-ui/core";
+import UniversalNavbar from "src/BD-INTERNS/UniversalNavbar/UniversalNavbar";
 
 const useStyles = makeStyles((theme) => ({
   layout: {
     minHeight: "100vh",
     display: "flex",
     flexDirection: "column",
-    background: "linear-gradient(to right, #f7b272 0%, #db6700 100%)",
-    backgroundAttachment: "fixed",
+    background: "#fafafa",
     "@media print": {
       background: "#fff !important",
       minHeight: "auto",
@@ -16,62 +16,50 @@ const useStyles = makeStyles((theme) => ({
   },
   nav: {
     display: "flex",
-    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: theme.spacing(1),
-    padding: theme.spacing(2, 3),
+    gap: theme.spacing(3),
+    padding: theme.spacing(1.5, 2),
     flexShrink: 0,
-    borderBottom: "1px solid rgba(0, 0, 0, 0.08)",
-    background: "rgba(255, 255, 255, 0.25)",
-    [theme.breakpoints.down("sm")]: {
-      padding: theme.spacing(2),
-    },
+    borderBottom: "1px solid #eee",
+    background: "#fff",
+    boxShadow: "0 1px 8px rgba(0, 0, 0, 0.06)",
+    fontFamily: '"Roboto", sans-serif',
   },
   navLink: {
-    color: "#5a524c",
+    color: "#666",
+    fontFamily: '"Roboto", sans-serif',
     textDecoration: "none",
-    fontSize: "0.9375rem",
+    fontSize: "0.875rem",
     fontWeight: 500,
-    padding: theme.spacing(1, 2),
-    borderRadius: 8,
-    transition: "color 0.18s ease, background 0.18s ease",
+    padding: theme.spacing(0.75, 0),
     whiteSpace: "nowrap",
-    "&:hover": {
-      color: "#1a1a1a",
-      background: "rgba(255, 255, 255, 0.6)",
-    },
+    transition: "color 0.15s ease",
+    "&:hover": { color: "#111" },
   },
   navLinkActive: {
-    color: "#1a1a1a",
+    color: "#111",
     fontWeight: 600,
-    background: "rgba(255, 255, 255, 0.7)",
   },
   main: {
     flex: 1,
     width: "100%",
-    maxWidth: 920,
-    margin: theme.spacing(3, "auto", 4),
-    padding: theme.spacing(3, 3),
+    maxWidth: 880,
+    margin: theme.spacing(2, "auto", 3),
+    padding: theme.spacing(2, 2.5),
     boxSizing: "border-box",
-    background: "#fafafa",
-    borderRadius: 16,
-    boxShadow: "0 2px 12px rgba(0, 0, 0, 0.06)",
-    border: "1px solid #e8e8e8",
+    background: "transparent",
+    fontFamily: '"Roboto", sans-serif',
     [theme.breakpoints.down("sm")]: {
-      marginLeft: theme.spacing(2),
-      marginRight: theme.spacing(2),
-      marginBottom: theme.spacing(2),
-    },
-    [theme.breakpoints.down("xs")]: {
-      padding: theme.spacing(2, 2),
       marginLeft: theme.spacing(1.5),
       marginRight: theme.spacing(1.5),
+      padding: theme.spacing(2),
     },
     "@media print": {
       background: "#fff !important",
-      boxShadow: "none",
-      border: "none",
+      margin: 0,
+      padding: 0,
+      maxWidth: "none",
     },
   },
 }));
@@ -81,23 +69,28 @@ function Layout() {
 
   return (
     <Box className={classes.layout}>
+      <UniversalNavbar />
       <nav className={classes.nav}>
         <NavLink
           to="/BDCalculator"
           end
           className={({ isActive }) =>
-            isActive ? `${classes.navLink} ${classes.navLinkActive}` : classes.navLink
+            isActive
+              ? `${classes.navLink} ${classes.navLinkActive}`
+              : classes.navLink
+          }
+        >
+          Home
+        </NavLink>
+        <NavLink
+          to="/BDCalculator/calculator"
+          className={({ isActive }) =>
+            isActive
+              ? `${classes.navLink} ${classes.navLinkActive}`
+              : classes.navLink
           }
         >
           Calculator
-        </NavLink>
-        <NavLink
-          to="/BDCalculator/About"
-          className={({ isActive }) =>
-            isActive ? `${classes.navLink} ${classes.navLinkActive}` : classes.navLink
-          }
-        >
-          About
         </NavLink>
       </nav>
       <Box component="main" className={classes.main}>

@@ -38,6 +38,7 @@ const PLANS = {
     price: 2999,
     basePrice: 2999,
     perEmployee: 79,
+    maxEmployees: 25,
     priceDisplay: "2,999 PHP + 79/employee/month",
     color: "#22c55e",
     lightColor: "rgba(34, 197, 94, 0.15)",
@@ -62,6 +63,7 @@ const PLANS = {
     price: 4999,
     basePrice: 4999,
     perEmployee: 109,
+    maxEmployees: 100,
     priceDisplay: "4,999 PHP + 109/employee/month",
     color: "#3b82f6",
     lightColor: "rgba(59, 130, 246, 0.15)",
@@ -87,6 +89,7 @@ const PLANS = {
     price: 10000,
     basePrice: 10000,
     perEmployee: 179,
+    maxEmployees: null,
     priceDisplay: "10,000 PHP + 179/employee/month",
     color: "#8b5cf6",
     lightColor: "rgba(139, 92, 246, 0.15)",
@@ -154,7 +157,7 @@ const useStyles = makeStyles((theme) => ({
   root: {
     minHeight: "100vh",
     overflow: "auto",
-    background: "#f4f6f8",
+    background: "#FAFBFD",
     paddingTop: theme.spacing(1.5),
     paddingBottom: theme.spacing(1.5),
     paddingLeft: theme.spacing(2),
@@ -195,7 +198,7 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "center",
   },
   pageTitle: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: theme.typography.h1.fontFamily,
     fontWeight: 700,
     marginBottom: 0,
     color: theme.palette.text.primary,
@@ -279,6 +282,9 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(1.5),
     backgroundColor: "rgba(0,0,0,0.02)",
     minWidth: 0,
+    [theme.breakpoints.down("md")]: {
+      order: -1,
+    },
   },
   billingCard: {
     borderRadius: 4,
@@ -293,22 +299,22 @@ const useStyles = makeStyles((theme) => ({
     height: 3,
     background: `linear-gradient(90deg, ${theme.palette.primary.main}, #ff9f43)`,
   },
-  billingCardContent: { padding: theme.spacing(1.5) },
+  billingCardContent: { padding: theme.spacing(1, 1.25) },
   sectionTitle: {
     display: "flex",
     alignItems: "center",
-    gap: theme.spacing(0.75),
-    fontFamily: '"Fira Sans", sans-serif',
+    gap: theme.spacing(0.5),
+    fontFamily: theme.typography.h2.fontFamily,
     fontWeight: 600,
-    marginBottom: theme.spacing(1.25),
-    fontSize: "0.8rem",
+    marginBottom: theme.spacing(0.75),
+    fontSize: "0.75rem",
     textTransform: "uppercase",
     letterSpacing: "0.04em",
     color: theme.palette.text.primary,
   },
   sectionIcon: {
-    width: 38,
-    height: 38,
+    width: 30,
+    height: 30,
     borderRadius: 4,
     display: "flex",
     alignItems: "center",
@@ -319,20 +325,20 @@ const useStyles = makeStyles((theme) => ({
   fieldRow: {
     display: "grid",
     gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-    gap: theme.spacing(1.5),
-    marginBottom: theme.spacing(1),
+    gap: theme.spacing(1),
+    marginBottom: theme.spacing(0.75),
     [theme.breakpoints.down("sm")]: { gridTemplateColumns: "1fr" },
   },
   fieldWrap: {
     display: "flex",
     flexDirection: "column",
-    gap: theme.spacing(0.5),
-    marginBottom: theme.spacing(1),
+    gap: theme.spacing(0.25),
+    marginBottom: theme.spacing(0.75),
     minWidth: 0,
   },
   fieldLabel: {
     fontFamily: theme.typography.body1.fontFamily,
-    fontSize: "0.8rem",
+    fontSize: "0.75rem",
     fontWeight: 500,
     color: "rgba(0,0,0,0.72)",
   },
@@ -342,15 +348,15 @@ const useStyles = makeStyles((theme) => ({
     "& .MuiOutlinedInput-root": {
       borderRadius: 4,
       backgroundColor: "#fff",
-      border: "2px solid rgba(0,0,0,0.15)",
+      border: "1.5px solid rgba(0,0,0,0.15)",
       transition: "border-color 0.2s ease, box-shadow 0.2s ease",
       "& .MuiOutlinedInput-notchedOutline": {
         border: "none",
       },
       "& .MuiOutlinedInput-input": {
         fontFamily: theme.typography.body1.fontFamily,
-        padding: theme.spacing(1.25, 1.5),
-        fontSize: "0.9rem",
+        padding: theme.spacing(0.75, 1),
+        fontSize: "0.8125rem",
       },
       "&.Mui-focused": {
         borderColor: theme.palette.primary.main,
@@ -498,7 +504,7 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     alignItems: "center",
     gap: theme.spacing(0.5),
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: theme.typography.h2.fontFamily,
     fontWeight: 600,
     marginBottom: theme.spacing(1),
     fontSize: "0.8rem",
@@ -842,7 +848,7 @@ const useStyles = makeStyles((theme) => ({
     boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
   },
   planName: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: theme.typography.h2.fontFamily,
     fontWeight: 600,
     fontSize: "0.9rem",
     marginBottom: 2,
@@ -854,7 +860,7 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(0.5),
   },
   planPrice: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: theme.typography.h2.fontFamily,
     fontWeight: 600,
     fontSize: "0.95rem",
     color: theme.palette.text.primary,
@@ -869,16 +875,61 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(0.5),
   },
   totalLabel: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: theme.typography.body1.fontFamily,
     fontWeight: 600,
     fontSize: "0.85rem",
   },
   totalAmount: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: theme.typography.h2.fontFamily,
     fontWeight: 700,
     fontSize: "1rem",
     color: theme.palette.primary.main,
     letterSpacing: "-0.02em",
+  },
+  amountHero: {
+    textAlign: "center",
+    padding: theme.spacing(2.5, 2),
+    marginBottom: theme.spacing(2),
+    borderRadius: 8,
+    backgroundColor: "rgba(255, 119, 4, 0.08)",
+    border: "2px solid rgba(255, 119, 4, 0.25)",
+  },
+  amountHeroLabel: {
+    fontFamily: theme.typography.body1.fontFamily,
+    fontSize: "0.75rem",
+    fontWeight: 600,
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+    color: theme.palette.text.secondary,
+    marginBottom: theme.spacing(0.5),
+  },
+  amountHeroValue: {
+    fontFamily: theme.typography.h2.fontFamily,
+    fontWeight: 800,
+    fontSize: "2rem",
+    letterSpacing: "-0.03em",
+    color: theme.palette.primary.main,
+    lineHeight: 1.2,
+  },
+  amountHeroSub: {
+    fontFamily: theme.typography.body1.fontFamily,
+    fontSize: "0.8125rem",
+    color: theme.palette.text.secondary,
+    marginTop: theme.spacing(0.5),
+  },
+  editablePriceRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(1),
+    marginBottom: theme.spacing(0.75),
+  },
+  editablePriceInput: {
+    width: 80,
+    "& .MuiOutlinedInput-input": {
+      padding: theme.spacing(0.75, 1),
+      fontSize: "0.875rem",
+    },
+    "& .MuiOutlinedInput-root": { borderRadius: 4 },
   },
   receiptBox: {
     border: "1px solid rgba(0,0,0,0.12)",
@@ -892,7 +943,7 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "center",
   },
   receiptTitle: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: theme.typography.h2.fontFamily,
     fontWeight: 700,
     fontSize: "0.95rem",
     marginBottom: 2,
@@ -919,7 +970,7 @@ const useStyles = makeStyles((theme) => ({
     margin: theme.spacing(0.75, 0),
   },
   receiptSectionTitle: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: theme.typography.h2.fontFamily,
     fontWeight: 600,
     fontSize: "0.7rem",
     textTransform: "uppercase",
@@ -928,22 +979,12 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(0.5),
     marginTop: theme.spacing(0.5),
   },
-  receiptFeatureItem: {
-    display: "flex",
-    alignItems: "center",
-    gap: theme.spacing(0.5),
-    padding: "2px 0",
-    fontFamily: theme.typography.body1.fontFamily,
-    fontSize: "0.75rem",
-    color: theme.palette.text.primary,
-    "& svg": { fontSize: 14, color: "#22c55e", flexShrink: 0 },
-  },
   confirmBtn: {
     width: "100%",
     marginTop: theme.spacing(2),
     padding: theme.spacing(1.25, 2),
     borderRadius: 4,
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: theme.typography.h2.fontFamily,
     fontWeight: 600,
     textTransform: "none",
     fontSize: "0.9rem",
@@ -966,22 +1007,6 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: "rgba(0,0,0,0.02)",
     borderRadius: 4,
   },
-  benefitsList: {
-    listStyle: "none",
-    padding: 0,
-    margin: 0,
-    marginTop: theme.spacing(0.75),
-  },
-  benefitItem: {
-    display: "flex",
-    alignItems: "center",
-    gap: theme.spacing(0.5),
-    fontFamily: theme.typography.body1.fontFamily,
-    fontSize: "0.75rem",
-    color: theme.palette.text.secondary,
-    marginBottom: 2,
-    "& svg": { fontSize: 14, color: "#22c55e", flexShrink: 0 },
-  },
   paymentDetailsBox: {
     marginTop: theme.spacing(1),
     padding: theme.spacing(1.25),
@@ -990,7 +1015,7 @@ const useStyles = makeStyles((theme) => ({
     border: "1px solid rgba(0,0,0,0.08)",
   },
   paymentDetailsTitle: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: theme.typography.h2.fontFamily,
     fontSize: "0.8rem",
     fontWeight: 600,
     textTransform: "uppercase",
@@ -1047,13 +1072,13 @@ const useStyles = makeStyles((theme) => ({
     boxShadow: "0 24px 48px rgba(0,0,0,0.2)",
   },
   qrModalTitle: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: theme.typography.h2.fontFamily,
     fontSize: "1rem",
     fontWeight: 600,
     marginBottom: theme.spacing(1.5),
   },
   qrModalAmount: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: theme.typography.h2.fontFamily,
     fontSize: "1.25rem",
     fontWeight: 700,
     color: theme.palette.primary.main,
@@ -1106,6 +1131,14 @@ export default function Checkout() {
   const [planDropdownOpen, setPlanDropdownOpen] = useState(false);
   const [planDropdownSearch, setPlanDropdownSearch] = useState("");
   const planDropdownRef = useRef(null);
+  const [employeeCount, setEmployeeCount] = useState(10);
+
+  const rawEmployees = Math.max(0, Math.floor(Number(employeeCount) || 0));
+  const displayEmployees =
+    plan.maxEmployees != null
+      ? Math.min(plan.maxEmployees, rawEmployees)
+      : rawEmployees;
+  const computedTotal = plan.basePrice + plan.perEmployee * displayEmployees;
 
   useEffect(() => {
     if (!phoneDropdownOpen) return;
@@ -1130,6 +1163,15 @@ export default function Checkout() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [planDropdownOpen]);
+
+  useEffect(() => {
+    const max = plan.maxEmployees;
+    if (max == null) return;
+    setEmployeeCount((prev) => {
+      const n = Math.max(0, Math.floor(Number(prev) || 0));
+      return n > max ? max : prev;
+    });
+  }, [planKey, plan.maxEmployees]);
 
   const handleChange = (field) => (e) => {
     const value = e?.target?.value;
@@ -1243,7 +1285,10 @@ export default function Checkout() {
     }
     if (form.paymentMethod === "paymaya") {
       if (!paymentDetails.mayaContact?.trim())
-        next.payment_mayaContact = "Maya mobile or email is required";
+        next.payment_mayaContact = "Maya mobile number is required";
+      else if (!/^09\d{9}$/.test(String(paymentDetails.mayaContact).replace(/\s/g, "")))
+        next.payment_mayaContact =
+          "Enter a valid 11-digit mobile number (09XX XXX XXXX)";
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -1262,6 +1307,8 @@ export default function Checkout() {
       form: { ...form },
       planKey,
       plan: { ...plan },
+      employeeCount: displayEmployees,
+      totalAmount: computedTotal,
       paymentMethod: form.paymentMethod,
       receiptId,
       date,
@@ -1560,8 +1607,8 @@ export default function Checkout() {
                     size="small"
                     placeholder="Street, Barangay, City, Province, ZIP Code"
                     multiline
-                    minRows={2}
-                    maxRows={4}
+                    minRows={1}
+                    maxRows={3}
                     value={form.billingAddress}
                     onChange={handleChange("billingAddress")}
                     onBlur={handleBlur("billingAddress")}
@@ -1817,24 +1864,24 @@ export default function Checkout() {
                       color="textSecondary"
                       style={{ marginBottom: 12 }}
                     >
-                      Enter the mobile number or email linked to your Maya
-                      account. You'll receive instructions to complete the
-                      payment.
+                      Enter the mobile number linked to your Maya account.
+                      You'll receive instructions to complete the payment.
                     </Typography>
                     <Box className={classes.fieldWrap}>
                       <Typography className={classes.fieldLabel}>
-                        Maya mobile or email
+                        Maya mobile number
                       </Typography>
                       <TextField
                         className={classes.field}
                         fullWidth
                         variant="outlined"
                         size="small"
-                        placeholder="09XX XXX XXXX or email@example.com"
+                        placeholder="09XX XXX XXXX"
                         value={paymentDetails.mayaContact || ""}
                         onChange={handlePaymentDetailsChange("mayaContact")}
                         error={!!errors.payment_mayaContact}
                         helperText={errors.payment_mayaContact}
+                        inputProps={{ maxLength: 11, inputMode: "numeric" }}
                       />
                     </Box>
                   </Box>
@@ -1872,12 +1919,12 @@ export default function Checkout() {
                         fullWidth
                         variant="outlined"
                         size="small"
-                        placeholder="09XX XXX XXXX or email@example.com"
+                        placeholder="09XX XXX XXXX"
                         value={paymentDetails.qrphContact || ""}
                         onChange={handlePaymentDetailsChange("qrphContact")}
                         error={!!errors.payment_qrphContact}
                         helperText={errors.payment_qrphContact}
-                        inputProps={{ type: "text" }}
+                        inputProps={{ maxLength: 11, inputMode: "numeric" }}
                       />
                     </Box>
                   </Box>
@@ -1893,8 +1940,20 @@ export default function Checkout() {
                 </Box>
               </Box>
 
-              {/* Order Summary - Receipt style */}
+              {/* Order Summary - Amount emphasized at top */}
               <Box className={classes.unifiedSummary}>
+                <Box className={classes.amountHero}>
+                  <Typography className={classes.amountHeroLabel}>
+                    Amount due this month
+                  </Typography>
+                  <Typography className={classes.amountHeroValue}>
+                    ₱{computedTotal.toLocaleString("en-PH")}
+                  </Typography>
+                  <Typography className={classes.amountHeroSub}>
+                    ₱{plan.basePrice.toLocaleString("en-PH")} base + ₱{plan.perEmployee} × {displayEmployees} employees
+                  </Typography>
+                </Box>
+
                 <Typography component="div" className={classes.sectionTitle}>
                   <Box
                     className={classes.sectionIcon}
@@ -2021,46 +2080,50 @@ export default function Checkout() {
                         ₱{plan.perEmployee}
                       </span>
                     </Box>
+                    <Box className={classes.receiptRow}>
+                      <span className={classes.receiptRowLabel}>
+                        Number of employees
+                      </span>
+                      <Box className={classes.editablePriceRow}>
+                        <TextField
+                          type="number"
+                          size="small"
+                          variant="outlined"
+                          className={classes.editablePriceInput}
+                          value={employeeCount}
+                          onChange={(e) => {
+                            const raw = e.target.value === ""
+                              ? ""
+                              : Math.max(0, parseInt(e.target.value, 10) || 0);
+                            if (raw === "") {
+                              setEmployeeCount("");
+                              return;
+                            }
+                            const max = plan.maxEmployees;
+                            setEmployeeCount(max != null && raw > max ? max : raw);
+                          }}
+                          inputProps={{
+                            min: 0,
+                            max: plan.maxEmployees ?? undefined,
+                            step: 1,
+                          }}
+                          helperText={
+                            plan.maxEmployees != null
+                              ? `Max ${plan.maxEmployees} employees for this plan`
+                              : null
+                          }
+                        />
+                      </Box>
+                    </Box>
                     <Box className={classes.receiptDivider} />
                     <Box className={classes.receiptRow}>
                       <span className={classes.totalLabel}>
-                        Total due today (base)
+                        Total this month
                       </span>
                       <span className={classes.totalAmount}>
-                        ₱{plan.basePrice.toLocaleString("en-PH")}/mo + ₱
-                        {plan.perEmployee}/employee
+                        ₱{computedTotal.toLocaleString("en-PH")}
                       </span>
                     </Box>
-
-                    {plan.features && plan.features.length > 0 && (
-                      <>
-                        <Box className={classes.receiptDivider} />
-                        <Typography className={classes.receiptSectionTitle}>
-                          Included in this plan
-                        </Typography>
-                        {plan.features.map((feature, i) => (
-                          <Box key={i} className={classes.receiptFeatureItem}>
-                            <CheckCircleOutline fontSize="small" />
-                            {feature}
-                          </Box>
-                        ))}
-                      </>
-                    )}
-
-                    {plan.benefits && plan.benefits.length > 0 && (
-                      <>
-                        <Box className={classes.receiptDivider} />
-                        <Typography className={classes.receiptSectionTitle}>
-                          Benefits
-                        </Typography>
-                        {plan.benefits.map((benefit, i) => (
-                          <Box key={i} className={classes.receiptFeatureItem}>
-                            <CheckCircleOutline fontSize="small" />
-                            {benefit}
-                          </Box>
-                        ))}
-                      </>
-                    )}
                   </Box>
                 </Box>
 
@@ -2108,7 +2171,7 @@ export default function Checkout() {
                     : "Maya"}
               </Typography>
               <Typography className={classes.qrModalAmount}>
-                {formatPrice(plan.basePrice)} + ₱{plan.perEmployee}/employee/mo
+                ₱{computedTotal.toLocaleString("en-PH")} ({formatPrice(plan.basePrice)} + ₱{plan.perEmployee}/employee × {displayEmployees})
               </Typography>
               <Typography
                 className={classes.qrHint}

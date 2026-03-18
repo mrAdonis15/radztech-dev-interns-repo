@@ -47,7 +47,7 @@ const useStyles = makeStyles((theme) => ({
     fontFamily: theme.typography.body1.fontFamily,
   },
   heading: {
-    fontFamily: theme.typography.fontFamily,
+    fontFamily: theme.typography.h2.fontFamily,
   },
   link: {
     fontSize: "0.875rem",
