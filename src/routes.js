@@ -28,7 +28,6 @@ import AGR from "./DEV-INTERNS/AGR";
 import CalculatorLayout from "./BD-INTERNS/13thMonthPayCalculator/Layout/Layout";
 import Landing from "./BD-INTERNS/13thMonthPayCalculator/Landing/Landing";
 import Calculator from "./BD-INTERNS/13thMonthPayCalculator/Calculator/Calculator";
-import aboutCalculator from "./BD-INTERNS/13thMonthPayCalculator/About/About";
 import Result from "./BD-INTERNS/13thMonthPayCalculator/Result/Result";
 
 //Product Finder
