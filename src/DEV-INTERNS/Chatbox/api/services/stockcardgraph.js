@@ -1,4 +1,8 @@
 /**
+ * Stock Card & General Ledger graph module.
+ * Single source for building and graphical design of:
+ * - Stock card: IN / OUT / Running Balance (blue / red / teal), monthly aggregation.
+ * - General Ledger: Debit / Credit / Running Balance (blue bars up, red bars down, green line), "YEAR YYYY" title, monthly aggregation.
  */
 const IN_COLOR = "rgb(54, 162, 235)";
 const OUT_COLOR = "rgb(255, 99, 132)";
@@ -147,7 +151,7 @@ function getGLDateParts(r) {
   if (!s) return null;
   const iso = s.match(/^(\d{4})-(\d{1,2})/);
   if (iso) return { year: parseInt(iso[1], 10), month: parseInt(iso[2], 10) || 1 };
-  const slash = s.match(/(\d{4})[\/\-](\d{1,2})/);
+  const slash = s.match(/(\d{4})[/-](\d{1,2})/);
   if (slash) return { year: parseInt(slash[1], 10), month: parseInt(slash[2], 10) || 1 };
   return null;
 }
@@ -187,6 +191,7 @@ function aggregateToMonthly(items, year) {
 }
 
 /** Aggregate by every period in the data (no year filter). */
+// eslint-disable-next-line no-unused-vars
 function aggregateByPeriod(items) {
   const toUse = items.length > ITEMS_AGGREGATE_MAX ? items.slice(-ITEMS_AGGREGATE_MAX) : items;
   const sorted = [...toUse].sort((a, b) => String(getPeriod(a)).localeCompare(String(getPeriod(b)), undefined, { numeric: true }));

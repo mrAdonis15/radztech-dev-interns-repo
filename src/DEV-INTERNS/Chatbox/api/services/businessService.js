@@ -51,6 +51,7 @@ export async function getBusinesses(token) {
   });
 }
 
+/* Fix for ESLint warning */
 const businessService = {
   selectBiz,
   setBiz,

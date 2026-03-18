@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import "./Chatbox.css";
 import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
@@ -18,14 +17,14 @@ import ChatBubbleOutlineIcon from "@material-ui/icons/ChatBubbleOutline";
 import ExpandLessIcon from "@material-ui/icons/ExpandLess";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 
-import { sendMessage } from "./api/services/chatService.js";
+import { sendMessage } from "../api/services/chatService.js";
 import {
   saveChatHistory,
   fetchChatHistoryBySessionId,
   getChatHistoryList,
   mapServerHistoryItem,
   normalizeToDisplayMessages,
-} from "./api/services/chatHistoryService.js";
+} from "../api/services/chatHistoryService.js";
 import {
   getInitialMessages,
   getDefaultPanelPosition,
@@ -77,12 +76,21 @@ export default function Chatbox({ defaultOpen = false }) {
   const [menuChatsCollapsed, setMenuChatsCollapsed] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
-
   const theme = useChatboxTheme(rootRef);
-  const location = useLocation();
 
-  // Intentionally not syncing session_id to URL so it does not appear in the address bar
-  const syncSessionIdToUrl = () => {};
+  const syncSessionIdToUrl = (sid) => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (sid && String(sid).trim()) {
+      url.searchParams.set("session_id", String(sid).trim());
+    } else {
+      url.searchParams.delete("session_id");
+    }
+    const next = url.pathname + (url.search || "");
+    if (window.location.pathname + (window.location.search || "") !== next) {
+      window.history.replaceState(null, "", next);
+    }
+  };
 
   useEffect(() => {
     if (!isOpen || !bodyRef.current) return;
@@ -102,34 +110,42 @@ export default function Chatbox({ defaultOpen = false }) {
     saveMessages(messages);
   }, [messages]);
 
-  // Restore conversation from session_id (state, URL once then clear, or localStorage) on mount
+  // Restore conversation from session_id in URL on mount (e.g. after page reload)
+  // Prefer localStorage messages for this session when available so img/chart are preserved (same as charts).
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const fromState = location.state?.session_id;
     const url = new URL(window.location.href);
-    const fromUrl = url.searchParams.get("session_id");
-    // If session_id was in URL, clear it so it does not appear in the address bar
-    if (fromUrl && fromUrl.trim()) {
-      url.searchParams.delete("session_id");
-      const clean = url.pathname + (url.search || "");
-      if (window.location.pathname + (window.location.search || "") !== clean) {
-        window.history.replaceState(null, "", clean);
-      }
+    const sid = url.searchParams.get("session_id");
+    if (!sid || !sid.trim()) return;
+    const trimmedSid = sid.trim();
+    setSessionId(trimmedSid);
+    setViewingHistoryId(`session-${trimmedSid}`);
+    const localHistory = loadHistory();
+    const localItem = localHistory.find(
+      (h) => (h.sessionId && h.sessionId === trimmedSid) || h.id === trimmedSid || h.id === `session-${trimmedSid}`,
+    );
+    const localMessages =
+      localItem?.messages && Array.isArray(localItem.messages) && localItem.messages.length > 0
+        ? localItem.messages
+        : null;
+    if (localMessages && localMessages.length > 0) {
+      setMessages(normalizeToDisplayMessages(localMessages));
+      const hasChart = localMessages.some((m) => m.type === "chart");
+      const hasImg = localMessages.some((m) => m.type === "img" && m.data?.images?.length);
+      if (hasChart || hasImg) setIsExpanded(true);
+      return;
     }
-    const sid = (fromState && String(fromState).trim()) || (fromUrl && String(fromUrl).trim()) || (localStorage.getItem("session_id") || "").trim();
-    if (!sid) return;
-    setSessionId(sid);
-    setViewingHistoryId(`session-${sid}`);
-    fetchChatHistoryBySessionId(sid)
+    fetchChatHistoryBySessionId(trimmedSid)
       .then((apiMessages) => {
         if (apiMessages && apiMessages.length > 0) {
           setMessages(normalizeToDisplayMessages(apiMessages));
           const hasChart = apiMessages.some((m) => m.type === "chart");
-          if (hasChart) setIsExpanded(true);
+          const hasImg = apiMessages.some((m) => m.type === "img" && m.data?.images?.length);
+          if (hasChart || hasImg) setIsExpanded(true);
         }
       })
       .catch(() => {});
-    // Run only once on mount
+    // Run only once on mount when URL has session_id
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -282,7 +298,6 @@ export default function Chatbox({ defaultOpen = false }) {
       messages,
       controller.signal,
       sessionId ?? undefined,
-      responseLanguage,
     )
       .then((reply) => {
         const isChart = reply && reply.type === "chart";
@@ -309,11 +324,11 @@ export default function Chatbox({ defaultOpen = false }) {
                   ? {
                       ...msg,
                       type: "img",
-                      data: { images: reply.images || [] },
+                      data: { images: (reply.images || []).slice(0, 10) },
                       text: "",
                       time: receivedTime,
-                  }
-                : { ...msg, text, time: receivedTime }
+                    }
+                  : { ...msg, text, time: receivedTime }
               : msg,
           ),
         );
@@ -370,10 +385,21 @@ export default function Chatbox({ defaultOpen = false }) {
         .then((apiMessages) => {
           const toShow = apiMessages?.length > 0 ? apiMessages : item.messages || [];
           setMessages(normalizeToDisplayMessages(toShow));
+          const hasChart = (toShow || []).some((m) => m.type === "chart");
+          const hasImg = (toShow || []).some((m) => m.type === "img" && m.data?.images?.length);
+          if (hasChart || hasImg) setIsExpanded(true);
         })
-        .catch(() => setMessages(normalizeToDisplayMessages(item.messages || [])));
+        .catch(() => {
+          setMessages(normalizeToDisplayMessages(item.messages || []));
+          const hasChart = (item.messages || []).some((m) => m.type === "chart");
+          const hasImg = (item.messages || []).some((m) => m.type === "img" && m.data?.images?.length);
+          if (hasChart || hasImg) setIsExpanded(true);
+        });
     } else {
       setMessages(normalizeToDisplayMessages(item.messages || []));
+      const hasChart = (item.messages || []).some((m) => m.type === "chart");
+      const hasImg = (item.messages || []).some((m) => m.type === "img" && m.data?.images?.length);
+      if (hasChart || hasImg) setIsExpanded(true);
     }
   };
 
@@ -602,9 +628,6 @@ export default function Chatbox({ defaultOpen = false }) {
                       themeProps={theme}
                       isExpanded={true}
                       placeholder="Ask UlapAI"
-                      responseLanguage={responseLanguage}
-                      onResponseLanguageChange={setResponseLanguage}
-                      responseLanguageOptions={RESPONSE_LANGUAGE_OPTIONS}
                     />
                   </>
                 )}
@@ -713,9 +736,6 @@ export default function Chatbox({ defaultOpen = false }) {
                   onDragStart={handleDragStart}
                   themeProps={theme}
                   isExpanded={false}
-                  responseLanguage={responseLanguage}
-                  onResponseLanguageChange={setResponseLanguage}
-                  responseLanguageOptions={RESPONSE_LANGUAGE_OPTIONS}
                 />
               </>
             )}
