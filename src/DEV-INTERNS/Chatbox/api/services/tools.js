@@ -884,8 +884,7 @@ export const tools = [
             data: {
               type: "object",
               description:
-                "The chart data object containing 'labels' (array of strings) and 'datasets' (array of dataset objects). Each dataset should include 'label' (string), 'data' (array of numbers), and optional styling such as 'backgroundColor' or 'borderColor'.",
-            },
+                "The chart data object must include labels (array of strings) and datasets (array of objects). Each dataset must have a label (string) and data (array of numbers), and may include distinct backgroundColor and borderColor. All color values must be unique across the entire chart, must not be reused, and should be generated as distinct HEX values using a consistent pattern to ensure uniqueness.",            },
             options: {
               type: "object",
               description:
