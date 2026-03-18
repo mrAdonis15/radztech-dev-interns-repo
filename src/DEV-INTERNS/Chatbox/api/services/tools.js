@@ -583,24 +583,44 @@ export const functions = {
     try {
       const url = `${BASE_URL}/reports/sl`;
 
-      const response = await axios.post(url, args, {
+      const wantsTransactions =
+        args?.includeTransactions === true || args?.transactions === true;
+      const { includeTransactions, transactions, ...payload } = args || {};
+
+      const response = await axios.post(url, payload, {
         headers,
       });
 
       const sl = response.data;
 
-      const data = {
+      const summary = {
         begAmt: sl.begAmt,
         tDr: sl.tDr,
         tCr: sl.tCr,
         endAmt: sl.endAmt,
       };
 
-      console.log("sl", data);
+      console.log("sl", summary);
+
+      if (wantsTransactions) {
+        const rep = Array.isArray(sl?.rep)
+          ? sl.rep
+          : Array.isArray(sl)
+            ? sl
+            : [];
+
+        return {
+          status: "success",
+          transactions: true,
+          data: rep,
+          summary,
+        };
+      }
 
       return {
         status: "success",
-        data: data,
+        transactions: false,
+        data: summary,
       };
     } catch (err) {
       return {
@@ -973,6 +993,11 @@ export const tools = [
               description:
                 "Optional list of branch. Do not use this if user did not specify branch/branches.",
             },
+            includeTransactions: {
+              type: "boolean",
+              description:
+                "Set to true if the user explicitly asks for transaction-level details (rep list). If false, returns only the summarized totals.",
+            },
           },
           required: [
             "ixAcc",
@@ -990,7 +1015,7 @@ export const tools = [
       {
         name: "get_sl_bal",
         description:
-          "Returns the the balance of a speciefic general accounts. You can use this for directly getting the overall balance of an account",
+          "Returns the the balance of a specific general accounts. You can use this for directly getting the overall balance of an account",
         parameters: {
           type: "object",
           properties: {
