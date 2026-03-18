@@ -2,7 +2,7 @@ import React, { memo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import Avatar from "@material-ui/core/Avatar";
 import Typography from "@material-ui/core/Typography";
-import radzLogo from "../Assets/SHARED] Radztech Interns Logo - 32.png";
+import mascot3D from "../../../images/3Dmascot.png";
 import ChartRenderer from "./chartRenderer";
 
 function isImageOnlyContent(text) {
@@ -77,7 +77,7 @@ function ChatMessageInner({ msg }) {
           minWidth: 0,
         }}
       >
-        <Avatar src={radzLogo} className="reply-icon" />
+        <Avatar src={mascot3D} className="reply-icon" />
         <div className="message-content left" style={{ marginLeft: 8 }}>
           {isChart ? (
             <div
