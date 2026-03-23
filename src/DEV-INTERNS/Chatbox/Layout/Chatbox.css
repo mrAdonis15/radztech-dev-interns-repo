@@ -147,12 +147,12 @@
 }
 
 .chat-ulap-sidebar-collapse-btn {
-  color: #616161 !important;
+  color: #ff7504 !important;
   flex-shrink: 0;
 }
 
 .chat-ulap-sidebar-menu-icon {
-  color: #616161 !important;
+  color: #ff7504 !important;
   font-size: 24px !important;
 }
 
@@ -239,7 +239,7 @@
 }
 
 .chat-ulap-nav-icon {
-  color: #616161 !important;
+  color: #ff7504 !important;
   font-size: 20px !important;
 }
 
@@ -254,7 +254,7 @@
 }
 
 .chat-ulap-search-icon {
-  color: #9e9e9e !important;
+  color: #ff7504 !important;
   font-size: 20px !important;
   flex-shrink: 0;
 }
@@ -315,7 +315,7 @@
 }
 
 .chat-search-modal-close {
-  color: #616161 !important;
+  color: #ff7504 !important;
   flex-shrink: 0;
 }
 
@@ -353,7 +353,7 @@
 }
 
 .chat-search-modal-section-title {
-  color: #757575 !important;
+  color: #5c5c5c !important;
   font-size: 0.8125rem !important;
   font-weight: 500 !important;
   margin-bottom: 8px !important;
@@ -374,7 +374,7 @@
 }
 
 .chat-search-modal-bubble-icon {
-  color: #9e9e9e !important;
+  color: #ff7504 !important;
   font-size: 20px !important;
   flex-shrink: 0;
 }
@@ -412,7 +412,7 @@
 }
 
 .chat-ulap-chats-icon {
-  color: #616161 !important;
+  color: #ff7504 !important;
   flex-shrink: 0;
   margin-right: 4px;
 }
@@ -442,7 +442,7 @@
 }
 
 .chat-ulap-chats-arrow {
-  color: #757575 !important;
+  color: #ff7504 !important;
 }
 
 .chat-ulap-chats-list {
@@ -469,12 +469,12 @@
 }
 
 .chat-ulap-chat-delete {
-  opacity: 0.5;
+  color: #ff7504 !important;
+  opacity: 0.9;
 }
 
 .chat-ulap-chat-delete:hover {
   opacity: 1;
-  color: #ff7504 !important;
 }
 
 .chat-ulap-main {
@@ -525,13 +525,13 @@
 }
 
 .chat-ulap-header-icon-btn {
-  color: #616161 !important;
+  color: #ff7504 !important;
 }
 
 .chat-controlIcons .chat-expand-btn,
 .chat-expand-btn,
 .chat-ulap-header-icon-btn.chat-expand-btn {
-  color: #616161 !important;
+  color: #ff7504 !important;
   border: none !important;
   background: transparent !important;
 }
@@ -539,14 +539,12 @@
 .chat-expand-btn:hover,
 .chat-ulap-header-icon-btn.chat-expand-btn:hover {
   background: rgba(0, 0, 0, 0.04) !important;
-  color: #424242 !important;
 }
 .chat-controlIcons .chat-expand-btn.Mui-focusVisible,
 .chat-expand-btn.Mui-focusVisible,
 .chat-ulap-header-icon-btn.chat-expand-btn.Mui-focusVisible {
   outline: none !important;
   background: rgba(0, 0, 0, 0.06) !important;
-  color: #424242 !important;
 }
 
 .chat-ulap-main-body {
@@ -736,6 +734,9 @@
 .chat-inputPaper .emoji-wrapper .MuiIconButton-root {
   padding: 4px;
 }
+.chat-inputPaper .emoji-wrapper .chat-emoji-icon {
+  color: #ff7504 !important;
+}
 
 .chat-inputPaper .chat-input-theme-wrap {
   flex-shrink: 0;
@@ -782,6 +783,9 @@
 .chat-sendButton {
   flex-shrink: 0;
   color: #ff7504 !important;
+}
+.chat-sendButton:disabled {
+  color: rgba(255, 117, 4, 0.45) !important;
 }
 
 .chat-stopButton {
@@ -1243,6 +1247,26 @@
   display: block;
   border-radius: 8px;
   vertical-align: middle;
+}
+
+.chat-thinking-bubble {
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+}
+
+.chat-thinking-gif {
+  display: block;
+  width: 22px;
+  height: 22px;
+  max-width: 22px;
+  max-height: 22px;
+  object-fit: contain;
 }
 
 .chat-typing .chat-typing-text {
