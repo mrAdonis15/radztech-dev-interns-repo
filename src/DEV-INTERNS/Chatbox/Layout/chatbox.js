@@ -288,7 +288,9 @@ export default function Chatbox({ defaultOpen = false }) {
     setShowEmoji(false);
 
     const placeholderId = crypto.randomUUID();
-    const typingMsg = createMessage(placeholderId, "bot", "...");
+    const typingMsg = createMessage(placeholderId, "bot", "", {
+      status: "thinking",
+    });
     setMessages((prev) => [...prev, userMsg, typingMsg]);
 
     const messageForAi = text || "Hello";
@@ -328,7 +330,7 @@ export default function Chatbox({ defaultOpen = false }) {
                       text: "",
                       time: receivedTime,
                     }
-                  : { ...msg, text, time: receivedTime }
+                  : { ...msg, text, time: receivedTime, status: undefined }
               : msg,
           ),
         );
@@ -348,6 +350,7 @@ export default function Chatbox({ defaultOpen = false }) {
                     ? "Request cancelled."
                     : "Sorry, something went wrong. Please try again.",
                   time: receivedTime,
+                  status: undefined,
                 }
               : msg,
           ),

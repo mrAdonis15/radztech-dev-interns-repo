@@ -51,12 +51,13 @@ export function formatTime() {
 }
 
 /** Create a message object */
-export function createMessage(id, sender, text) {
+export function createMessage(id, sender, text, extra = {}) {
   return {
     id,
     sender,
     text,
     time: formatTime(),
+    ...extra,
   };
 }
 

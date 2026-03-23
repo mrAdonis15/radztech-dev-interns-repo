@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import Avatar from "@material-ui/core/Avatar";
 import Typography from "@material-ui/core/Typography";
 import mascot3D from "../../../images/3Dmascot.png";
+import thinkingGif from "../Assets/657560085_1306828051311695_7680741071615797336_n.gif";
 import ChartRenderer from "./chartRenderer";
 
 function isImageOnlyContent(text) {
@@ -23,7 +24,7 @@ const markdownImgComponent = {
 
 function ChatMessageInner({ msg }) {
   const isMe = msg.sender === "me";
-  const isTyping = msg.text === "...";
+  const isThinking = msg.status === "thinking" || msg.text === "...";
   const isChart = msg.type === "chart";
   const isImg = msg.type === "img" && msg.data && Array.isArray(msg.data.images);
 
@@ -81,7 +82,7 @@ function ChatMessageInner({ msg }) {
         <div className="message-content left" style={{ marginLeft: 8 }}>
           {isChart ? (
             <div
-              className={"chat-bubbleLeft" + (isTyping ? " chat-typing" : "")}
+              className={"chat-bubbleLeft" + (isThinking ? " chat-typing" : "")}
             >
               <ChartRenderer
                 type={chart.chartType}
@@ -115,15 +116,24 @@ function ChatMessageInner({ msg }) {
                 <ReactMarkdown components={markdownImgComponent}>{msg.text}</ReactMarkdown>
               </Typography>
             </div>
+          ) : isThinking ? (
+            <div className="chat-thinking-bubble" aria-label="UlapAI is thinking">
+              <img
+                src={thinkingGif}
+                alt=""
+                aria-hidden="true"
+                className="chat-thinking-gif"
+              />
+            </div>
           ) : (
             <div
-              className={"chat-bubbleLeft" + (isTyping ? " chat-typing" : "")}
+              className={"chat-bubbleLeft" + (isThinking ? " chat-typing" : "")}
             >
               <Typography
                 component="div"
                 variant="body2"
                 className={
-                  "bubble-text left" + (isTyping ? " chat-typing-text" : "")
+                  "bubble-text left" + (isThinking ? " chat-typing-text" : "")
                 }
               >
                 <ReactMarkdown components={markdownImgComponent}>{msg.text}</ReactMarkdown>
