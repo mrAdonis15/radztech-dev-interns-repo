@@ -6,6 +6,7 @@ import Card from "@material-ui/core/Card";
 import CardActionArea from "@material-ui/core/CardActionArea";
 import ChatIcon from "@material-ui/icons/Chat";
 import AssessmentIcon from "@material-ui/icons/Toc";
+import StarIcon from "@material-ui/icons/Star";
 import LoginToolbar from "../Login/LoginToolbar";
 import "./ChooseApp.css";
 
@@ -24,6 +25,10 @@ export default function ChooseApp() {
 
   const goToAGR = () => {
     navigate("/AGR", { replace: true });
+  };
+
+  const goToStarRating = () => {
+    navigate("/StarRating", { replace: true });
   };
 
   if (!token) return <Navigate to="/login" replace />;
@@ -64,6 +69,23 @@ export default function ChooseApp() {
                   </Typography>
                   <Typography variant="body2" className="choose-app-card-desc">
                     Customer Aging Simulator
+                  </Typography>
+                </Box>
+              </CardActionArea>
+            </Card>
+            <Card className="choose-app-card" elevation={0}>
+              <CardActionArea onClick={goToStarRating} className="choose-app-card-action">
+                <Box className="choose-app-card-icon-container">
+                  <Box className="choose-app-card-icon-circle">
+                    <StarIcon className="choose-app-card-icon" />
+                  </Box>
+                </Box>
+                <Box className="choose-app-card-details">
+                  <Typography variant="h6" component="h2" className="choose-app-card-label">
+                    Star Rating
+                  </Typography>
+                  <Typography variant="body2" className="choose-app-card-desc">
+                    Category evaluation dashboard
                   </Typography>
                 </Box>
               </CardActionArea>

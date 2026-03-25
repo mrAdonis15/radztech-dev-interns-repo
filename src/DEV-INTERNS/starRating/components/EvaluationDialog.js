@@ -108,8 +108,8 @@ function EvaluationDialog({ open, category, questions, onClose, onSave }) {
       <DialogTitle>{category ? `Evaluate ${category.name}` : "Evaluate"}</DialogTitle>
       <DialogContent className={classes.content}>
         <Typography variant="body2" className={classes.intro}>
-          Answer each question with a star rating. The card score will be based on the
-          average of your answers.
+          Answer each question with a star rating. The 5-star score is calculated using
+          the weighted mean: total star points divided by total reviews.
         </Typography>
 
         {questions.length === 0 ? (
@@ -143,7 +143,7 @@ function EvaluationDialog({ open, category, questions, onClose, onSave }) {
             Answered questions: {answeredRatings.length}/{questions.length}
           </Typography>
           <Typography variant="body1" className={classes.summaryValue}>
-            {draftAverage ? `Current average: ${draftAverage}/5` : "No answers yet"}
+            {draftAverage ? `Current weighted average: ${draftAverage}/5` : "No answers yet"}
           </Typography>
         </Box>
       </DialogContent>
