@@ -35,79 +35,93 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(14),
     paddingBottom: theme.spacing(8),
     background:
-      "linear-gradient(180deg, #fcfcfd 0%, #f8fafc 55%, #f3f4f6 100%)",
+      "linear-gradient(180deg, #f5f6f8 0%, #f1f3f5 100%)",
   },
   hero: {
-    padding: theme.spacing(0, 0, 3),
+    padding: 0,
     backgroundColor: "transparent",
     color: "#1f2937",
     marginBottom: theme.spacing(2),
   },
+  sectionLabel: {
+    fontSize: 14,
+    color: "#6b7280",
+    marginBottom: theme.spacing(1),
+  },
   heroTitle: {
     fontWeight: 700,
     letterSpacing: "-0.03em",
-    color: "#111827",
+    color: "#f97316",
   },
   heroSubtitle: {
     color: "#6b7280",
     marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(3),
   },
-  topBar: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: theme.spacing(2),
+  filterPanel: {
+    borderRadius: 4,
+    border: "1px solid #d7dce1",
+    boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
+    overflow: "hidden",
+    backgroundColor: "#ffffff",
     marginTop: theme.spacing(3),
-    [theme.breakpoints.down("md")]: {
-      flexDirection: "column",
-      alignItems: "stretch",
-    },
   },
-  topBarLeft: {
+  filterBody: {
+    padding: theme.spacing(2),
+  },
+  filtersGrid: {
     display: "flex",
-    alignItems: "center",
+    alignItems: "flex-end",
+    flexWrap: "wrap",
     gap: theme.spacing(2),
     [theme.breakpoints.down("sm")]: {
       flexDirection: "column",
       alignItems: "stretch",
     },
   },
-  switchTitle: {
-    fontWeight: 600,
-    color: "#374151",
+  fieldBlock: {
+    minWidth: 0,
+    flex: "1 1 320px",
   },
-  selectLabel: {
+  fieldLabel: {
+    fontSize: 11,
     color: "#6b7280",
-    "&.Mui-focused": {
-      color: "#6b7280",
+    marginBottom: theme.spacing(0.5),
+    minHeight: 16,
+  },
+  searchField: {
+    width: "100%",
+    "& .MuiOutlinedInput-root": {
+      backgroundColor: "#ffffff",
+      borderRadius: 2,
     },
   },
+  searchSpacer: {
+    minHeight: 16,
+    marginBottom: theme.spacing(0.5),
+  },
   selectControl: {
-    minWidth: 260,
+    width: "100%",
+  },
+  selectField: {
+    width: "100%",
   },
   selectInput: {
     color: "#111827",
     fontWeight: 600,
-    "& .MuiSelect-icon": {
-      color: "#6b7280",
+    "& .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#cfd6dd",
     },
-    "&:before": {
-      borderBottomColor: "rgba(107, 114, 128, 0.3)",
-    },
-    "&:after": {
-      borderBottomColor: "#f97316",
-    },
-    "&:hover:not(.Mui-disabled):before": {
-      borderBottomColor: "#9ca3af",
+    "&:hover .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#b8c1cc",
     },
   },
   summaryRow: {
     display: "flex",
     alignItems: "center",
     gap: theme.spacing(4),
-    marginTop: theme.spacing(4),
-    paddingTop: theme.spacing(2),
-    borderTop: "1px solid rgba(229, 231, 235, 0.9)",
+    marginTop: theme.spacing(2),
+    paddingTop: theme.spacing(1),
     [theme.breakpoints.down("sm")]: {
       flexWrap: "wrap",
       gap: theme.spacing(2.5),
@@ -140,20 +154,23 @@ const useStyles = makeStyles((theme) => ({
   actions: {
     display: "flex",
     gap: theme.spacing(2),
+    padding: theme.spacing(1.5, 2),
+    borderTop: "1px solid #e5e7eb",
+    backgroundColor: "#ffffff",
   },
   resetButton: {
-    borderRadius: 999,
-    padding: theme.spacing(1, 2.25),
+    borderRadius: 3,
+    padding: theme.spacing(0.9, 1.8),
     textTransform: "none",
-    fontWeight: 600,
+    fontWeight: 700,
     boxShadow: "none",
   },
   manageButton: {
-    borderColor: "#e5e7eb",
-    color: "#374151",
+    borderColor: "#f97316",
+    color: "#f97316",
     "&:hover": {
-      borderColor: "#d1d5db",
-      backgroundColor: "#f9fafb",
+      borderColor: "#ea580c",
+      backgroundColor: "#fff7ed",
     },
   },
   resetPrimaryButton: {
@@ -166,25 +183,26 @@ const useStyles = makeStyles((theme) => ({
   },
   emptyState: {
     padding: theme.spacing(4),
-    borderRadius: 18,
+    borderRadius: 4,
     textAlign: "center",
     color: "#475569",
-    backgroundColor: "rgba(255,255,255,0.8)",
-    border: "1px dashed rgba(148, 163, 184, 0.35)",
+    backgroundColor: "#ffffff",
+    border: "1px solid #d7dce1",
   },
   tableShell: {
-    borderRadius: 18,
-    border: "1px solid rgba(229, 231, 235, 1)",
-    boxShadow: "0 10px 30px rgba(15, 23, 42, 0.04)",
+    borderRadius: 4,
+    border: "1px solid #d7dce1",
+    boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
     overflow: "hidden",
     backgroundColor: "#ffffff",
+    marginTop: theme.spacing(2.5),
   },
   tableTitleBar: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: theme.spacing(2.5, 3, 2),
-    borderBottom: "1px solid rgba(243, 244, 246, 1)",
+    padding: theme.spacing(1.5, 2),
+    borderBottom: "1px solid #e5e7eb",
     backgroundColor: "#ffffff",
     [theme.breakpoints.down("xs")]: {
       flexDirection: "column",
@@ -201,34 +219,31 @@ const useStyles = makeStyles((theme) => ({
   },
   tableHeaderCell: {
     backgroundColor: "#ffffff",
-    color: "#6b7280",
+    color: "#111827",
     fontWeight: 700,
     fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    borderBottom: "1px solid rgba(243, 244, 246, 1)",
+    borderBottom: "1px solid #dfe4ea",
   },
   tableRow: {
     transition: "background-color 0.16s ease",
     "&:hover": {
-      backgroundColor: "#fafafa",
+      backgroundColor: "#f8fafc",
     },
   },
   nameCell: {
     fontWeight: 600,
     color: "#0f172a",
     minWidth: 220,
-    borderBottom: "1px solid rgba(243, 244, 246, 1)",
+    borderBottom: "1px solid #edf1f5",
   },
   metricCell: {
     color: "#334155",
-    whiteSpace: "nowrap",
-    borderBottom: "1px solid rgba(243, 244, 246, 1)",
+    borderBottom: "1px solid #edf1f5",
   },
   statusWrap: {
     display: "inline-flex",
     alignItems: "center",
-    gap: theme.spacing(1),
+    gap: theme.spacing(0.75),
   },
   statusDot: {
     width: 8,
@@ -248,15 +263,15 @@ const useStyles = makeStyles((theme) => ({
   },
   actionCell: {
     whiteSpace: "nowrap",
-    borderBottom: "1px solid rgba(243, 244, 246, 1)",
+    borderBottom: "1px solid #edf1f5",
   },
   evaluateButton: {
-    borderRadius: 999,
+    borderRadius: 3,
     textTransform: "none",
-    fontWeight: 600,
+    fontWeight: 700,
     backgroundColor: "#ea580c",
     color: "#ffffff",
-    padding: theme.spacing(0.85, 2),
+    padding: theme.spacing(0.75, 1.8),
     "&:hover": {
       backgroundColor: "#f97316",
     },
@@ -271,18 +286,8 @@ const useStyles = makeStyles((theme) => ({
       alignItems: "stretch",
     },
   },
-  searchField: {
-    minWidth: 260,
-    "& .MuiOutlinedInput-root": {
-      backgroundColor: "#ffffff",
-    },
-    [theme.breakpoints.down("sm")]: {
-      minWidth: 0,
-      width: "100%",
-    },
-  },
   filterControl: {
-    minWidth: 150,
+    minWidth: 180,
     [theme.breakpoints.down("sm")]: {
       width: "100%",
     },
@@ -365,83 +370,113 @@ function StarRatingPage() {
       <Box className={classes.page}>
         <Container maxWidth="lg">
           <Paper elevation={0} className={classes.hero}>
+            <Typography className={classes.sectionLabel}>Evaluation</Typography>
             <Typography variant="h3" className={classes.heroTitle}>
-              {displayMode.heading}
+              {activeGroup?.label || displayMode.heading}
             </Typography>
             <Typography variant="body1" className={classes.heroSubtitle}>
               {activeGroup?.description}
             </Typography>
 
-            <Box className={classes.topBar}>
-              <Box className={classes.topBarLeft}>
-                <Typography variant="body1" className={classes.switchTitle}>
-                  {displayMode.subheading}
-                </Typography>
-                <FormControl className={classes.selectControl}>
-                  <InputLabel className={classes.selectLabel} id="rating-group-select-label">
-                    Rating setup
-                  </InputLabel>
-                  <Select
-                    labelId="rating-group-select-label"
-                    value={activeGroupId}
-                    onChange={handleSelectGroup}
-                    className={classes.selectInput}
-                  >
-                    {categoryGroupList.map((group) => (
-                      <MenuItem key={group.id} value={group.id}>
-                        {group.label || "Untitled setup"}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+            <Paper elevation={0} className={classes.filterPanel}>
+              <Box className={classes.filterBody}>
+                <Box className={classes.filtersGrid}>
+                  <Box className={classes.fieldBlock}>
+                    <Box className={classes.searchSpacer} />
+                    <TextField
+                      variant="outlined"
+                      size="small"
+                      placeholder={`Search ${summary.itemLabelPlural.toLowerCase()}`}
+                      value={searchTerm}
+                      onChange={(event) => setSearchTerm(event.target.value)}
+                      className={classes.searchField}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <SearchIcon fontSize="small" style={{ color: "#6b7280" }} />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Box>
+                  <Box className={classes.fieldBlock}>
+                    <Typography className={classes.fieldLabel}>Rating Setup</Typography>
+                    <FormControl variant="outlined" size="small" className={classes.selectControl}>
+                      <Select
+                        value={activeGroupId}
+                        onChange={handleSelectGroup}
+                        className={classes.selectInput}
+                      >
+                        {categoryGroupList.map((group) => (
+                          <MenuItem key={group.id} value={group.id}>
+                            {group.label || "Untitled setup"}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
+                  <Box className={classes.fieldBlock}>
+                    <Typography className={classes.fieldLabel}>Status</Typography>
+                    <FormControl variant="outlined" size="small" className={classes.filterControl}>
+                      <Select
+                        value={statusFilter}
+                        onChange={(event) => setStatusFilter(event.target.value)}
+                        className={classes.selectField}
+                      >
+                        <MenuItem value="all">All Status</MenuItem>
+                        <MenuItem value="rated">Rated</MenuItem>
+                        <MenuItem value="pending">Not rated</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Box>
+                </Box>
+
+                <Box className={classes.summaryRow}>
+                  <Box className={classes.metricBlock}>
+                    <Typography className={classes.summaryLabel}>
+                      {summary.itemLabelPlural}
+                    </Typography>
+                    <Typography variant="h5" className={classes.summaryValue}>
+                      {summary.totalCategories}
+                    </Typography>
+                  </Box>
+                  <Box className={classes.metricBlock}>
+                    <Typography className={classes.summaryLabel}>Rated</Typography>
+                    <Typography variant="h5" className={classes.summaryValue}>
+                      {summary.ratedCategories}
+                    </Typography>
+                  </Box>
+                  <Box className={classes.metricBlock}>
+                    <Typography className={classes.summaryLabel}>Average</Typography>
+                    <Typography variant="h5" className={classes.summaryValue}>
+                      {summary.averageUserRating.toFixed(1)}
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" className={classes.progressText}>
+                    {summary.ratedCategories} of {summary.totalCategories}{" "}
+                    {summary.itemLabelPlural.toLowerCase()} rated
+                  </Typography>
+                </Box>
               </Box>
 
               <Box className={classes.actions}>
                 <Button
-                  variant="outlined"
-                  startIcon={<SettingsIcon />}
+                  variant="text"
                   onClick={handleOpenAdmin}
                   className={`${classes.resetButton} ${classes.manageButton}`}
                 >
-                  Manage
+                  MANAGE SETUP
                 </Button>
                 <Button
-                  variant="contained"
+                  variant="text"
                   startIcon={<ReplayIcon />}
                   onClick={resetRatings}
-                  className={`${classes.resetButton} ${classes.resetPrimaryButton}`}
+                  className={`${classes.resetButton} ${classes.manageButton}`}
                 >
-                  Reset
+                  RESET RATINGS
                 </Button>
               </Box>
-            </Box>
-
-            <Box className={classes.summaryRow}>
-              <Box className={classes.metricBlock}>
-                <Typography className={classes.summaryLabel}>
-                  {summary.itemLabelPlural}
-                </Typography>
-                <Typography variant="h5" className={classes.summaryValue}>
-                  {summary.totalCategories}
-                </Typography>
-              </Box>
-              <Box className={classes.metricBlock}>
-                <Typography className={classes.summaryLabel}>Rated</Typography>
-                <Typography variant="h5" className={classes.summaryValue}>
-                  {summary.ratedCategories}
-                </Typography>
-              </Box>
-              <Box className={classes.metricBlock}>
-                <Typography className={classes.summaryLabel}>Average</Typography>
-                <Typography variant="h5" className={classes.summaryValue}>
-                  {summary.averageUserRating.toFixed(1)}
-                </Typography>
-              </Box>
-              <Typography variant="body2" className={classes.progressText}>
-                {summary.ratedCategories} of {summary.totalCategories}{" "}
-                {summary.itemLabelPlural.toLowerCase()} rated
-              </Typography>
-            </Box>
+            </Paper>
           </Paper>
 
           {categories.length > 0 ? (
@@ -457,40 +492,8 @@ function StarRatingPage() {
                   </Typography>
                 </Box>
                 <Typography variant="body2" className={classes.tableSubtitle}>
-                  {summary.totalCategories} total {summary.itemLabelPlural.toLowerCase()}
+                  {filteredCategories.length} shown
                 </Typography>
-              </Box>
-              <Box className={classes.tableTitleBar} style={{ paddingTop: 0 }}>
-                <Box className={classes.tableTools}>
-                  <TextField
-                    variant="outlined"
-                    size="small"
-                    placeholder={`Search ${summary.itemLabelPlural.toLowerCase()}`}
-                    value={searchTerm}
-                    onChange={(event) => setSearchTerm(event.target.value)}
-                    className={classes.searchField}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon fontSize="small" style={{ color: "#9ca3af" }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                  <FormControl variant="outlined" size="small" className={classes.filterControl}>
-                    <InputLabel id="status-filter-label">Status</InputLabel>
-                    <Select
-                      labelId="status-filter-label"
-                      value={statusFilter}
-                      onChange={(event) => setStatusFilter(event.target.value)}
-                      label="Status"
-                    >
-                      <MenuItem value="all">All</MenuItem>
-                      <MenuItem value="rated">Rated</MenuItem>
-                      <MenuItem value="pending">Pending</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
               </Box>
               <Table>
                 <TableHead>
@@ -500,8 +503,7 @@ function StarRatingPage() {
                     </TableCell>
                     <TableCell className={classes.tableHeaderCell}>Status</TableCell>
                     <TableCell className={classes.tableHeaderCell}>Your Rating</TableCell>
-                    <TableCell className={classes.tableHeaderCell}>Average Rating</TableCell>
-                    <TableCell className={classes.tableHeaderCell}>Total Reviews</TableCell>
+                    <TableCell className={classes.tableHeaderCell}>Notes</TableCell>
                     <TableCell align="right" className={classes.tableHeaderCell}>
                       Action
                     </TableCell>
@@ -531,11 +533,10 @@ function StarRatingPage() {
                         </TableCell>
                         <TableCell className={classes.metricCell}>
                           {category.totalRatings > 0
-                            ? `${category.averageRating.toFixed(1)} / 5`
-                            : "No ratings yet"}
-                        </TableCell>
-                        <TableCell className={classes.metricCell}>
-                          {category.totalRatings}
+                            ? `Average ${category.averageRating.toFixed(1)} from ${category.totalRatings} review${
+                                category.totalRatings > 1 ? "s" : ""
+                              }`
+                            : "No ratings submitted yet"}
                         </TableCell>
                         <TableCell align="right" className={classes.actionCell}>
                           <Button
@@ -551,7 +552,7 @@ function StarRatingPage() {
                   })}
                   {filteredCategories.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} align="center" className={classes.metricCell}>
+                      <TableCell colSpan={5} align="center" className={classes.metricCell}>
                         No matching results found.
                       </TableCell>
                     </TableRow>
