@@ -34,6 +34,7 @@ const useStyles = makeStyles((theme) => ({
     minHeight: "100vh",
     paddingTop: theme.spacing(14),
     paddingBottom: theme.spacing(8),
+    fontFamily: '"Poppins", sans-serif',
     background:
       "linear-gradient(180deg, #f5f6f8 0%, #f1f3f5 100%)",
   },
@@ -323,6 +324,9 @@ function StarRatingPage() {
     addQuestion,
     updateQuestion,
     removeQuestion,
+    addSubQuestion,
+    updateSubQuestion,
+    removeSubQuestion,
     resetQuestions,
   } = useEvaluationQuestions();
 
@@ -586,6 +590,9 @@ function StarRatingPage() {
             onAddQuestion={addQuestion}
             onUpdateQuestion={updateQuestion}
             onRemoveQuestion={removeQuestion}
+            onAddSubQuestion={addSubQuestion}
+            onUpdateSubQuestion={updateSubQuestion}
+            onRemoveSubQuestion={removeSubQuestion}
             onResetQuestions={resetQuestions}
             onAddGroup={addGroup}
             onUpdateGroup={updateGroup}

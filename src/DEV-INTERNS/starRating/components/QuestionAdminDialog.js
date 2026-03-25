@@ -74,6 +74,17 @@ const useStyles = makeStyles((theme) => ({
     border: "1px solid rgba(148, 163, 184, 0.22)",
     backgroundColor: "#f8fafc",
   },
+  subQuestionCard: {
+    padding: theme.spacing(1.5),
+    borderRadius: 14,
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    backgroundColor: "#ffffff",
+  },
+  subQuestionStack: {
+    display: "grid",
+    gap: theme.spacing(1.5),
+    marginTop: theme.spacing(1.5),
+  },
   itemHeader: {
     display: "flex",
     alignItems: "center",
@@ -106,6 +117,9 @@ function QuestionAdminDialog({
   onUpdateQuestion,
   onRemoveQuestion,
   onResetQuestions,
+  onAddSubQuestion,
+  onUpdateSubQuestion,
+  onRemoveSubQuestion,
   onAddGroup,
   onUpdateGroup,
   onRemoveGroup,
@@ -343,6 +357,75 @@ function QuestionAdminDialog({
                       onUpdateQuestion(question.id, "helperText", event.target.value)
                     }
                   />
+
+                  <Box className={classes.toolbar}>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      startIcon={<AddIcon />}
+                      onClick={() => onAddSubQuestion(question.id)}
+                      className={classes.actionButton}
+                    >
+                      Add sub-question
+                    </Button>
+                  </Box>
+
+                  {(question.subQuestions || []).length > 0 ? (
+                    <Box className={classes.subQuestionStack}>
+                      {question.subQuestions.map((subQuestion, subIndex) => (
+                        <Box key={subQuestion.id} className={classes.subQuestionCard}>
+                          <Box className={classes.itemHeader}>
+                            <Typography variant="body1" className={classes.itemTitle}>
+                              Sub-question {index + 1}.{subIndex + 1}
+                            </Typography>
+                            <IconButton
+                              onClick={() =>
+                                onRemoveSubQuestion(question.id, subQuestion.id)
+                              }
+                              aria-label={`Delete sub-question ${subIndex + 1}`}
+                            >
+                              <DeleteOutlineIcon />
+                            </IconButton>
+                          </Box>
+
+                          <Box className={classes.stack}>
+                            <TextField
+                              label="Sub-question title"
+                              variant="outlined"
+                              fullWidth
+                              value={subQuestion.label}
+                              placeholder="Enter the sub-question title"
+                              onChange={(event) =>
+                                onUpdateSubQuestion(
+                                  question.id,
+                                  subQuestion.id,
+                                  "label",
+                                  event.target.value
+                                )
+                              }
+                            />
+                            <TextField
+                              label="Sub-question helper text"
+                              variant="outlined"
+                              fullWidth
+                              multiline
+                              rows={2}
+                              value={subQuestion.helperText}
+                              placeholder="Add guidance for how this sub-question should be rated"
+                              onChange={(event) =>
+                                onUpdateSubQuestion(
+                                  question.id,
+                                  subQuestion.id,
+                                  "helperText",
+                                  event.target.value
+                                )
+                              }
+                            />
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
+                  ) : null}
                 </Box>
               </Box>
             ))

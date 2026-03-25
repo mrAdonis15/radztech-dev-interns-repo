@@ -3,7 +3,13 @@ import defaultQuestions from "../data/questions";
 
 const STORAGE_KEY = "dev-interns-star-rating-questions";
 
-const cloneQuestions = (questions) => questions.map((question) => ({ ...question }));
+const cloneQuestions = (questions) =>
+  questions.map((question) => ({
+    ...question,
+    subQuestions: Array.isArray(question.subQuestions)
+      ? question.subQuestions.map((subQuestion) => ({ ...subQuestion }))
+      : [],
+  }));
 const createUniqueQuestionId = () =>
   `question-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -14,7 +20,15 @@ const isValidQuestionSet = (questions) =>
       question &&
       typeof question.id === "string" &&
       typeof question.label === "string" &&
-      typeof question.helperText === "string"
+      typeof question.helperText === "string" &&
+      Array.isArray(question.subQuestions) &&
+      question.subQuestions.every(
+        (subQuestion) =>
+          subQuestion &&
+          typeof subQuestion.id === "string" &&
+          typeof subQuestion.label === "string" &&
+          typeof subQuestion.helperText === "string"
+      )
   );
 
 const getStoredQuestions = () => {
@@ -56,6 +70,7 @@ export default function useEvaluationQuestions() {
         id: createUniqueQuestionId(),
         label: "",
         helperText: "",
+        subQuestions: [],
       },
     ]);
   };
@@ -79,6 +94,61 @@ export default function useEvaluationQuestions() {
     );
   };
 
+  const addSubQuestion = (questionId) => {
+    setQuestions((currentQuestions) =>
+      currentQuestions.map((question) =>
+        question.id === questionId
+          ? {
+              ...question,
+              subQuestions: [
+                ...(question.subQuestions || []),
+                {
+                  id: createUniqueQuestionId(),
+                  label: "",
+                  helperText: "",
+                },
+              ],
+            }
+          : question
+      )
+    );
+  };
+
+  const updateSubQuestion = (questionId, subQuestionId, field, value) => {
+    setQuestions((currentQuestions) =>
+      currentQuestions.map((question) =>
+        question.id === questionId
+          ? {
+              ...question,
+              subQuestions: (question.subQuestions || []).map((subQuestion) =>
+                subQuestion.id === subQuestionId
+                  ? {
+                      ...subQuestion,
+                      [field]: value,
+                    }
+                  : subQuestion
+              ),
+            }
+          : question
+      )
+    );
+  };
+
+  const removeSubQuestion = (questionId, subQuestionId) => {
+    setQuestions((currentQuestions) =>
+      currentQuestions.map((question) =>
+        question.id === questionId
+          ? {
+              ...question,
+              subQuestions: (question.subQuestions || []).filter(
+                (subQuestion) => subQuestion.id !== subQuestionId
+              ),
+            }
+          : question
+      )
+    );
+  };
+
   const resetQuestions = () => {
     setQuestions(cloneQuestions(defaultQuestions));
   };
@@ -88,6 +158,9 @@ export default function useEvaluationQuestions() {
     addQuestion,
     updateQuestion,
     removeQuestion,
+    addSubQuestion,
+    updateSubQuestion,
+    removeSubQuestion,
     resetQuestions,
   };
 }

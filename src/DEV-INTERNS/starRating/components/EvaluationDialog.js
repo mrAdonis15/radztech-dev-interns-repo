@@ -26,6 +26,12 @@ const useStyles = makeStyles((theme) => ({
   questionBlock: {
     padding: theme.spacing(2, 0),
   },
+  subQuestionBlock: {
+    marginTop: theme.spacing(1.5),
+    marginLeft: theme.spacing(2),
+    paddingLeft: theme.spacing(2),
+    borderLeft: "2px solid rgba(148, 163, 184, 0.24)",
+  },
   questionTitle: {
     fontWeight: 600,
     color: "#0f172a",
@@ -64,6 +70,10 @@ const useStyles = makeStyles((theme) => ({
 function EvaluationDialog({ open, category, questions, onClose, onSave }) {
   const classes = useStyles();
   const [draftRatings, setDraftRatings] = useState({});
+  const totalQuestionCount = questions.reduce(
+    (count, question) => count + 1 + (question.subQuestions || []).length,
+    0
+  );
 
   useEffect(() => {
     if (!category) {
@@ -127,20 +137,35 @@ function EvaluationDialog({ open, category, questions, onClose, onSave }) {
                 <Typography variant="body2" className={classes.helperText}>
                   {question.helperText}
                 </Typography>
-                <StarRating
-                  value={draftRatings[question.id] || 0}
-                  onChange={(rating) => handleRateQuestion(question.id, rating)}
-                  showValue
-                />
-              </Box>
-              {index < questions.length - 1 ? <Divider /> : null}
-            </React.Fragment>
+              <StarRating
+                value={draftRatings[question.id] || 0}
+                onChange={(rating) => handleRateQuestion(question.id, rating)}
+                showValue
+              />
+              {(question.subQuestions || []).map((subQuestion) => (
+                <Box key={subQuestion.id} className={classes.subQuestionBlock}>
+                  <Typography variant="subtitle2" className={classes.questionTitle}>
+                    {subQuestion.label || "Untitled sub-question"}
+                  </Typography>
+                  <Typography variant="body2" className={classes.helperText}>
+                    {subQuestion.helperText}
+                  </Typography>
+                  <StarRating
+                    value={draftRatings[subQuestion.id] || 0}
+                    onChange={(rating) => handleRateQuestion(subQuestion.id, rating)}
+                    showValue
+                  />
+                </Box>
+              ))}
+            </Box>
+            {index < questions.length - 1 ? <Divider /> : null}
+          </React.Fragment>
           ))
         )}
 
         <Box className={classes.summary}>
           <Typography variant="body2" color="textSecondary">
-            Answered questions: {answeredRatings.length}/{questions.length}
+            Answered questions: {answeredRatings.length}/{totalQuestionCount}
           </Typography>
           <Typography variant="body1" className={classes.summaryValue}>
             {draftAverage ? `Current weighted average: ${draftAverage}/5` : "No answers yet"}
