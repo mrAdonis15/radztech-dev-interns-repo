@@ -1,61 +1,61 @@
 import { createTheme } from "@material-ui/core";
 
 const typography = {
-  fontFamily: '"Roboto", sans-serif',
+  fontFamily: '"Poppins", sans-serif',
   h1: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: '"Poppins", sans-serif',
     fontWeight: 500,
     fontSize: 35,
     letterSpacing: "-0.24px",
   },
   h2: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: '"Poppins", sans-serif',
     fontWeight: 500,
     fontSize: 29,
     letterSpacing: "-0.24px",
   },
   h3: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: '"Poppins", sans-serif',
     fontWeight: 500,
     fontSize: 24,
     letterSpacing: "-0.06px",
   },
   h4: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: '"Poppins", sans-serif',
     fontWeight: 500,
     fontSize: 20,
     letterSpacing: "-0.06px",
   },
   h5: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: '"Poppins", sans-serif',
     fontWeight: 500,
     fontSize: 16,
     letterSpacing: "-0.05px",
   },
   h6: {
-    fontFamily: '"Fira Sans", sans-serif',
+    fontFamily: '"Poppins", sans-serif',
     fontWeight: 500,
     fontSize: 14,
     letterSpacing: "-0.05px",
   },
   body1: {
-    fontFamily: '"Roboto", sans-serif',
+    fontFamily: '"Poppins", sans-serif',
     fontWeight: 400,
   },
   body2: {
-    fontFamily: '"Roboto", sans-serif',
+    fontFamily: '"Poppins", sans-serif',
     fontWeight: 400,
   },
   overline: {
     fontWeight: 500,
-    fontFamily: '"Roboto", sans-serif',
+    fontFamily: '"Poppins", sans-serif',
   },
   subtitle1: {
-    fontFamily: '"Roboto", sans-serif',
+    fontFamily: '"Poppins", sans-serif',
     fontWeight: 400,
   },
   subtitle2: {
-    fontFamily: '"Roboto", sans-serif',
+    fontFamily: '"Poppins", sans-serif',
     fontWeight: 400,
   },
 };

@@ -23,6 +23,7 @@ import ImageCompressor from "./DEV-INTERNS/ImageCompress/ImageCompressor";
 import SqlFormatter from "./DEV-INTERNS/SQL Formatter/SqlFormatter";
 import Timelogstest from "./DEV-INTERNS/uiJSON/Adam/components/timelogstest";
 import AGR from "./DEV-INTERNS/AGR";
+import BibleVerseApp from "./DEV-INTERNS/Bible_verse/bible";
 
 // BD routes
 import CalculatorLayout from "./BD-INTERNS/13thMonthPayCalculator/Layout/Layout";
@@ -61,6 +62,7 @@ const routes = [
     element: ChatboxLayout,
     children: [{ index: true, element: ChatboxPage }],
   },
+
   {
     path: "/",
     element: DefaultLayout,
@@ -109,6 +111,10 @@ const routes = [
         path: "/TimeLogs",
         element: Timelogstest,
       },
+      {
+        path: "BibleVerseApp",
+        element: BibleVerseApp,
+      },
     ],
   },
   {
@@ -141,6 +147,7 @@ const routes = [
     path: "/AGR",
     element: AGR,
   },
+
   // BD routes
   {
     path: "/BDCalculator",

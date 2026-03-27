@@ -34,13 +34,21 @@ const pages = [
     anchor: "accounting-and-beyond",
     path: "https://ulap.biz/accounting-and-beyond",
   },
-  { label: "Features", anchor: "features", path: "https://ulap.biz/notable-features" },
+  {
+    label: "Features",
+    anchor: "features",
+    path: "https://ulap.biz/notable-features",
+  },
   {
     label: "Schedules and Reports",
     anchor: "schedules-and-reports",
     path: "https://ulap.biz/reports-and-schedule",
   },
-  { label: "Contact Us", anchor: "contact-us", path: "https://ulap.biz/contact-us" },
+  {
+    label: "Contact Us",
+    anchor: "contact-us",
+    path: "https://ulap.biz/contact-us",
+  },
 ];
 
 const useStyles = makeStyles((theme) => ({
@@ -62,7 +70,8 @@ const useStyles = makeStyles((theme) => ({
     gap: ".3em",
     alignItems: "center",
     filter: "grayscale(10%)",
-    fontFamily: '"Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    fontFamily:
+      '"Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     transition: "all 500ms ease-in-out",
     [theme.breakpoints.down("md")]: {
       flexGrow: 1,
@@ -130,7 +139,11 @@ const Navbar = () => {
   const handleSignUp = async (event) => {
     event.preventDefault();
     setAuthError(null);
-    const result = await register(signUpEmail, signUpPassword, signUpConfirmPassword);
+    const result = await register(
+      signUpEmail,
+      signUpPassword,
+      signUpConfirmPassword,
+    );
     if (result.success) {
       setSignUpOpen(false);
       setSignUpEmail("");
@@ -167,19 +180,31 @@ const Navbar = () => {
                 },
                 alignItems: "center",
                 width: "100%",
-              }}>
+              }}
+            >
               <Box className={classes.iconContainer}>
                 <button
-                  onClick={() => handleSmoothScroll("ulap", "https://ulap.biz/")}
-                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+                  onClick={() =>
+                    handleSmoothScroll("ulap", "https://ulap.biz/")
+                  }
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                  }}
+                >
                   <Avatar src="/favicon.ico" />
                 </button>
                 <Link
                   variant="h4"
                   underline="none"
                   color="textPrimary"
-                  onClick={() => handleSmoothScroll("ulap", "https://ulap.biz/")}
-                  style={{ cursor: "pointer" }}>
+                  onClick={() =>
+                    handleSmoothScroll("ulap", "https://ulap.biz/")
+                  }
+                  style={{ cursor: "pointer" }}
+                >
                   Ulap<span className={classes.biz}>Biz</span>
                 </Link>
               </Box>
@@ -189,7 +214,8 @@ const Navbar = () => {
                     width: "100%",
                     display: "flex",
                     justifyContent: "flex-end",
-                  }}>
+                  }}
+                >
                   {open ? (
                     <CloseIcon color="primary" onClick={() => setOpen(false)} />
                   ) : (
@@ -207,24 +233,29 @@ const Navbar = () => {
                     "& :hover": {
                       color: "#FF7704",
                     },
-                  }}>
+                  }}
+                >
                   <Box
                     sx={{
                       display: "flex",
                       alignItems: "center",
                       gap: "1rem",
-                    }}>
+                    }}
+                  >
                     {pages.map((page) => (
                       <Link
                         key={page.label}
                         variant="h6"
                         underline="none"
                         color="textPrimary"
-                        onClick={() => handleSmoothScroll(page.anchor, page.path)}
+                        onClick={() =>
+                          handleSmoothScroll(page.anchor, page.path)
+                        }
                         style={{
                           fontSize: ".8rem",
                           cursor: "pointer",
-                        }}>
+                        }}
+                      >
                         {page.label}
                       </Link>
                     ))}
@@ -234,11 +265,19 @@ const Navbar = () => {
                       display: "flex",
                       gap: "1rem",
                       alignItems: "center",
-                    }}>
+                    }}
+                  >
                     {user ? (
                       <>
-                        <span style={{ fontSize: ".8rem" }}>Welcome, {user.email}</span>
-                        <Button size="small" variant="outlined" color="primary" onClick={logout}>
+                        <span style={{ fontSize: ".8rem" }}>
+                          Welcome, {user.email}
+                        </span>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="primary"
+                          onClick={logout}
+                        >
                           Logout
                         </Button>
                       </>
@@ -251,7 +290,8 @@ const Navbar = () => {
                           underline="none"
                           color="textPrimary"
                           className={classes.signin}
-                          style={{ cursor: "pointer" }}>
+                          style={{ cursor: "pointer" }}
+                        >
                           Sign In
                         </Link>
                         <Link
@@ -261,7 +301,8 @@ const Navbar = () => {
                           underline="none"
                           color="textPrimary"
                           className={classes.signup}
-                          style={{ cursor: "pointer" }}>
+                          style={{ cursor: "pointer" }}
+                        >
                           Sign Up
                         </Link>
                       </>
@@ -282,7 +323,8 @@ const Navbar = () => {
                   gap: "1rem",
                   marginBottom: "1rem",
                   height: "100vh",
-                }}>
+                }}
+              >
                 {pages.map((page) => (
                   <Link
                     key={page.label}
@@ -290,12 +332,18 @@ const Navbar = () => {
                     underline="none"
                     color="primary"
                     onClick={() => handleSmoothScroll(page.anchor, page.path)}
-                    style={{ cursor: "pointer" }}>
+                    style={{ cursor: "pointer" }}
+                  >
                     {page.label}
                   </Link>
                 ))}
                 {user ? (
-                  <Button size="small" variant="outlined" color="primary" onClick={logout}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="primary"
+                    onClick={logout}
+                  >
                     Logout
                   </Button>
                 ) : (
@@ -306,7 +354,11 @@ const Navbar = () => {
                       variant="h6"
                       underline="none"
                       color="textPrimary"
-                      style={{ color: theme.palette.primary.main, cursor: "pointer" }}>
+                      style={{
+                        color: theme.palette.primary.main,
+                        cursor: "pointer",
+                      }}
+                    >
                       Sign In
                     </Link>
                     <Link
@@ -315,7 +367,11 @@ const Navbar = () => {
                       onClick={() => setSignUpOpen(true)}
                       underline="none"
                       color="textPrimary"
-                      style={{ color: theme.palette.primary.main, cursor: "pointer" }}>
+                      style={{
+                        color: theme.palette.primary.main,
+                        cursor: "pointer",
+                      }}
+                    >
                       Sign Up
                     </Link>
                   </>
@@ -333,7 +389,8 @@ const Navbar = () => {
           setAuthError(null);
         }}
         maxWidth="sm"
-        fullWidth>
+        fullWidth
+      >
         <DialogTitle>Sign In</DialogTitle>
         <DialogContent>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
@@ -362,7 +419,8 @@ const Navbar = () => {
               fullWidth
               size="large"
               onClick={handleSignIn}
-              disabled={loading}>
+              disabled={loading}
+            >
               {loading ? "Signing In..." : "Sign In"}
             </Button>
           </Box>
@@ -376,7 +434,8 @@ const Navbar = () => {
           setAuthError(null);
         }}
         maxWidth="sm"
-        fullWidth>
+        fullWidth
+      >
         <DialogTitle>Sign Up</DialogTitle>
         <DialogContent>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
@@ -407,14 +466,18 @@ const Navbar = () => {
               value={signUpConfirmPassword}
               onChange={(event) => setSignUpConfirmPassword(event.target.value)}
             />
-            <FormControlLabel control={<Checkbox />} label="I agree to the Terms & Conditions" />
+            <FormControlLabel
+              control={<Checkbox />}
+              label="I agree to the Terms & Conditions"
+            />
             <Button
               variant="contained"
               color="primary"
               fullWidth
               size="large"
               onClick={handleSignUp}
-              disabled={loading}>
+              disabled={loading}
+            >
               {loading ? "Creating Account..." : "Sign Up"}
             </Button>
           </Box>
@@ -425,8 +488,12 @@ const Navbar = () => {
         open={showError}
         autoHideDuration={4000}
         onClose={() => setShowError(false)}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}>
-        <SnackbarContent style={{ backgroundColor: "#f44336" }} message={authError} />
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <SnackbarContent
+          style={{ backgroundColor: "#f44336" }}
+          message={authError}
+        />
       </Snackbar>
     </>
   );
