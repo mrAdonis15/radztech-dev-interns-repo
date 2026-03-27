@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import Avatar from "@material-ui/core/Avatar";
 import Typography from "@material-ui/core/Typography";
 import mascot3D from "../../../images/3Dmascot.png";
-import thinkingGif from "../Assets/657560085_1306828051311695_7680741071615797336_n.gif";
+import thinkingGif from "../Assets/ulap.gif";
 import ChartRenderer from "./chartRenderer";
 
 function isImageOnlyContent(text) {

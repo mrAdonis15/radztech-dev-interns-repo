@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
-import defaultQuestions from "../data/questions";
+import questionData from "../data/questions.json";
 
 const STORAGE_KEY = "dev-interns-star-rating-questions";
+const defaultQuestions = Array.isArray(questionData?.questions) ? questionData.questions : [];
+
+const createQuestionPayload = (questions) => ({
+  questions: cloneQuestions(questions),
+});
 
 const cloneQuestions = (questions) =>
   questions.map((question) => ({
@@ -31,6 +36,11 @@ const isValidQuestionSet = (questions) =>
       )
   );
 
+const isValidStoredQuestionPayload = (payload) =>
+  payload &&
+  typeof payload === "object" &&
+  isValidQuestionSet(payload.questions);
+
 const getStoredQuestions = () => {
   if (typeof window === "undefined") {
     return cloneQuestions(defaultQuestions);
@@ -44,6 +54,10 @@ const getStoredQuestions = () => {
     }
 
     const parsedValue = JSON.parse(storedValue);
+    if (isValidStoredQuestionPayload(parsedValue)) {
+      return cloneQuestions(parsedValue.questions);
+    }
+
     return isValidQuestionSet(parsedValue)
       ? cloneQuestions(parsedValue)
       : cloneQuestions(defaultQuestions);
@@ -60,7 +74,7 @@ export default function useEvaluationQuestions() {
       return;
     }
 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(questions));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(createQuestionPayload(questions)));
   }, [questions]);
 
   const addQuestion = () => {

@@ -97,6 +97,7 @@ const useStyles = makeStyles((theme) => ({
 function CategoryRatingCard({ category, onSelect }) {
   const classes = useStyles();
   const hasRatings = category.totalRatings > 0;
+  const hasUserRating = category.currentUserRating > 0;
 
   return (
     <Card className={classes.card} elevation={0} onClick={() => onSelect(category)}>
@@ -168,8 +169,9 @@ function CategoryRatingCard({ category, onSelect }) {
               event.stopPropagation();
               onSelect(category);
             }}
+            disabled={hasUserRating}
           >
-            Evaluate
+            {hasUserRating ? "Evaluated" : "Evaluate"}
           </Button>
         </Box>
       </CardContent>
