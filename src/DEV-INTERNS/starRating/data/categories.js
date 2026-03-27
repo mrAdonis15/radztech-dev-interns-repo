@@ -4,7 +4,7 @@ const createCategory = (id, name) => ({
   averageRating: 0,
   totalRatings: 0,
   currentUserRating: 0,
-  questionRatings: {},
+  evaluationResult: null,
 });
 
 const categoryGroups = {

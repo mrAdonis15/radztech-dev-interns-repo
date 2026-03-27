@@ -75,13 +75,27 @@ function EvaluationDialog({ open, category, questions, onClose, onSave }) {
     0
   );
 
+  const getDraftRatingsFromEvaluation = (evaluationResult) => {
+    if (!evaluationResult || !Array.isArray(evaluationResult.ratings)) {
+      return {};
+    }
+
+    return evaluationResult.ratings.reduce((accumulator, entry) => {
+      if (entry?.questionId && entry?.rating > 0) {
+        accumulator[entry.questionId] = entry.rating;
+      }
+
+      return accumulator;
+    }, {});
+  };
+
   useEffect(() => {
     if (!category) {
       setDraftRatings({});
       return;
     }
 
-    setDraftRatings(category.questionRatings || {});
+    setDraftRatings(getDraftRatingsFromEvaluation(category.evaluationResult));
   }, [category]);
 
   const answeredRatings = useMemo(
@@ -104,7 +118,53 @@ function EvaluationDialog({ open, category, questions, onClose, onSave }) {
       return;
     }
 
-    onSave(category.id, draftRatings);
+    const ratings = questions.reduce((entries, question) => {
+      const questionRating = draftRatings[question.id];
+
+      if (questionRating > 0) {
+        entries.push({
+          questionId: question.id,
+          parentQuestionId: null,
+          label: question.label,
+          helperText: question.helperText,
+          type: "question",
+          rating: questionRating,
+        });
+      }
+
+      (question.subQuestions || []).forEach((subQuestion) => {
+        const subQuestionRating = draftRatings[subQuestion.id];
+
+        if (subQuestionRating > 0) {
+          entries.push({
+            questionId: subQuestion.id,
+            parentQuestionId: question.id,
+            label: subQuestion.label,
+            helperText: subQuestion.helperText,
+            type: "subQuestion",
+            rating: subQuestionRating,
+          });
+        }
+      });
+
+      return entries;
+    }, []);
+
+    const evaluationResult = {
+      categoryId: category.id,
+      categoryName: category.name,
+      submittedAt: new Date().toISOString(),
+      answeredQuestions: ratings.length,
+      totalQuestions: totalQuestionCount,
+      overallRating: ratings.length
+        ? Number(
+            (ratings.reduce((sum, entry) => sum + entry.rating, 0) / ratings.length).toFixed(1)
+          )
+        : 0,
+      ratings,
+    };
+
+    return onSave(category.id, evaluationResult);
   };
 
   return (
@@ -137,29 +197,29 @@ function EvaluationDialog({ open, category, questions, onClose, onSave }) {
                 <Typography variant="body2" className={classes.helperText}>
                   {question.helperText}
                 </Typography>
-              <StarRating
-                value={draftRatings[question.id] || 0}
-                onChange={(rating) => handleRateQuestion(question.id, rating)}
-                showValue
-              />
-              {(question.subQuestions || []).map((subQuestion) => (
-                <Box key={subQuestion.id} className={classes.subQuestionBlock}>
-                  <Typography variant="subtitle2" className={classes.questionTitle}>
-                    {subQuestion.label || "Untitled sub-question"}
-                  </Typography>
-                  <Typography variant="body2" className={classes.helperText}>
-                    {subQuestion.helperText}
-                  </Typography>
-                  <StarRating
-                    value={draftRatings[subQuestion.id] || 0}
-                    onChange={(rating) => handleRateQuestion(subQuestion.id, rating)}
-                    showValue
-                  />
-                </Box>
-              ))}
-            </Box>
-            {index < questions.length - 1 ? <Divider /> : null}
-          </React.Fragment>
+                <StarRating
+                  value={draftRatings[question.id] || 0}
+                  onChange={(rating) => handleRateQuestion(question.id, rating)}
+                  showValue
+                />
+                {(question.subQuestions || []).map((subQuestion) => (
+                  <Box key={subQuestion.id} className={classes.subQuestionBlock}>
+                    <Typography variant="subtitle2" className={classes.questionTitle}>
+                      {subQuestion.label || "Untitled sub-question"}
+                    </Typography>
+                    <Typography variant="body2" className={classes.helperText}>
+                      {subQuestion.helperText}
+                    </Typography>
+                    <StarRating
+                      value={draftRatings[subQuestion.id] || 0}
+                      onChange={(rating) => handleRateQuestion(subQuestion.id, rating)}
+                      showValue
+                    />
+                  </Box>
+                ))}
+              </Box>
+              {index < questions.length - 1 ? <Divider /> : null}
+            </React.Fragment>
           ))
         )}
 

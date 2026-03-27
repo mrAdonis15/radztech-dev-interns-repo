@@ -13,8 +13,92 @@ const createEmptyCategory = () => ({
   averageRating: 0,
   totalRatings: 0,
   currentUserRating: 0,
-  questionRatings: {},
+  evaluationResult: null,
 });
+
+const normalizeEvaluationRatings = (ratings) =>
+  Array.isArray(ratings)
+    ? ratings
+        .filter(
+          (entry) =>
+            entry &&
+            typeof entry.questionId === "string" &&
+            typeof entry.rating === "number" &&
+            Number.isFinite(entry.rating)
+        )
+        .map((entry) => ({
+          questionId: entry.questionId,
+          parentQuestionId:
+            typeof entry.parentQuestionId === "string" ? entry.parentQuestionId : null,
+          label: typeof entry.label === "string" ? entry.label : "",
+          helperText: typeof entry.helperText === "string" ? entry.helperText : "",
+          type: entry.type === "subQuestion" ? "subQuestion" : "question",
+          rating: clampRating(entry.rating),
+        }))
+    : [];
+
+const normalizeLegacyQuestionRatings = (questionRatings) =>
+  questionRatings && typeof questionRatings === "object"
+    ? Object.keys(questionRatings).reduce((accumulator, questionId) => {
+        const rating = questionRatings[questionId];
+
+        if (typeof rating === "number" && Number.isFinite(rating) && rating > 0) {
+          accumulator.push({
+            questionId,
+            parentQuestionId: null,
+            label: "",
+            helperText: "",
+            type: "question",
+            rating: clampRating(rating),
+          });
+        }
+
+        return accumulator;
+      }, [])
+    : [];
+
+const normalizeEvaluationResult = (evaluationResult, category) => {
+  if (!evaluationResult || typeof evaluationResult !== "object") {
+    return null;
+  }
+
+  const ratings = normalizeEvaluationRatings(evaluationResult.ratings);
+
+  if (!ratings.length) {
+    return null;
+  }
+
+  return {
+    categoryId:
+      typeof evaluationResult.categoryId === "string" ? evaluationResult.categoryId : category?.id,
+    categoryName:
+      typeof evaluationResult.categoryName === "string"
+        ? evaluationResult.categoryName
+        : category?.name || "",
+    submittedAt:
+      typeof evaluationResult.submittedAt === "string"
+        ? evaluationResult.submittedAt
+        : new Date().toISOString(),
+    answeredQuestions:
+      typeof evaluationResult.answeredQuestions === "number" &&
+      Number.isFinite(evaluationResult.answeredQuestions)
+        ? evaluationResult.answeredQuestions
+        : ratings.length,
+    totalQuestions:
+      typeof evaluationResult.totalQuestions === "number" &&
+      Number.isFinite(evaluationResult.totalQuestions)
+        ? evaluationResult.totalQuestions
+        : ratings.length,
+    overallRating:
+      typeof evaluationResult.overallRating === "number" &&
+      Number.isFinite(evaluationResult.overallRating)
+        ? Number(evaluationResult.overallRating.toFixed(1))
+        : Number(
+            (ratings.reduce((sum, entry) => sum + entry.rating, 0) / ratings.length).toFixed(1)
+          ),
+    ratings,
+  };
+};
 
 const normalizeCategory = (category) => ({
   id: typeof category?.id === "string" ? category.id : createUniqueId("rating-item"),
@@ -31,10 +115,16 @@ const normalizeCategory = (category) => ({
     typeof category?.currentUserRating === "number" && Number.isFinite(category.currentUserRating)
       ? category.currentUserRating
       : 0,
-  questionRatings:
-    category?.questionRatings && typeof category.questionRatings === "object"
-      ? { ...category.questionRatings }
-      : {},
+  evaluationResult:
+    normalizeEvaluationResult(category?.evaluationResult, category) ||
+    normalizeEvaluationResult(
+      {
+        categoryId: category?.id,
+        categoryName: category?.name,
+        ratings: normalizeLegacyQuestionRatings(category?.questionRatings),
+      },
+      category
+    ),
 });
 
 const normalizeGroup = (group, fallbackId) => ({
@@ -170,19 +260,12 @@ export default function useCategoryRatings() {
     window.localStorage.setItem(ACTIVE_GROUP_STORAGE_KEY, activeGroupId);
   }, [activeGroupId]);
 
-  const handleSaveEvaluation = (categoryId, questionRatings) => {
-    const sanitizedQuestionRatings = Object.keys(questionRatings).reduce(
-      (accumulator, key) => {
-        const rating = questionRatings[key];
+  const handleSaveEvaluation = (categoryId, evaluationResult) => {
+    const sanitizedEvaluationResult = normalizeEvaluationResult(evaluationResult);
 
-        if (rating > 0) {
-          accumulator[key] = clampRating(rating);
-        }
-
-        return accumulator;
-      },
-      {}
-    );
+    if (!sanitizedEvaluationResult) {
+      return null;
+    }
 
     setCategoryState((currentGroups) => {
       const currentGroup = currentGroups[activeGroupId];
@@ -195,7 +278,7 @@ export default function useCategoryRatings() {
           return category;
         }
 
-        const answeredRatings = Object.values(sanitizedQuestionRatings);
+        const answeredRatings = sanitizedEvaluationResult.ratings.map((entry) => entry.rating);
         const nextUserRating =
           answeredRatings.length > 0
             ? answeredRatings.reduce((sum, rating) => sum + rating, 0) / answeredRatings.length
@@ -216,7 +299,13 @@ export default function useCategoryRatings() {
 
         return {
           ...category,
-          questionRatings: sanitizedQuestionRatings,
+          evaluationResult: {
+            ...sanitizedEvaluationResult,
+            categoryId,
+            categoryName: category.name,
+            overallRating: Number(nextUserRating.toFixed(1)),
+            answeredQuestions: answeredRatings.length,
+          },
           currentUserRating: Number(nextUserRating.toFixed(1)),
           totalRatings: nextTotalRatings,
           averageRating: getWeightedAverage(nextTotalScore, nextTotalRatings),
@@ -231,6 +320,8 @@ export default function useCategoryRatings() {
         },
       };
     });
+
+    return sanitizedEvaluationResult;
   };
 
   const resetRatings = () => {
@@ -249,7 +340,7 @@ export default function useCategoryRatings() {
             averageRating: 0,
             totalRatings: 0,
             currentUserRating: 0,
-            questionRatings: {},
+            evaluationResult: null,
           })),
         },
       };

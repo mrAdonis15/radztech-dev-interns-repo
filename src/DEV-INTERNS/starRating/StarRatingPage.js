@@ -3,9 +3,11 @@ import {
   Box,
   Button,
   Container,
+  Dialog,
+  DialogContent,
   FormControl,
   Grid,
-  InputLabel,
+  IconButton,
   InputAdornment,
   MenuItem,
   Paper,
@@ -20,14 +22,18 @@ import {
   makeStyles,
   Typography,
 } from "@material-ui/core";
-import SettingsIcon from "@material-ui/icons/Settings";
+import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
+import CloseIcon from "@material-ui/icons/Close";
 import ReplayIcon from "@material-ui/icons/Replay";
 import SearchIcon from "@material-ui/icons/Search";
 import LoginToolbar from "../../Auth/Login/LoginToolbar";
 import EvaluationDialog from "./components/EvaluationDialog";
+import EvaluationResultDialog from "./components/EvaluationResultDialog";
 import QuestionAdminDialog from "./components/QuestionAdminDialog";
 import useCategoryRatings from "./hooks/useCategoryRatings";
 import useEvaluationQuestions from "./hooks/useEvaluationQuestions";
+
+const SHOW_JSON_BUTTON = false;
 
 const useStyles = makeStyles((theme) => ({
   page: {
@@ -90,16 +96,37 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(0.5),
     minHeight: 16,
   },
-  searchField: {
-    width: "100%",
-    "& .MuiOutlinedInput-root": {
-      backgroundColor: "#ffffff",
-      borderRadius: 2,
+  searchButtonWrap: {
+    display: "flex",
+    alignItems: "center",
+    minHeight: 40,
+    gap: theme.spacing(1.5),
+  },
+  searchButton: {
+    minWidth: 48,
+    width: 48,
+    height: 40,
+    borderRadius: 4,
+    border: "1px solid #cfd6dd",
+    color: "#6b7280",
+    backgroundColor: "#ffffff",
+    "&:hover": {
+      backgroundColor: "#f8fafc",
+      borderColor: "#b8c1cc",
     },
   },
   searchSpacer: {
     minHeight: 16,
     marginBottom: theme.spacing(0.5),
+  },
+  searchSelectedLabel: {
+    color: "#1f3b64",
+    fontSize: 16,
+    fontWeight: 500,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    cursor: "pointer",
   },
   selectControl: {
     width: "100%",
@@ -266,6 +293,13 @@ const useStyles = makeStyles((theme) => ({
     whiteSpace: "nowrap",
     borderBottom: "1px solid #edf1f5",
   },
+  actionStack: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: theme.spacing(1),
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+  },
   evaluateButton: {
     borderRadius: 3,
     textTransform: "none",
@@ -275,6 +309,18 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(0.75, 1.8),
     "&:hover": {
       backgroundColor: "#f97316",
+    },
+  },
+  jsonButton: {
+    borderRadius: 3,
+    textTransform: "none",
+    fontWeight: 700,
+    borderColor: "#cbd5e1",
+    color: "#1e293b",
+    padding: theme.spacing(0.75, 1.6),
+    "&:hover": {
+      borderColor: "#94a3b8",
+      backgroundColor: "#f8fafc",
     },
   },
   tableTools: {
@@ -293,13 +339,109 @@ const useStyles = makeStyles((theme) => ({
       width: "100%",
     },
   },
+  searchDialogPaper: {
+    borderRadius: 0,
+    maxWidth: 760,
+    width: "100%",
+    height: "min(720px, calc(100vh - 48px))",
+  },
+  searchDialogContent: {
+    padding: 0,
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
+  },
+  searchDialogHeader: {
+    minHeight: 96,
+    borderBottom: "1px solid #e5e7eb",
+    padding: theme.spacing(1.5, 1.75),
+    flexShrink: 0,
+  },
+  searchDialogInput: {
+    width: "100%",
+    "& .MuiOutlinedInput-root": {
+      minHeight: 68,
+      borderRadius: 4,
+      backgroundColor: "#ffffff",
+      "& fieldset": {
+        borderColor: "#c7cdd4",
+      },
+      "&:hover fieldset": {
+        borderColor: "#b7bec7",
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "#c7cdd4",
+        borderWidth: 1,
+      },
+    },
+    "& .MuiOutlinedInput-input": {
+      fontSize: 18,
+      padding: theme.spacing(2.25, 0, 2.25, 0.5),
+      color: "#111827",
+    },
+    "& .MuiInputLabel-outlined": {
+      color: "#757575",
+      transform: "translate(14px, -6px) scale(0.75)",
+      backgroundColor: "#ffffff",
+      padding: "0 6px",
+    },
+    "& .MuiInputLabel-outlined.Mui-focused": {
+      color: "#757575",
+    },
+  },
+  searchDialogIcon: {
+    color: "#757575",
+    flexShrink: 0,
+  },
+  searchDialogAction: {
+    color: "#ef4444",
+  },
+  searchList: {
+    overflowY: "auto",
+    flex: 1,
+  },
+  searchListRow: {
+    display: "grid",
+    gridTemplateColumns: "88px minmax(0, 1fr) 48px",
+    alignItems: "center",
+    minHeight: 96,
+    padding: theme.spacing(0, 2),
+    borderBottom: "1px solid #eceff3",
+    cursor: "pointer",
+    transition: "background-color 0.16s ease",
+    "&:hover": {
+      backgroundColor: "#fafafa",
+    },
+  },
+  searchListCode: {
+    color: "#2f343b",
+    fontSize: 14,
+    letterSpacing: "0.02em",
+  },
+  searchListName: {
+    color: "#202124",
+    fontSize: 18,
+    fontWeight: 500,
+  },
+  searchListArrow: {
+    color: "#6b7280",
+    justifySelf: "end",
+  },
+  searchEmptyState: {
+    padding: theme.spacing(4),
+    textAlign: "center",
+    color: "#6b7280",
+  },
 }));
 
 function StarRatingPage() {
   const classes = useStyles();
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [jsonPreviewCategory, setJsonPreviewCategory] = useState(null);
   const [adminOpen, setAdminOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
+  const [searchDraft, setSearchDraft] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const {
     activeGroupId,
@@ -338,9 +480,18 @@ function StarRatingPage() {
     setSelectedCategory(null);
   };
 
-  const handleSaveCategoryEvaluation = (categoryId, questionRatings) => {
-    handleSaveEvaluation(categoryId, questionRatings);
+  const handleOpenJsonPreview = (category) => {
+    setJsonPreviewCategory(category);
+  };
+
+  const handleCloseJsonPreview = () => {
+    setJsonPreviewCategory(null);
+  };
+
+  const handleSaveCategoryEvaluation = (categoryId, evaluationResult) => {
+    const savedEvaluation = handleSaveEvaluation(categoryId, evaluationResult);
     setSelectedCategory(null);
+    return savedEvaluation;
   };
 
   const handleOpenAdmin = () => {
@@ -351,8 +502,36 @@ function StarRatingPage() {
     setAdminOpen(false);
   };
 
+  const handleOpenSearchDialog = () => {
+    setSearchDraft(searchTerm);
+    setSearchDialogOpen(true);
+  };
+
+  const handleCloseSearchDialog = () => {
+    setSearchDialogOpen(false);
+  };
+
+  const handleSelectSearchCategory = (categoryName) => {
+    setSearchTerm(categoryName);
+    setSearchDraft(categoryName);
+    setSearchDialogOpen(false);
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setSearchDraft("");
+    setSearchDialogOpen(false);
+  };
+
   useEffect(() => {
     setSelectedCategory(null);
+    setJsonPreviewCategory(null);
+  }, [activeGroupId]);
+
+  useEffect(() => {
+    setSearchTerm("");
+    setSearchDraft("");
+    setSearchDialogOpen(false);
   }, [activeGroupId]);
 
   const filteredCategories = categories.filter((category) => {
@@ -367,6 +546,10 @@ function StarRatingPage() {
 
     return matchesSearch && matchesStatus;
   });
+
+  const searchResults = categories.filter((category) =>
+    category.name.toLowerCase().includes(searchDraft.trim().toLowerCase())
+  );
 
   return (
     <>
@@ -387,21 +570,22 @@ function StarRatingPage() {
                 <Box className={classes.filtersGrid}>
                   <Box className={classes.fieldBlock}>
                     <Box className={classes.searchSpacer} />
-                    <TextField
-                      variant="outlined"
-                      size="small"
-                      placeholder={`Search ${summary.itemLabelPlural.toLowerCase()}`}
-                      value={searchTerm}
-                      onChange={(event) => setSearchTerm(event.target.value)}
-                      className={classes.searchField}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <SearchIcon fontSize="small" style={{ color: "#6b7280" }} />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
+                    <Box className={classes.searchButtonWrap}>
+                      <IconButton
+                        className={classes.searchButton}
+                        onClick={handleOpenSearchDialog}
+                        aria-label={`Search ${summary.itemLabelPlural.toLowerCase()}`}
+                      >
+                        <SearchIcon fontSize="small" />
+                      </IconButton>
+                      <Typography
+                        variant="body2"
+                        className={classes.searchSelectedLabel}
+                        onClick={handleOpenSearchDialog}
+                      >
+                        Search {summary.itemLabelPlural.toLowerCase()}
+                      </Typography>
+                    </Box>
                   </Box>
                   <Box className={classes.fieldBlock}>
                     <Typography className={classes.fieldLabel}>Rating Setup</Typography>
@@ -543,13 +727,26 @@ function StarRatingPage() {
                             : "No ratings submitted yet"}
                         </TableCell>
                         <TableCell align="right" className={classes.actionCell}>
-                          <Button
-                            variant="contained"
-                            className={classes.evaluateButton}
-                            onClick={() => handleOpenEvaluation(category)}
-                          >
-                            Evaluate
-                          </Button>
+                          <Box className={classes.actionStack}>
+                            {SHOW_JSON_BUTTON ? (
+                              <Button
+                                variant="outlined"
+                                className={classes.jsonButton}
+                                onClick={() => handleOpenJsonPreview(category)}
+                                disabled={!category.evaluationResult}
+                              >
+                                View JSON
+                              </Button>
+                            ) : null}
+                            <Button
+                              variant="contained"
+                              className={classes.evaluateButton}
+                              onClick={() => handleOpenEvaluation(category)}
+                              disabled={hasRating}
+                            >
+                              {hasRating ? "Evaluated" : "Evaluate"}
+                            </Button>
+                          </Box>
                         </TableCell>
                       </TableRow>
                     );
@@ -581,6 +778,75 @@ function StarRatingPage() {
             onClose={handleCloseEvaluation}
             onSave={handleSaveCategoryEvaluation}
           />
+
+          <EvaluationResultDialog
+            open={Boolean(jsonPreviewCategory)}
+            category={jsonPreviewCategory}
+            onClose={handleCloseJsonPreview}
+          />
+
+          <Dialog
+            open={searchDialogOpen}
+            onClose={handleCloseSearchDialog}
+            fullWidth
+            maxWidth="md"
+            classes={{ paper: classes.searchDialogPaper }}
+          >
+            <DialogContent className={classes.searchDialogContent}>
+              <Box className={classes.searchDialogHeader}>
+                <TextField
+                  autoFocus
+                  variant="outlined"
+                  label={summary.itemLabelPlural}
+                  placeholder={`Search ${summary.itemLabelPlural}`}
+                  value={searchDraft}
+                  onChange={(event) => setSearchDraft(event.target.value)}
+                  className={classes.searchDialogInput}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon className={classes.searchDialogIcon} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          className={classes.searchDialogAction}
+                          aria-label="Clear selected search"
+                          onClick={handleClearSearch}
+                          edge="end"
+                        >
+                          <CloseIcon />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Box>
+
+              <Box className={classes.searchList}>
+                {searchResults.length > 0 ? (
+                  searchResults.map((category, index) => (
+                    <Box
+                      key={category.id}
+                      className={classes.searchListRow}
+                      onClick={() => handleSelectSearchCategory(category.name)}
+                    >
+                      <Typography className={classes.searchListCode}>
+                        {String(index + 1).padStart(3, "0")}
+                      </Typography>
+                      <Typography className={classes.searchListName}>{category.name}</Typography>
+                      <ArrowForwardIcon className={classes.searchListArrow} />
+                    </Box>
+                  ))
+                ) : (
+                  <Typography variant="body2" className={classes.searchEmptyState}>
+                    No matching {summary.itemLabelPlural.toLowerCase()} found.
+                  </Typography>
+                )}
+              </Box>
+            </DialogContent>
+          </Dialog>
 
           <QuestionAdminDialog
             open={adminOpen}
