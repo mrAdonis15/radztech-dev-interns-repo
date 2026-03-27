@@ -24,6 +24,7 @@ import SqlFormatter from "./DEV-INTERNS/SQL Formatter/SqlFormatter";
 import Timelogstest from "./DEV-INTERNS/uiJSON/Adam/components/timelogstest";
 import AGR from "./DEV-INTERNS/AGR";
 import StarRatingPage from "./DEV-INTERNS/starRating";
+import BibleVerse from "./DEV-INTERNS/BibleVerse/bible";
 
 // BD routes
 import CalculatorLayout from "./BD-INTERNS/13thMonthPayCalculator/Layout/Layout";
@@ -114,6 +115,10 @@ const routes = [
         path: "/StarRating",
         element: StarRatingPage,
       },
+      {
+        path: "/verses",
+        element: BibleVerse,
+      }
     ],
   },
   {
