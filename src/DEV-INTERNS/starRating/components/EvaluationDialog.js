@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -7,17 +7,22 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  TextField,
   makeStyles,
   Typography,
 } from "@material-ui/core";
 import StarRating from "./StarRating";
 
+const isParagraphType = (type) => type !== "rating";
+
 const useStyles = makeStyles((theme) => ({
   paper: {
     borderRadius: 20,
+    fontFamily: '"Poppins", sans-serif',
   },
   content: {
     paddingTop: theme.spacing(1),
+    fontFamily: '"Poppins", sans-serif',
   },
   intro: {
     marginBottom: theme.spacing(2),
@@ -64,17 +69,12 @@ const useStyles = makeStyles((theme) => ({
     textTransform: "none",
     fontWeight: 600,
     padding: theme.spacing(1, 2.5),
+    fontFamily: '"Poppins", sans-serif',
   },
 }));
 
 function EvaluationDialog({ open, category, questions, onClose, onSave }) {
   const classes = useStyles();
-  const [draftRatings, setDraftRatings] = useState({});
-  const totalQuestionCount = questions.reduce(
-    (count, question) => count + 1 + (question.subQuestions || []).length,
-    0
-  );
-
   const getDraftRatingsFromEvaluation = (evaluationResult) => {
     if (!evaluationResult || !Array.isArray(evaluationResult.ratings)) {
       return {};
@@ -89,18 +89,38 @@ function EvaluationDialog({ open, category, questions, onClose, onSave }) {
     }, {});
   };
 
-  useEffect(() => {
-    if (!category) {
-      setDraftRatings({});
-      return;
+  const getDraftEssaysFromEvaluation = (evaluationResult) => {
+    if (!evaluationResult || !Array.isArray(evaluationResult.essayResponses)) {
+      return {};
     }
 
-    setDraftRatings(getDraftRatingsFromEvaluation(category.evaluationResult));
-  }, [category]);
+    return evaluationResult.essayResponses.reduce((accumulator, entry) => {
+      if (entry?.questionId && typeof entry.responseText === "string") {
+        accumulator[entry.questionId] = entry.responseText;
+      }
+
+      return accumulator;
+    }, {});
+  };
+
+  const [draftRatings, setDraftRatings] = useState(() =>
+    category ? getDraftRatingsFromEvaluation(category.evaluationResult) : {}
+  );
+  const [draftEssays, setDraftEssays] = useState(() =>
+    category ? getDraftEssaysFromEvaluation(category.evaluationResult) : {}
+  );
+  const totalQuestionCount = questions.reduce(
+    (count, questionCategory) => count + (questionCategory.subQuestions || []).length,
+    0
+  );
 
   const answeredRatings = useMemo(
     () => Object.values(draftRatings).filter((value) => value > 0),
     [draftRatings]
+  );
+  const answeredEssays = useMemo(
+    () => Object.values(draftEssays).filter((value) => typeof value === "string" && value.trim()),
+    [draftEssays]
   );
   const draftAverage = answeredRatings.length
     ? (answeredRatings.reduce((sum, value) => sum + value, 0) / answeredRatings.length).toFixed(1)
@@ -113,36 +133,53 @@ function EvaluationDialog({ open, category, questions, onClose, onSave }) {
     }));
   };
 
+  const handleEssayChange = (questionId, value) => {
+    setDraftEssays((currentEssays) => ({
+      ...currentEssays,
+      [questionId]: value,
+    }));
+  };
+
   const handleSave = () => {
     if (!category) {
       return;
     }
 
-    const ratings = questions.reduce((entries, question) => {
-      const questionRating = draftRatings[question.id];
-
-      if (questionRating > 0) {
-        entries.push({
-          questionId: question.id,
-          parentQuestionId: null,
-          label: question.label,
-          helperText: question.helperText,
-          type: "question",
-          rating: questionRating,
-        });
-      }
-
-      (question.subQuestions || []).forEach((subQuestion) => {
+    const ratings = questions.reduce((entries, questionCategory) => {
+      (questionCategory.subQuestions || []).forEach((subQuestion) => {
         const subQuestionRating = draftRatings[subQuestion.id];
 
-        if (subQuestionRating > 0) {
+        if (!isParagraphType(subQuestion.type) && subQuestionRating > 0) {
           entries.push({
             questionId: subQuestion.id,
-            parentQuestionId: question.id,
+            parentQuestionId: questionCategory.id,
             label: subQuestion.label,
             helperText: subQuestion.helperText,
-            type: "subQuestion",
+            type: "question",
             rating: subQuestionRating,
+          });
+        }
+      });
+
+      return entries;
+    }, []);
+
+    const essayResponses = questions.reduce((entries, questionCategory) => {
+      (questionCategory.subQuestions || []).forEach((subQuestion) => {
+        const subQuestionEssay = draftEssays[subQuestion.id];
+
+        if (
+          isParagraphType(subQuestion.type) &&
+          typeof subQuestionEssay === "string" &&
+          subQuestionEssay.trim()
+        ) {
+          entries.push({
+            questionId: subQuestion.id,
+            parentQuestionId: questionCategory.id,
+            label: subQuestion.label,
+            helperText: subQuestion.helperText,
+            type: "question",
+            responseText: subQuestionEssay.trim(),
           });
         }
       });
@@ -154,7 +191,7 @@ function EvaluationDialog({ open, category, questions, onClose, onSave }) {
       categoryId: category.id,
       categoryName: category.name,
       submittedAt: new Date().toISOString(),
-      answeredQuestions: ratings.length,
+      answeredQuestions: ratings.length + essayResponses.length,
       totalQuestions: totalQuestionCount,
       overallRating: ratings.length
         ? Number(
@@ -162,6 +199,7 @@ function EvaluationDialog({ open, category, questions, onClose, onSave }) {
           )
         : 0,
       ratings,
+      essayResponses,
     };
 
     return onSave(category.id, evaluationResult);
@@ -178,8 +216,8 @@ function EvaluationDialog({ open, category, questions, onClose, onSave }) {
       <DialogTitle>{category ? `Evaluate ${category.name}` : "Evaluate"}</DialogTitle>
       <DialogContent className={classes.content}>
         <Typography variant="body2" className={classes.intro}>
-          Answer each question with a star rating. The 5-star score is calculated using
-          the weighted mean: total star points divided by total reviews.
+          Answer each question using the configured type. Rate questions use stars,
+          while paragraph questions use a text box.
         </Typography>
 
         {questions.length === 0 ? (
@@ -188,35 +226,49 @@ function EvaluationDialog({ open, category, questions, onClose, onSave }) {
             at least one question.
           </Typography>
         ) : (
-          questions.map((question, index) => (
-            <React.Fragment key={question.id}>
+          questions.map((questionCategory, index) => (
+            <React.Fragment key={questionCategory.id}>
               <Box className={classes.questionBlock}>
                 <Typography variant="subtitle1" className={classes.questionTitle}>
-                  {question.label}
+                  {questionCategory.label || `Category ${index + 1}`}
                 </Typography>
                 <Typography variant="body2" className={classes.helperText}>
-                  {question.helperText}
+                  {questionCategory.helperText}
                 </Typography>
-                <StarRating
-                  value={draftRatings[question.id] || 0}
-                  onChange={(rating) => handleRateQuestion(question.id, rating)}
-                  showValue
-                />
-                {(question.subQuestions || []).map((subQuestion) => (
+                {(questionCategory.subQuestions || []).map((subQuestion) => (
                   <Box key={subQuestion.id} className={classes.subQuestionBlock}>
                     <Typography variant="subtitle2" className={classes.questionTitle}>
-                      {subQuestion.label || "Untitled sub-question"}
+                      {subQuestion.label || "Untitled question"}
                     </Typography>
                     <Typography variant="body2" className={classes.helperText}>
                       {subQuestion.helperText}
                     </Typography>
-                    <StarRating
-                      value={draftRatings[subQuestion.id] || 0}
-                      onChange={(rating) => handleRateQuestion(subQuestion.id, rating)}
-                      showValue
-                    />
+                    {isParagraphType(subQuestion.type) ? (
+                      <TextField
+                        variant="outlined"
+                        fullWidth
+                        multiline
+                        rows={4}
+                        placeholder="Write your answer here"
+                        value={draftEssays[subQuestion.id] || ""}
+                        onChange={(event) =>
+                          handleEssayChange(subQuestion.id, event.target.value)
+                        }
+                      />
+                    ) : (
+                      <StarRating
+                        value={draftRatings[subQuestion.id] || 0}
+                        onChange={(rating) => handleRateQuestion(subQuestion.id, rating)}
+                        showValue
+                      />
+                    )}
                   </Box>
                 ))}
+                {(questionCategory.subQuestions || []).length === 0 ? (
+                  <Typography variant="body2" className={classes.emptyState}>
+                    No questions in this category yet.
+                  </Typography>
+                ) : null}
               </Box>
               {index < questions.length - 1 ? <Divider /> : null}
             </React.Fragment>
@@ -225,7 +277,7 @@ function EvaluationDialog({ open, category, questions, onClose, onSave }) {
 
         <Box className={classes.summary}>
           <Typography variant="body2" color="textSecondary">
-            Answered questions: {answeredRatings.length}/{totalQuestionCount}
+            Answered questions: {answeredRatings.length + answeredEssays.length}/{totalQuestionCount}
           </Typography>
           <Typography variant="body1" className={classes.summaryValue}>
             {draftAverage ? `Current weighted average: ${draftAverage}/5` : "No answers yet"}

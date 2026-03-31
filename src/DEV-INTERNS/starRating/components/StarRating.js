@@ -8,6 +8,7 @@ const useStyles = makeStyles((theme) => ({
     display: "inline-flex",
     alignItems: "center",
     gap: theme.spacing(0.5),
+    fontFamily: '"Poppins", sans-serif',
   },
   stars: {
     display: "flex",
@@ -34,6 +35,7 @@ const useStyles = makeStyles((theme) => ({
   caption: {
     marginLeft: theme.spacing(1),
     minWidth: 52,
+    fontFamily: '"Poppins", sans-serif',
   },
 }));
 

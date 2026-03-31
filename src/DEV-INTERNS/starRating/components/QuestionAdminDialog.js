@@ -1,118 +1,261 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import {
   Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  ClickAwayListener,
   IconButton,
   TextField,
+  Tooltip,
   makeStyles,
   Typography,
 } from "@material-ui/core";
-import AddIcon from "@material-ui/icons/Add";
+import AddCircleOutlineIcon from "@material-ui/icons/AddCircleOutline";
 import DeleteOutlineIcon from "@material-ui/icons/DeleteOutline";
+import PlaylistAddIcon from "@material-ui/icons/PlaylistAdd";
 import ReplayIcon from "@material-ui/icons/Replay";
+
+const isParagraphType = (type) => type !== "rating";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
     borderRadius: 20,
+    overflow: "hidden",
+    backgroundColor: "#f8fafc",
+    fontFamily: '"Poppins", sans-serif',
   },
-  content: {
-    paddingTop: theme.spacing(1),
-  },
-  intro: {
-    marginBottom: theme.spacing(2),
-    color: "#475569",
-  },
-  section: {
-    marginBottom: theme.spacing(3),
-    padding: theme.spacing(2),
-    borderRadius: 18,
-    border: "1px solid rgba(148, 163, 184, 0.22)",
+  panel: {
+    borderRadius: 4,
+    border: "1px solid #d7dce1",
     backgroundColor: "#ffffff",
+    boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
+    overflow: "hidden",
+    marginTop: theme.spacing(2.5),
+    fontFamily: '"Poppins", sans-serif',
   },
-  sectionTitle: {
+  panelHeader: {
+    padding: theme.spacing(2, 2, 0),
+  },
+  title: {
     fontWeight: 700,
     color: "#0f172a",
-    marginBottom: theme.spacing(0.75),
+    marginBottom: theme.spacing(1),
+    fontFamily: '"Poppins", sans-serif',
   },
-  sectionText: {
+  intro: {
+    marginBottom: theme.spacing(2.5),
     color: "#64748b",
-    marginBottom: theme.spacing(2),
+    lineHeight: 1.6,
+  },
+  panelBody: {
+    padding: theme.spacing(0, 2, 2),
+    backgroundColor: "#ffffff",
   },
   toolbar: {
     display: "flex",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    flexWrap: "wrap",
     gap: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-    [theme.breakpoints.down("xs")]: {
-      flexDirection: "column",
-    },
   },
   actionButton: {
     borderRadius: 999,
     textTransform: "none",
     fontWeight: 600,
+    boxShadow: "none",
   },
-  stack: {
-    display: "grid",
-    gap: theme.spacing(2),
+  canvas: {
+    marginTop: theme.spacing(2.5),
   },
-  row: {
-    display: "grid",
-    gap: theme.spacing(2),
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  categoryRow: {
+    position: "relative",
+    marginBottom: theme.spacing(2),
+    paddingRight: 88,
     [theme.breakpoints.down("xs")]: {
-      gridTemplateColumns: "1fr",
+      paddingRight: 0,
+      paddingBottom: 56,
     },
   },
   itemCard: {
     padding: theme.spacing(2),
-    borderRadius: 16,
-    border: "1px solid rgba(148, 163, 184, 0.22)",
-    backgroundColor: "#f8fafc",
-  },
-  subQuestionCard: {
-    padding: theme.spacing(1.5),
-    borderRadius: 14,
-    border: "1px solid rgba(148, 163, 184, 0.18)",
+    borderRadius: 4,
+    border: "1px solid #d7dce1",
     backgroundColor: "#ffffff",
-  },
-  subQuestionStack: {
-    display: "grid",
-    gap: theme.spacing(1.5),
-    marginTop: theme.spacing(1.5),
+    boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
+    width: "100%",
+    boxSizing: "border-box",
   },
   itemHeader: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: theme.spacing(1.5),
+    gap: theme.spacing(1),
+    marginBottom: theme.spacing(1),
   },
-  itemTitle: {
+  categoryHeaderButton: {
+    flex: 1,
+    minHeight: 56,
+    boxSizing: "border-box",
+    borderRadius: 14,
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    backgroundColor: "#ffffff",
+    display: "flex",
+    alignItems: "center",
+    padding: theme.spacing(0, 2),
+    color: "#0f172a",
+    fontSize: 18,
+    fontWeight: 700,
+    cursor: "pointer",
+    transition: "border-color 0.18s ease, box-shadow 0.18s ease",
+    "&:hover": {
+      borderColor: "rgba(249, 115, 22, 0.45)",
+      boxShadow: "0 8px 24px rgba(15, 23, 42, 0.06)",
+    },
+  },
+  categoryHeaderField: {
+    flex: 1,
+    "& .MuiOutlinedInput-root": {
+      minHeight: 56,
+      backgroundColor: "#ffffff",
+      borderRadius: 14,
+      fontWeight: 700,
+      alignItems: "center",
+    },
+    "& .MuiOutlinedInput-input": {
+      fontSize: 18,
+      fontWeight: 700,
+      color: "#0f172a",
+      paddingTop: 16,
+      paddingBottom: 16,
+      boxSizing: "border-box",
+    },
+  },
+  stack: {
+    display: "grid",
+    gap: theme.spacing(2),
+  },
+  subQuestionStack: {
+    display: "grid",
+    gap: theme.spacing(1.5),
+    marginTop: theme.spacing(1),
+  },
+  subQuestionCard: {
+    padding: theme.spacing(1.5, 1.75),
+    borderRadius: 14,
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    backgroundColor: "#ffffff",
+    cursor: "pointer",
+    transition: "border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease",
+    "&:hover": {
+      borderColor: "rgba(249, 115, 22, 0.45)",
+      boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)",
+      transform: "translateY(-1px)",
+    },
+  },
+  subQuestionEditingCard: {
+    borderColor: "rgba(249, 115, 22, 0.45)",
+    boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)",
+  },
+  questionCardHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: theme.spacing(1),
+    marginBottom: theme.spacing(1),
+  },
+  questionLabel: {
     fontWeight: 600,
     color: "#0f172a",
   },
+  questionType: {
+    color: "#64748b",
+    fontSize: 13,
+  },
+  questionMeta: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(1),
+    color: "#64748b",
+    fontSize: 13,
+  },
+  questionEditorRow: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr) 180px auto",
+    gap: theme.spacing(1.5),
+    alignItems: "start",
+    [theme.breakpoints.down("xs")]: {
+      gridTemplateColumns: "1fr",
+    },
+  },
+  questionEditorField: {
+    "& .MuiOutlinedInput-root": {
+      borderRadius: 12,
+      backgroundColor: "#ffffff",
+    },
+  },
+  questionTypeField: {
+    "& .MuiOutlinedInput-root": {
+      borderRadius: 12,
+      backgroundColor: "#ffffff",
+    },
+  },
+  iconButtonRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(0.5),
+  },
+  railSlot: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    display: "flex",
+    justifyContent: "center",
+    [theme.breakpoints.down("xs")]: {
+      top: "auto",
+      right: 0,
+      bottom: 0,
+    },
+  },
+  sideRail: {
+    width: 64,
+    minWidth: 64,
+    flex: "0 0 64px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.spacing(1),
+    padding: 0,
+    boxSizing: "border-box",
+    alignSelf: "start",
+  },
+  sideRailButton: {
+    width: 42,
+    minWidth: 42,
+    height: 42,
+    minHeight: 42,
+    flex: "0 0 42px",
+    borderRadius: 12,
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    color: "#475569",
+    backgroundColor: "#ffffff",
+    "&:hover": {
+      backgroundColor: "#fff7ed",
+      color: "#ea580c",
+    },
+  },
   emptyState: {
-    padding: theme.spacing(2),
+    padding: theme.spacing(2.5),
     borderRadius: 16,
     border: "1px dashed rgba(148, 163, 184, 0.4)",
     backgroundColor: "#f8fafc",
     color: "#64748b",
     textAlign: "center",
   },
-  footer: {
-    padding: theme.spacing(2, 3, 3),
-  },
 }));
 
 function QuestionAdminDialog({
-  open,
   questions,
-  activeGroup,
-  onClose,
+  onSaveJson,
   onAddQuestion,
   onUpdateQuestion,
   onRemoveQuestion,
@@ -120,324 +263,263 @@ function QuestionAdminDialog({
   onAddSubQuestion,
   onUpdateSubQuestion,
   onRemoveSubQuestion,
-  onAddGroup,
-  onUpdateGroup,
-  onRemoveGroup,
-  onResetGroups,
-  onAddCategory,
-  onUpdateCategory,
-  onRemoveCategory,
 }) {
   const classes = useStyles();
-  const itemLabelSingular = activeGroup?.itemLabelSingular || "Item";
-  const itemLabelPlural = activeGroup?.itemLabelPlural || "Items";
+  const [editingCategoryId, setEditingCategoryId] = useState("");
+  const [editingSubQuestion, setEditingSubQuestion] = useState({
+    categoryId: "",
+    questionId: "",
+  });
+  const [activeRailCategoryId, setActiveRailCategoryId] = useState("");
+  const resolvedActiveRailCategoryId = useMemo(() => {
+    if (!questions.length) {
+      return "";
+    }
+
+    return questions.some((question) => question.id === activeRailCategoryId)
+      ? activeRailCategoryId
+      : questions[questions.length - 1].id;
+  }, [questions, activeRailCategoryId]);
+
+  const handleStartQuestionEdit = (categoryId, questionId) => {
+    setEditingSubQuestion({
+      categoryId,
+      questionId,
+    });
+  };
+
+  const handleStopQuestionEdit = () => {
+    setEditingSubQuestion({
+      categoryId: "",
+      questionId: "",
+    });
+  };
+
+  const handleStartCategoryEdit = (categoryId) => {
+    setEditingCategoryId(categoryId);
+  };
+
+  const handleStopCategoryEdit = () => {
+    setEditingCategoryId("");
+  };
+
+  const handleAddQuestion = (categoryId) => {
+    const newQuestionId = onAddSubQuestion(categoryId);
+    if (newQuestionId) {
+      handleStartQuestionEdit(categoryId, newQuestionId);
+    }
+  };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="md"
-      classes={{ paper: classes.paper }}
-    >
-      <DialogTitle>Setup Panel</DialogTitle>
-      <DialogContent className={classes.content}>
-        <Typography variant="body2" className={classes.intro}>
-          Create a rating setup.
-        </Typography>
-
-        <Box className={classes.section}>
-          <Typography variant="h6" className={classes.sectionTitle}>
-            Rating setup
-          </Typography>
-          <Typography variant="body2" className={classes.sectionText}>
-            Define the current rating set, what kind of thing is being rated, and the
-            entries that should appear on the page.
-          </Typography>
-
-          <Box className={classes.toolbar}>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<AddIcon />}
-              onClick={onAddGroup}
-              className={classes.actionButton}
-            >
-              Add rating setup
-            </Button>
-            <Button
-              variant="outlined"
-              color="default"
-              startIcon={<ReplayIcon />}
-              onClick={onResetGroups}
-              className={classes.actionButton}
-            >
-              Reset default setups
-            </Button>
+    <>
+      <Box className={classes.canvas}>
+        {questions.length === 0 ? (
+          <Box className={classes.emptyState}>
+            <Typography variant="body2">
+              No categories yet. Click the add category button to create one.
+            </Typography>
           </Box>
+        ) : (
+          <>
+            {questions.map((question, index) => {
+              const isActiveRailCategory = resolvedActiveRailCategoryId === question.id;
 
-          {activeGroup ? (
-            <Box className={classes.stack}>
-              <TextField
-                label="Setup title"
-                variant="outlined"
-                fullWidth
-                value={activeGroup.label}
-                onChange={(event) =>
-                  onUpdateGroup(activeGroup.id, "label", event.target.value)
-                }
-              />
-              <TextField
-                label="Setup description"
-                variant="outlined"
-                fullWidth
-                multiline
-                rows={2}
-                value={activeGroup.description}
-                onChange={(event) =>
-                  onUpdateGroup(activeGroup.id, "description", event.target.value)
-                }
-              />
-              <Box className={classes.row}>
-                <TextField
-                  label="Single item label"
-                  variant="outlined"
-                  value={activeGroup.itemLabelSingular}
-                  placeholder="Product"
-                  onChange={(event) =>
-                    onUpdateGroup(activeGroup.id, "itemLabelSingular", event.target.value)
-                  }
-                />
-                <TextField
-                  label="Plural item label"
-                  variant="outlined"
-                  value={activeGroup.itemLabelPlural}
-                  placeholder="Products"
-                  onChange={(event) =>
-                    onUpdateGroup(activeGroup.id, "itemLabelPlural", event.target.value)
-                  }
-                />
-              </Box>
-
-              <Box className={classes.toolbar}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  onClick={() => onAddCategory(activeGroup.id)}
-                  className={classes.actionButton}
-                >
-                  Add {itemLabelSingular.toLowerCase()}
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  startIcon={<DeleteOutlineIcon />}
-                  onClick={() => onRemoveGroup(activeGroup.id)}
-                  className={classes.actionButton}
-                >
-                  Delete this setup
-                </Button>
-              </Box>
-
-              {activeGroup.categories.length === 0 ? (
-                <Box className={classes.emptyState}>
-                  <Typography variant="body2">
-                    No {itemLabelPlural.toLowerCase()} yet. Add one to make this setup ready.
-                  </Typography>
-                </Box>
-              ) : (
-                activeGroup.categories.map((category, index) => (
-                  <Box key={category.id} className={classes.itemCard}>
+              return (
+                <Box key={question.id} className={classes.categoryRow}>
+                  <Box
+                    className={classes.itemCard}
+                    onClick={() => setActiveRailCategoryId(question.id)}
+                  >
                     <Box className={classes.itemHeader}>
-                      <Typography variant="subtitle1" className={classes.itemTitle}>
-                        {itemLabelSingular} {index + 1}
-                      </Typography>
+                      {editingCategoryId === question.id ? (
+                        <TextField
+                          variant="outlined"
+                          fullWidth
+                          autoFocus
+                          className={classes.categoryHeaderField}
+                          value={question.label}
+                          placeholder="Category"
+                          onChange={(event) =>
+                            onUpdateQuestion(question.id, "label", event.target.value)
+                          }
+                          onBlur={handleStopCategoryEdit}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === "Escape") {
+                              handleStopCategoryEdit();
+                            }
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          className={classes.categoryHeaderButton}
+                          onDoubleClick={() => handleStartCategoryEdit(question.id)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              handleStartCategoryEdit(question.id);
+                            }
+                          }}
+                          aria-label="Edit category"
+                        >
+                          {question.label || "Category"}
+                        </Box>
+                      )}
                       <IconButton
-                        onClick={() => onRemoveCategory(activeGroup.id, category.id)}
-                        aria-label={`Delete ${itemLabelSingular.toLowerCase()} ${index + 1}`}
+                        onClick={() => onRemoveQuestion(question.id)}
+                        aria-label="Delete category"
                       >
                         <DeleteOutlineIcon />
                       </IconButton>
                     </Box>
-                    <TextField
-                      label={`${itemLabelSingular} name`}
-                      variant="outlined"
-                      fullWidth
-                      value={category.name}
-                      placeholder={`Enter the ${itemLabelSingular.toLowerCase()} name`}
-                      onChange={(event) =>
-                        onUpdateCategory(activeGroup.id, category.id, event.target.value)
-                      }
-                    />
-                  </Box>
-                ))
-              )}
-            </Box>
-          ) : (
-            <Box className={classes.emptyState}>
-              <Typography variant="body2">
-                No rating setup is available. Add one to begin configuring ratings.
-              </Typography>
-            </Box>
-          )}
-        </Box>
 
-        <Box className={classes.section}>
-          <Typography variant="h6" className={classes.sectionTitle}>
-            Rating questions
-          </Typography>
-          <Typography variant="body2" className={classes.sectionText}>
-            These questions are reused whenever someone evaluates an item in the current
-            system.
-          </Typography>
+                    <Box className={classes.stack}>
+                        {(question.subQuestions || []).length > 0 ? (
+                          <Box className={classes.subQuestionStack}>
+                            {question.subQuestions.map((subQuestion) => (
+                              <Box
+                                key={subQuestion.id}
+                                className={`${classes.subQuestionCard} ${
+                                  editingSubQuestion.categoryId === question.id &&
+                                  editingSubQuestion.questionId === subQuestion.id
+                                    ? classes.subQuestionEditingCard
+                                    : ""
+                                }`}
+                                onDoubleClick={() =>
+                                  handleStartQuestionEdit(question.id, subQuestion.id)
+                                }
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter" || event.key === " ") {
+                                    handleStartQuestionEdit(question.id, subQuestion.id);
+                                  }
+                                }}
+                              >
+                                {editingSubQuestion.categoryId === question.id &&
+                                editingSubQuestion.questionId === subQuestion.id ? (
+                                  <ClickAwayListener onClickAway={handleStopQuestionEdit}>
+                                    <Box className={classes.questionEditorRow}>
+                                      <TextField
+                                        variant="outlined"
+                                        fullWidth
+                                        autoFocus
+                                        placeholder="Question"
+                                        value={subQuestion.label || ""}
+                                        className={classes.questionEditorField}
+                                        onChange={(event) =>
+                                          onUpdateSubQuestion(
+                                            question.id,
+                                            subQuestion.id,
+                                            "label",
+                                            event.target.value
+                                          )
+                                        }
+                                        onKeyDown={(event) => {
+                                          if (event.key === "Enter" || event.key === "Escape") {
+                                            handleStopQuestionEdit();
+                                          }
+                                        }}
+                                      />
+                                      <TextField
+                                        select
+                                        variant="outlined"
+                                        value={subQuestion.type || "rating"}
+                                        className={classes.questionTypeField}
+                                        SelectProps={{
+                                          native: true,
+                                        }}
+                                        onChange={(event) =>
+                                          onUpdateSubQuestion(
+                                            question.id,
+                                            subQuestion.id,
+                                            "type",
+                                            event.target.value
+                                          )
+                                        }
+                                      >
+                                        <option value="rating">Rate</option>
+                                        <option value="paragraph">Paragraph</option>
+                                      </TextField>
+                                      <Box className={classes.iconButtonRow}>
+                                        <IconButton
+                                          onMouseDown={(event) => event.preventDefault()}
+                                          onClick={() =>
+                                            onRemoveSubQuestion(question.id, subQuestion.id)
+                                          }
+                                          aria-label="Delete question"
+                                        >
+                                          <DeleteOutlineIcon />
+                                        </IconButton>
+                                      </Box>
+                                    </Box>
+                                  </ClickAwayListener>
+                                ) : (
+                                  <>
+                                    <Box className={classes.questionCardHeader}>
+                                      <Box>
+                                        <Typography className={classes.questionLabel}>
+                                          {subQuestion.label || "Question"}
+                                        </Typography>
+                                        <Typography className={classes.questionType}>
+                                          {isParagraphType(subQuestion.type) ? "Paragraph" : "Rate"}
+                                        </Typography>
+                                      </Box>
+                                      <Box className={classes.iconButtonRow}>
+                                        <IconButton
+                                          onClick={(event) => {
+                                            event.stopPropagation();
+                                            onRemoveSubQuestion(question.id, subQuestion.id);
+                                          }}
+                                          aria-label="Delete question"
+                                        >
+                                          <DeleteOutlineIcon />
+                                        </IconButton>
+                                      </Box>
+                                    </Box>
 
-          <Box className={classes.toolbar}>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<AddIcon />}
-              onClick={onAddQuestion}
-              className={classes.actionButton}
-            >
-              Add question
-            </Button>
-            <Button
-              variant="outlined"
-              color="default"
-              startIcon={<ReplayIcon />}
-              onClick={onResetQuestions}
-              className={classes.actionButton}
-            >
-              Reset default questions
-            </Button>
-          </Box>
-
-          {questions.length === 0 ? (
-            <Box className={classes.emptyState}>
-              <Typography variant="body2">
-                No questions yet. Click `Add question` to create one.
-              </Typography>
-            </Box>
-          ) : (
-            questions.map((question, index) => (
-              <Box key={question.id} className={classes.itemCard}>
-                <Box className={classes.itemHeader}>
-                  <Typography variant="subtitle1" className={classes.itemTitle}>
-                    Question {index + 1}
-                  </Typography>
-                  <IconButton
-                    onClick={() => onRemoveQuestion(question.id)}
-                    aria-label={`Delete question ${index + 1}`}
-                  >
-                    <DeleteOutlineIcon />
-                  </IconButton>
-                </Box>
-
-                <Box className={classes.stack}>
-                  <TextField
-                    label="Question title"
-                    variant="outlined"
-                    fullWidth
-                    value={question.label}
-                    placeholder="Enter the question title"
-                    onChange={(event) =>
-                      onUpdateQuestion(question.id, "label", event.target.value)
-                    }
-                  />
-                  <TextField
-                    label="Helper text"
-                    variant="outlined"
-                    fullWidth
-                    multiline
-                    rows={2}
-                    value={question.helperText}
-                    placeholder="Add guidance for how this question should be rated"
-                    onChange={(event) =>
-                      onUpdateQuestion(question.id, "helperText", event.target.value)
-                    }
-                  />
-
-                  <Box className={classes.toolbar}>
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      startIcon={<AddIcon />}
-                      onClick={() => onAddSubQuestion(question.id)}
-                      className={classes.actionButton}
-                    >
-                      Add sub-question
-                    </Button>
-                  </Box>
-
-                  {(question.subQuestions || []).length > 0 ? (
-                    <Box className={classes.subQuestionStack}>
-                      {question.subQuestions.map((subQuestion, subIndex) => (
-                        <Box key={subQuestion.id} className={classes.subQuestionCard}>
-                          <Box className={classes.itemHeader}>
-                            <Typography variant="body1" className={classes.itemTitle}>
-                              Sub-question {index + 1}.{subIndex + 1}
-                            </Typography>
-                            <IconButton
-                              onClick={() =>
-                                onRemoveSubQuestion(question.id, subQuestion.id)
-                              }
-                              aria-label={`Delete sub-question ${subIndex + 1}`}
-                            >
-                              <DeleteOutlineIcon />
-                            </IconButton>
+                                    <Box className={classes.questionMeta}></Box>
+                                  </>
+                                )}
+                              </Box>
+                            ))}
                           </Box>
-
-                          <Box className={classes.stack}>
-                            <TextField
-                              label="Sub-question title"
-                              variant="outlined"
-                              fullWidth
-                              value={subQuestion.label}
-                              placeholder="Enter the sub-question title"
-                              onChange={(event) =>
-                                onUpdateSubQuestion(
-                                  question.id,
-                                  subQuestion.id,
-                                  "label",
-                                  event.target.value
-                                )
-                              }
-                            />
-                            <TextField
-                              label="Sub-question helper text"
-                              variant="outlined"
-                              fullWidth
-                              multiline
-                              rows={2}
-                              value={subQuestion.helperText}
-                              placeholder="Add guidance for how this sub-question should be rated"
-                              onChange={(event) =>
-                                onUpdateSubQuestion(
-                                  question.id,
-                                  subQuestion.id,
-                                  "helperText",
-                                  event.target.value
-                                )
-                              }
-                            />
-                          </Box>
-                        </Box>
-                      ))}
+                        ) : null}
                     </Box>
-                  ) : null}
+                  </Box>
+
+                  <Box className={classes.railSlot}>
+                    {isActiveRailCategory ? (
+                      <Box className={classes.sideRail}>
+                        <Tooltip title="Add category" placement="left" arrow>
+                          <IconButton
+                            className={classes.sideRailButton}
+                            onClick={onAddQuestion}
+                            aria-label="Add category"
+                          >
+                            <AddCircleOutlineIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Add question" placement="left" arrow>
+                          <IconButton
+                            className={classes.sideRailButton}
+                            onClick={() => handleAddQuestion(question.id)}
+                            aria-label="Add question"
+                          >
+                            <PlaylistAddIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    ) : null}
+                  </Box>
                 </Box>
-              </Box>
-            ))
-          )}
-        </Box>
-      </DialogContent>
-      <DialogActions className={classes.footer}>
-        <Button onClick={onClose} color="primary">
-          Close
-        </Button>
-      </DialogActions>
-    </Dialog>
+              );
+            })}
+          </>
+        )}
+      </Box>
+
+    </>
   );
 }
 
