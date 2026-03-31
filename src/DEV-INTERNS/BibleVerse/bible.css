@@ -1,0 +1,348 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,400&display=swap");
+
+/* ── Root & Background ── */
+.bva-root {
+  font-family: "Poppins", sans-serif;
+  background: #ffffff;
+  width: min(100%, 710px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 20px 20px 20px;
+  margin: 150px auto 0;
+  position: relative;
+  overflow-x: hidden;
+  border-radius: 14px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+}
+
+/* ── Container ── */
+.bva-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+/* ── Shared Header ── */
+.bva-q-header,
+.bva-v-header {
+  text-align: left;
+  margin-bottom: 0;
+  width: 100%;
+}
+
+.bva-subtitle {
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-bottom: 6px;
+}
+
+.bva-title {
+  font-size: clamp(1rem, 2.2vw, 1.3rem);
+  line-height: 1.15;
+  font-weight: 900;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.bva-title--black {
+  color: #1a1a1a;
+}
+
+.bva-title--orange {
+  color: #f97316;
+}
+
+.bva-tagline {
+  font-size: 0.72rem;
+  color: #888;
+  font-weight: 300;
+  margin-top: 4px;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+
+/* ── Divider — vertical ── */
+.bva-divider {
+  width: 1px;
+  align-self: stretch;
+  background: linear-gradient(to bottom, transparent, #c9b88a, transparent);
+  margin: 0 16px;
+  flex-shrink: 0;
+  border: none;
+  height: auto;
+}
+
+/* ── Question Screen — horizontal ── */
+.bva-question-screen {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+}
+
+.bva-q-header {
+  flex: 0 0 200px;
+}
+
+/* ── Verse Screen — horizontal ── */
+.bva-verse-screen {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.bva-v-left {
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.bva-back-btn {
+  background: none;
+  border: 1.5px solid #ddd;
+  border-radius: 100px;
+  padding: 6px 14px;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #888;
+  margin-bottom: 14px;
+  transition: all 0.2s;
+  display: inline-block;
+}
+
+.bva-back-btn:hover {
+  border-color: #aaa;
+  color: #555;
+}
+
+/* ── Right panel ── */
+.bva-right {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* ── Feeling Grid ── */
+.bva-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.bva-btn {
+  position: relative;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 8px 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  transition:
+    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s ease;
+  outline: none;
+}
+
+.bva-btn:hover {
+  transform: translateY(-5px) scale(1.04);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.13);
+}
+
+.bva-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 -2px 4px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+  display: block;
+}
+
+.bva-btn:hover .bva-dot {
+  transform: scale(1.1);
+}
+
+.bva-emoji {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.bva-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5a4f3e;
+}
+
+.bva-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 18px;
+  border: 3px solid transparent;
+  transition: border-color 0.2s ease;
+  pointer-events: none;
+}
+
+/* ── Verse Card ── */
+.bva-card {
+  background: white;
+  border-radius: 18px;
+  padding: 20px 20px 16px;
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.09);
+  position: relative;
+  overflow: hidden;
+  animation: bvaCardIn 0.45s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+}
+
+@keyframes bvaCardIn {
+  from {
+    opacity: 0;
+    transform: translateX(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.bva-card__bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 7px;
+  border-radius: 18px 18px 0 0;
+}
+
+.bva-card__quote {
+  font-family: "Poppins", sans-serif;
+  font-size: 4rem;
+  line-height: 0.5;
+  opacity: 0.07;
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.bva-card__feeling {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-bottom: 10px;
+}
+
+.bva-card__text {
+  font-size: clamp(0.78rem, 1.3vw, 0.88rem);
+  line-height: 1.75;
+  color: #2c2416;
+  font-style: italic;
+  font-weight: 300;
+  margin: 0 0 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.bva-card__ref-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.bva-card__reference {
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5a4f3e;
+}
+
+.bva-card__translation {
+  font-size: 0.7rem;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: #bbb;
+}
+
+.bva-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bva-card__counter {
+  font-size: 0.7rem;
+  color: #ccc;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+}
+
+.bva-card__next {
+  border: none;
+  color: white;
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 10px 26px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+}
+
+.bva-card__next:hover {
+  opacity: 0.82;
+  transform: scale(1.04);
+}
+
+/* ── Responsive: stack on small screens ── */
+@media (max-width: 600px) {
+  .bva-root {
+    width: min(100%, 420px);
+  }
+  .bva-question-screen,
+  .bva-verse-screen {
+    flex-direction: column;
+  }
+  .bva-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #c9b88a, transparent);
+    margin: 12px 0;
+  }
+  .bva-q-header,
+  .bva-v-left {
+    flex: unset;
+    width: 100%;
+  }
+  .bva-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

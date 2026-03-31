@@ -64,9 +64,7 @@ export default function ChatInputArea({
             size="small"
             onClick={() => setShowEmoji((prev) => !prev)}
           >
-            <EmojiEmotionsIcon
-              style={{ color: showEmoji ? "#ff6f00" : "#777" }}
-            />
+            <EmojiEmotionsIcon className="chat-emoji-icon" />
           </IconButton>
         </div>
 
