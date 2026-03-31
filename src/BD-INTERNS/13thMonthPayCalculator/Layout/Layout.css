@@ -2,9 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  /* F7B272 → DB6700 gradient */
-  background: linear-gradient(to right, #f7b272 0%, #db6700 100%);
-  background-attachment: fixed;
+  background: #FAFBFD;
 }
 
 .layout-nav {
@@ -46,14 +44,11 @@
 .layout-main {
   flex: 1;
   width: 100%;
-  max-width: 920px;
-  margin: 1.5rem auto 2rem;
-  padding: 2.25rem 2rem;
+  max-width: 880px;
+  margin: 1.25rem auto 2rem;
+  padding: 1.5rem 1.75rem;
   box-sizing: border-box;
-  background: #fafafa;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e8e8e8;
+  background: transparent;
 }
 
 @media (max-width: 768px) {

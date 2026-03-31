@@ -57,14 +57,14 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   logo: {
-    fontFamily: theme.typography.fontFamily,
+    fontFamily: theme.typography.h2.fontFamily,
     fontSize: "1.5rem",
     fontWeight: 700,
     color: theme.palette.primary.main,
     marginBottom: theme.spacing(1),
   },
   title: {
-    fontFamily: theme.typography.fontFamily,
+    fontFamily: theme.typography.h2.fontFamily,
     fontSize: "1.25rem",
     fontWeight: 600,
     marginBottom: theme.spacing(3),
@@ -109,7 +109,7 @@ const useStyles = makeStyles((theme) => ({
     fontFamily: theme.typography.body2.fontFamily,
   },
   noDataTitle: {
-    fontFamily: theme.typography.fontFamily,
+    fontFamily: theme.typography.h2.fontFamily,
   },
 }));
 
@@ -130,8 +130,22 @@ export default function Reciept() {
   const [downloading, setDownloading] = useState(false);
 
   const data = location.state || {};
-  // planKey is passed from Checkout but not displayed on receipt
-  const { form = {}, plan = {}, paymentMethod = "", receiptId, date } = data;
+  const {
+    form = {},
+    plan = {},
+    employeeCount = 0,
+    totalAmount,
+    paymentMethod = "",
+    receiptId,
+    date,
+  } = data;
+
+  const computedTotal =
+    totalAmount != null
+      ? totalAmount
+      : plan.basePrice != null && plan.perEmployee != null
+        ? plan.basePrice + plan.perEmployee * (Number(employeeCount) || 0)
+        : (plan.basePrice ?? plan.price ?? null);
 
   const receiptNumber =
     receiptId || `UPR-${Date.now().toString(36).toUpperCase()}`;
@@ -161,7 +175,12 @@ export default function Reciept() {
   };
 
   const hasData =
-    form.recipientName || form.fullName || form.workEmail || plan.label;
+    receiptId ||
+    form.recipientName ||
+    form.fullName ||
+    form.workEmail ||
+    plan.label ||
+    plan.name;
 
   if (!hasData) {
     return (
@@ -269,11 +288,47 @@ export default function Reciept() {
             </div>
           )}
 
-          <div className={classes.sectionTitle}>Purchase details</div>
-          {plan.label && (
+          <div className={classes.sectionTitle}>Order summary</div>
+          {plan.name && (
             <div className={classes.row}>
               <span className={classes.label}>Plan</span>
+              <span className={classes.value}>{plan.name}</span>
+            </div>
+          )}
+          {plan.label && plan.label !== plan.name && (
+            <div className={classes.row}>
+              <span className={classes.label}>Plan tier</span>
               <span className={classes.value}>{plan.label}</span>
+            </div>
+          )}
+          {employeeCount != null && employeeCount !== "" && (
+            <div className={classes.row}>
+              <span className={classes.label}>Number of employees</span>
+              <span className={classes.value}>
+                {Number(employeeCount) || 0}
+              </span>
+            </div>
+          )}
+          {plan.basePrice != null && (
+            <div className={classes.row}>
+              <span className={classes.label}>Base price</span>
+              <span className={classes.value}>
+                ₱{Number(plan.basePrice).toLocaleString("en-PH")}
+              </span>
+            </div>
+          )}
+          {plan.perEmployee != null && (Number(employeeCount) || 0) > 0 && (
+            <div className={classes.row}>
+              <span className={classes.label}>
+                Per employee (₱{plan.perEmployee} × {Number(employeeCount) || 0}
+                )
+              </span>
+              <span className={classes.value}>
+                ₱
+                {(
+                  plan.perEmployee * (Number(employeeCount) || 0)
+                ).toLocaleString("en-PH")}
+              </span>
             </div>
           )}
           {paymentMethod && (
@@ -284,20 +339,18 @@ export default function Reciept() {
               </span>
             </div>
           )}
-          <div className={`${classes.row} ${classes.totalRow}`}>
-            <span>Total paid</span>
-            <span>
-              ₱
-              {plan.basePrice != null
-                ? Number(plan.basePrice).toLocaleString("en-PH")
-                : plan.price != null
-                  ? Number(plan.price).toLocaleString("en-PH")
-                  : "—"}
-              {plan.perEmployee != null
-                ? ` + ₱${plan.perEmployee}/employee/month`
-                : "/month"}
-            </span>
-          </div>
+          {computedTotal != null && (
+            <div className={`${classes.row} ${classes.totalRow}`}>
+              <span>Total amount due / paid</span>
+              <span>₱{Number(computedTotal).toLocaleString("en-PH")}</span>
+            </div>
+          )}
+          {computedTotal == null && plan.priceDisplay && (
+            <div className={`${classes.row} ${classes.totalRow}`}>
+              <span>Price</span>
+              <span className={classes.value}>{plan.priceDisplay}</span>
+            </div>
+          )}
 
           <div className={classes.footer}>
             Thank you for subscribing to UlapPayroll. This receipt has been sent

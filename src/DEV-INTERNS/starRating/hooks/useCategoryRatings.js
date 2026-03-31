@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import categoryGroups, { defaultGroupId } from "../data/categories";
 
 const STORAGE_KEY = "dev-interns-star-rating-groups";
@@ -37,6 +37,27 @@ const normalizeEvaluationRatings = (ratings) =>
         }))
     : [];
 
+const normalizeEssayResponses = (responses) =>
+  Array.isArray(responses)
+    ? responses
+        .filter(
+          (entry) =>
+            entry &&
+            typeof entry.questionId === "string" &&
+            typeof entry.responseText === "string" &&
+            entry.responseText.trim()
+        )
+        .map((entry) => ({
+          questionId: entry.questionId,
+          parentQuestionId:
+            typeof entry.parentQuestionId === "string" ? entry.parentQuestionId : null,
+          label: typeof entry.label === "string" ? entry.label : "",
+          helperText: typeof entry.helperText === "string" ? entry.helperText : "",
+          type: entry.type === "subQuestion" ? "subQuestion" : "question",
+          responseText: entry.responseText.trim(),
+        }))
+    : [];
+
 const normalizeLegacyQuestionRatings = (questionRatings) =>
   questionRatings && typeof questionRatings === "object"
     ? Object.keys(questionRatings).reduce((accumulator, questionId) => {
@@ -63,8 +84,9 @@ const normalizeEvaluationResult = (evaluationResult, category) => {
   }
 
   const ratings = normalizeEvaluationRatings(evaluationResult.ratings);
+  const essayResponses = normalizeEssayResponses(evaluationResult.essayResponses);
 
-  if (!ratings.length) {
+  if (!ratings.length && !essayResponses.length) {
     return null;
   }
 
@@ -83,12 +105,12 @@ const normalizeEvaluationResult = (evaluationResult, category) => {
       typeof evaluationResult.answeredQuestions === "number" &&
       Number.isFinite(evaluationResult.answeredQuestions)
         ? evaluationResult.answeredQuestions
-        : ratings.length,
+        : ratings.length + essayResponses.length,
     totalQuestions:
       typeof evaluationResult.totalQuestions === "number" &&
       Number.isFinite(evaluationResult.totalQuestions)
         ? evaluationResult.totalQuestions
-        : ratings.length,
+        : ratings.length + essayResponses.length,
     overallRating:
       typeof evaluationResult.overallRating === "number" &&
       Number.isFinite(evaluationResult.overallRating)
@@ -97,6 +119,7 @@ const normalizeEvaluationResult = (evaluationResult, category) => {
             (ratings.reduce((sum, entry) => sum + entry.rating, 0) / ratings.length).toFixed(1)
           ),
     ratings,
+    essayResponses,
   };
 };
 
@@ -230,35 +253,32 @@ const getDisplayMode = (group) => {
 const clampRating = (rating) => Math.min(5, Math.max(1, rating));
 
 export default function useCategoryRatings() {
-  const [activeGroupId, setActiveGroupId] = useState(getStoredActiveGroupId);
   const [categoryState, setCategoryState] = useState(getStoredCategoryGroups);
-
-  useEffect(() => {
+  const getInitialActiveGroupId = () => {
+    const storedActiveGroupId = getStoredActiveGroupId();
+    return categoryState[storedActiveGroupId]
+      ? storedActiveGroupId
+      : Object.keys(categoryState)[0] || defaultGroupId;
+  };
+  const [activeGroupId, setActiveGroupIdState] = useState(getInitialActiveGroupId);
+  const persistCategoryState = (nextCategoryState) => {
     if (typeof window === "undefined") {
       return;
     }
 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(categoryState));
-  }, [categoryState]);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextCategoryState));
+  };
 
-  useEffect(() => {
-    const groupIds = Object.keys(categoryState);
-    if (!groupIds.length) {
-      return;
-    }
-
-    if (!categoryState[activeGroupId]) {
-      setActiveGroupId(groupIds[0]);
-    }
-  }, [activeGroupId, categoryState]);
-
-  useEffect(() => {
+  const setPersistedActiveGroupId = (nextActiveGroupId) => {
     if (typeof window === "undefined") {
-      return;
+      setActiveGroupIdState(nextActiveGroupId);
+      return nextActiveGroupId;
     }
 
-    window.localStorage.setItem(ACTIVE_GROUP_STORAGE_KEY, activeGroupId);
-  }, [activeGroupId]);
+    window.localStorage.setItem(ACTIVE_GROUP_STORAGE_KEY, nextActiveGroupId);
+    setActiveGroupIdState(nextActiveGroupId);
+    return nextActiveGroupId;
+  };
 
   const handleSaveEvaluation = (categoryId, evaluationResult) => {
     const sanitizedEvaluationResult = normalizeEvaluationResult(evaluationResult);
@@ -312,13 +332,15 @@ export default function useCategoryRatings() {
         };
       });
 
-      return {
+      const nextGroups = {
         ...currentGroups,
         [currentGroup.id]: {
           ...currentGroup,
           categories: nextCategories,
         },
       };
+      persistCategoryState(nextGroups);
+      return nextGroups;
     });
 
     return sanitizedEvaluationResult;
@@ -331,7 +353,7 @@ export default function useCategoryRatings() {
         return currentGroups;
       }
 
-      return {
+      const nextGroups = {
         ...currentGroups,
         [activeGroupId]: {
           ...currentGroup,
@@ -344,29 +366,35 @@ export default function useCategoryRatings() {
           })),
         },
       };
+      persistCategoryState(nextGroups);
+      return nextGroups;
     });
   };
 
   const handleSelectGroup = (event) => {
-    setActiveGroupId(event.target.value);
+    setPersistedActiveGroupId(event.target.value);
   };
 
   const addGroup = () => {
     const nextId = createUniqueId("rating-set");
 
-    setCategoryState((currentGroups) => ({
-      ...currentGroups,
-      [nextId]: {
-        id: nextId,
-        label: "New Rating Set",
-        description: "Describe what should be rated in this setup.",
-        itemLabelSingular: "Item",
-        itemLabelPlural: "Items",
-        categories: [createEmptyCategory()],
-      },
-    }));
+    setCategoryState((currentGroups) => {
+      const nextGroups = {
+        ...currentGroups,
+        [nextId]: {
+          id: nextId,
+          label: "New Rating Set",
+          description: "Describe what should be rated in this setup.",
+          itemLabelSingular: "Item",
+          itemLabelPlural: "Items",
+          categories: [createEmptyCategory()],
+        },
+      };
+      persistCategoryState(nextGroups);
+      return nextGroups;
+    });
 
-    setActiveGroupId(nextId);
+    setPersistedActiveGroupId(nextId);
   };
 
   const updateGroup = (groupId, field, value) => {
@@ -376,13 +404,15 @@ export default function useCategoryRatings() {
         return currentGroups;
       }
 
-      return {
+      const nextGroups = {
         ...currentGroups,
         [groupId]: {
           ...group,
           [field]: value,
         },
       };
+      persistCategoryState(nextGroups);
+      return nextGroups;
     });
   };
 
@@ -392,14 +422,17 @@ export default function useCategoryRatings() {
       delete nextGroups[groupId];
 
       if (Object.keys(nextGroups).length === 0) {
-        setActiveGroupId(defaultGroupId);
-        return cloneCategoryGroups(defaultCategoryGroups);
+        const resetGroups = cloneCategoryGroups(defaultCategoryGroups);
+        persistCategoryState(resetGroups);
+        setPersistedActiveGroupId(defaultGroupId);
+        return resetGroups;
       }
 
       if (activeGroupId === groupId) {
-        setActiveGroupId(Object.keys(nextGroups)[0]);
+        setPersistedActiveGroupId(Object.keys(nextGroups)[0]);
       }
 
+      persistCategoryState(nextGroups);
       return nextGroups;
     });
   };
@@ -411,13 +444,15 @@ export default function useCategoryRatings() {
         return currentGroups;
       }
 
-      return {
+      const nextGroups = {
         ...currentGroups,
         [groupId]: {
           ...group,
           categories: [...group.categories, createEmptyCategory()],
         },
       };
+      persistCategoryState(nextGroups);
+      return nextGroups;
     });
   };
 
@@ -428,7 +463,7 @@ export default function useCategoryRatings() {
         return currentGroups;
       }
 
-      return {
+      const nextGroups = {
         ...currentGroups,
         [groupId]: {
           ...group,
@@ -442,6 +477,8 @@ export default function useCategoryRatings() {
           ),
         },
       };
+      persistCategoryState(nextGroups);
+      return nextGroups;
     });
   };
 
@@ -452,19 +489,23 @@ export default function useCategoryRatings() {
         return currentGroups;
       }
 
-      return {
+      const nextGroups = {
         ...currentGroups,
         [groupId]: {
           ...group,
           categories: group.categories.filter((category) => category.id !== categoryId),
         },
       };
+      persistCategoryState(nextGroups);
+      return nextGroups;
     });
   };
 
   const resetGroups = () => {
-    setCategoryState(cloneCategoryGroups(defaultCategoryGroups));
-    setActiveGroupId(defaultGroupId);
+    const nextGroups = cloneCategoryGroups(defaultCategoryGroups);
+    persistCategoryState(nextGroups);
+    setCategoryState(nextGroups);
+    setPersistedActiveGroupId(defaultGroupId);
   };
 
   const activeGroup = categoryState[activeGroupId] || categoryState[Object.keys(categoryState)[0]];

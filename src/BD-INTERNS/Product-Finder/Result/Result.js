@@ -8,7 +8,6 @@ import {
   makeStyles,
 } from "@material-ui/core";
 import CheckIcon from "@material-ui/icons/Check";
-import { PricingCardGrid } from "../Pricing/PricingCardGrid";
 
 // --- Data Configuration (Same as Quiz) — key matches Checkout ?plan= ---
 const plans = [
@@ -113,9 +112,9 @@ const useStyles = makeStyles((theme) => ({
   wrapper: {
     fontFamily: theme.typography.body1.fontFamily,
     minHeight: "100vh",
-    background: "#f7f9fc",
-    paddingTop: theme.spacing(4),
-    paddingBottom: theme.spacing(6),
+    background: "#FAFBFD",
+    paddingTop: theme.spacing(3),
+    paddingBottom: theme.spacing(4),
     paddingLeft: theme.spacing(3),
     paddingRight: theme.spacing(3),
     boxSizing: "border-box",
@@ -136,15 +135,27 @@ const useStyles = makeStyles((theme) => ({
   },
   card: {
     background: "#fff",
-    borderRadius: 12,
+    borderRadius: 10,
     border: "1px solid #e2e8f0",
-    padding: theme.spacing(4, 3),
-    marginBottom: theme.spacing(5),
+    padding: theme.spacing(2.5, 2.5),
+    marginBottom: theme.spacing(2),
     animation: "resultCardIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards",
     position: "relative",
+    maxWidth: 640,
+    marginLeft: "auto",
+    marginRight: "auto",
     [theme.breakpoints.down("xs")]: {
-      padding: theme.spacing(3, 2),
+      padding: theme.spacing(2, 2),
     },
+  },
+  pageHeading: {
+    fontFamily: theme.typography.h1.fontFamily,
+    fontSize: "1.75rem",
+    fontWeight: 700,
+    color: "#0f172a",
+    marginBottom: theme.spacing(2),
+    lineHeight: 1.3,
+    textAlign: "center",
   },
   partialNote: {
     fontSize: "0.8125rem",
@@ -200,36 +211,39 @@ const useStyles = makeStyles((theme) => ({
     minWidth: 0,
   },
   planTitle: {
-    fontSize: "1.25rem",
+    fontFamily: theme.typography.h2.fontFamily,
+    fontSize: "1rem",
     fontWeight: 700,
     color: "#0f172a",
     letterSpacing: "-0.02em",
   },
   planPriceBig: {
-    fontSize: "3rem",
+    fontFamily: theme.typography.h2.fontFamily,
+    fontSize: "1.5rem",
     fontWeight: 800,
     letterSpacing: "-0.02em",
     lineHeight: 1.2,
-    marginBottom: theme.spacing(0.5),
+    marginBottom: theme.spacing(0.25),
   },
   planPriceSub: {
-    fontSize: "0.75rem",
+    fontSize: "0.7rem",
     color: "#64748b",
-    marginBottom: theme.spacing(2),
+    marginBottom: theme.spacing(1),
   },
   planPriceSmall: {
-    fontSize: "1rem",
+    fontSize: "0.875rem",
     fontWeight: 600,
     opacity: 0.95,
   },
   planDescription: {
-    fontSize: "0.875rem",
+    fontFamily: theme.typography.body1.fontFamily,
+    fontSize: "0.8125rem",
     fontweight: 400,
     color: "#64748b",
     lineHeight: 1.5,
   },
   planPrice: {
-    fontSize: "1.375rem",
+    fontSize: "1.125rem",
     fontWeight: 700,
     color: "#0f172a",
     textAlign: "right",
@@ -237,6 +251,7 @@ const useStyles = makeStyles((theme) => ({
     flexShrink: 0,
   },
   sectionLabel: {
+    fontFamily: theme.typography.body1.fontFamily,
     fontSize: "0.6875rem",
     fontWeight: 700,
     color: "#475569",
@@ -276,32 +291,22 @@ const useStyles = makeStyles((theme) => ({
     borderTop: "1px solid #e2e8f0",
   },
   whyHeading: {
-    fontSize: "1.5rem",
+    fontFamily: theme.typography.h3.fontFamily,
+    fontSize: "0.875rem",
     fontWeight: 700,
     color: "#0f172a",
-    marginBottom: theme.spacing(1.5),
+    marginBottom: theme.spacing(1),
     lineHeight: 1.4,
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
   },
   whyParagraph: {
-    fontSize: "0.875rem",
-    color: "#475569",
-    lineHeight: 1.65,
-    fontweight: 400,
-    marginBottom: theme.spacing(3),
-  },
-  benefitsList: {
-    listStyle: "none",
-    padding: 0,
-    margin: 0,
-  },
-  benefitItem: {
-    display: "flex",
-    alignItems: "flex-start",
-    gap: theme.spacing(1.5),
+    fontFamily: theme.typography.body1.fontFamily,
     fontSize: "0.8125rem",
     color: "#475569",
-    marginBottom: theme.spacing(1.5),
-    lineHeight: 1.4,
+    lineHeight: 1.6,
+    fontweight: 400,
+    marginBottom: theme.spacing(2),
   },
   ctaRow: {
     marginTop: theme.spacing(4),
@@ -310,33 +315,63 @@ const useStyles = makeStyles((theme) => ({
     gap: theme.spacing(1.5),
   },
   primaryBtn: {
-    padding: theme.spacing(1.25, 2),
+    padding: theme.spacing(0.875, 1.5),
     fontWeight: 600,
-    fontSize: "0.9375rem",
+    fontSize: "0.8125rem",
     textTransform: "none",
-    borderRadius: 8,
-    backgroundColor: "#FF7704",
+    borderRadius: 6,
+    backgroundColor: "#DB6700",
     color: "#fff",
     boxShadow: "none",
     "&:hover": {
-      backgroundColor: "#FF7704",
+      backgroundColor: "#C45D00",
       boxShadow: "none",
     },
   },
   retakeLink: {
     display: "block",
     textAlign: "center",
-    fontSize: "0.875rem",
+    fontSize: "0.75rem",
     color: "#64748b",
     textDecoration: "none",
+    marginTop: theme.spacing(1),
     "&:hover": { color: "#0f172a" },
   },
-  compareTitle: {
-    fontSize: "3rem",
+  persuasionBox: {
+    marginTop: theme.spacing(4),
+    padding: theme.spacing(2.5, 2.5),
+    borderRadius: 12,
+    background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+    border: "1px solid #e2e8f0",
+  },
+  persuasionTitle: {
+    fontFamily: theme.typography.h3.fontFamily,
+    fontSize: "1rem",
     fontWeight: 700,
     color: "#0f172a",
-    marginBottom: theme.spacing(3),
-    textAlign: "center",
+    marginBottom: theme.spacing(1.5),
+    lineHeight: 1.3,
+  },
+  persuasionList: {
+    listStyle: "none",
+    padding: 0,
+    margin: 0,
+  },
+  persuasionItem: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: theme.spacing(1.25),
+    fontFamily: theme.typography.body1.fontFamily,
+    fontSize: "0.875rem",
+    color: "#334155",
+    lineHeight: 1.5,
+    marginBottom: theme.spacing(1.25),
+    "&:last-child": { marginBottom: 0 },
+  },
+  persuasionIcon: {
+    flexShrink: 0,
+    color: "#22c55e",
+    marginTop: 2,
   },
 }));
 
@@ -347,14 +382,10 @@ function Result() {
   const totalScore = location.state?.totalScore ?? null;
   const answeredCount = location.state?.answeredCount;
   const totalQuestions = location.state?.totalQuestions ?? 5;
-  const answers = location.state?.answers ?? {};
-  const questionsSummary = location.state?.questionsSummary ?? [];
   const isPartial =
     answeredCount != null &&
     totalQuestions != null &&
     answeredCount < totalQuestions;
-  const hasAnswers =
-    questionsSummary.length > 0 && Object.keys(answers).length > 0;
 
   const getRecommendedPlan = () => {
     const score = totalScore != null ? totalScore : 0;
@@ -370,40 +401,106 @@ function Result() {
     navigate(`/ProductFinder/Checkout?plan=${recommended.key}`);
   };
 
-  const getAnswerLabels = (q) => {
-    const val = answers[q.id];
-    if (val == null) return null;
-    if (Array.isArray(val)) return val.map((o) => o.label).join(", ");
-    return val.label || val;
+  // 4 fixed recommendation reasons — benefit-focused, never "what you chose"
+  const getRecommendationReasons = () => {
+    const planName = recommended.name;
+    const key = recommended.key;
+    const reasons = [];
+    // Type 1: Fit for your size / capacity
+    if (key === "starter") {
+      reasons.push(
+        "It gives you the right capacity and pricing for small teams, with room to grow without overpaying.",
+      );
+    } else if (key === "professional") {
+      reasons.push(
+        "It’s built for growing teams and multiple locations—right size, right features, without enterprise complexity.",
+      );
+    } else if (key === "enterprise") {
+      reasons.push(
+        "It scales with your organization’s size and complexity so you’re covered as you grow.",
+      );
+    } else {
+      reasons.push(
+        "A custom solution will match your scale and complexity so you get exactly what you need.",
+      );
+    }
+    // Type 2: Fit for how you work (features & reports)
+    if (key === "starter") {
+      reasons.push(
+        "You get the core payroll and reporting you need to run payroll confidently from day one.",
+      );
+    } else if (key === "professional") {
+      reasons.push(
+        "You get stronger features and compliance reporting that fit how growing companies run payroll.",
+      );
+    } else if (key === "enterprise") {
+      reasons.push(
+        "You get the full suite plus management and analytics so payroll and HR stay in control.",
+      );
+    } else {
+      reasons.push(
+        "Our team will align features and reporting to the way you actually work.",
+      );
+    }
+    // Type 3: Fit for support
+    if (key === "starter") {
+      reasons.push(
+        "Expert product support is included so you’re never stuck when you need help.",
+      );
+    } else if (key === "professional") {
+      reasons.push(
+        "Priority support and setup help are included so you can focus on running the business.",
+      );
+    } else if (key === "enterprise") {
+      reasons.push(
+        "Dedicated support and a Product Expert are there when you need them.",
+      );
+    } else {
+      reasons.push(
+        "You’ll have a dedicated team to guide setup and ongoing use.",
+      );
+    }
+    // Type 4: Why we recommend (confidence / next step)
+    reasons.push(`We think the ${planName} plan is the best fit for you`);
+    return reasons;
   };
 
-  const answersParagraph = hasAnswers
-    ? questionsSummary
-        .filter((q) => getAnswerLabels(q))
-        .map((q) => {
-          const labels = getAnswerLabels(q);
-          const t = q.title.replace(/\?$/, "").trim();
-          if (/how many employees/i.test(t))
-            return `You have ${labels} employees.`;
-          if (/types of workers/i.test(t)) return `You pay ${labels}.`;
-          if (/want from your payroll/i.test(t)) return `You want ${labels}.`;
-          if (/kind of payroll reports/i.test(t)) return `You need ${labels}.`;
-          if (/level of payroll support/i.test(t))
-            return `You prefer ${labels}.`;
-          return `${t}: ${labels}.`;
-        })
-        .join(" ")
-    : "";
+  const recommendationReasons = getRecommendationReasons();
 
   return (
     <div className={classes.wrapper}>
       <style>{KEYFRAMES}</style>
       <Container maxWidth="lg" className={classes.container} disableGutters>
         <Box className={classes.card}>
+          <Typography component="h1" className={classes.pageHeading}>
+            Results
+          </Typography>
           {isPartial && (
             <Typography className={classes.partialNote}>
               Answer more questions for a more accurate recommendation.
             </Typography>
+          )}
+
+          {/* Pricing at top */}
+          {recommended.price != null && (
+            <Box marginBottom={2}>
+              <Typography
+                className={classes.planPriceBig}
+                style={{ color: recommended.color }}
+                component="span"
+              >
+                {recommended.price.replace(/\/employee\/month/i, "")}
+                <span
+                  className={classes.planPriceSmall}
+                  style={{ color: recommended.color }}
+                >
+                  /employee/month
+                </span>
+              </Typography>
+              <Typography className={classes.planPriceSub}>
+                Base + per employee / month
+              </Typography>
+            </Box>
           )}
 
           <Box className={classes.mainRow}>
@@ -419,26 +516,6 @@ function Result() {
                   ? recommended.name
                   : `${recommended.name} Plan`}
               </Typography>
-              {recommended.price != null && (
-                <>
-                  <Typography
-                    className={classes.planPriceBig}
-                    style={{ color: recommended.color }}
-                    component="span"
-                  >
-                    {recommended.price.replace(/\/employee\/month/i, "")}
-                    <span
-                      className={classes.planPriceSmall}
-                      style={{ color: recommended.color }}
-                    >
-                      /employee/month
-                    </span>
-                  </Typography>
-                  <Typography className={classes.planPriceSub}>
-                    Base + per employee / month
-                  </Typography>
-                </>
-              )}
               <Typography className={classes.planDescription}>
                 {recommended.description}
               </Typography>
@@ -464,35 +541,23 @@ function Result() {
               )}
             </div>
             <div className={classes.rightCol}>
-              {(hasAnswers || recommended.benefits?.length) > 0 && (
+              {recommendationReasons.length > 0 && (
                 <>
-                  {hasAnswers && (
-                    <>
-                      <Typography component="h3" className={classes.whyHeading}>
-                        Why this is for you?
-                      </Typography>
-                      <Typography className={classes.whyParagraph}>
-                        {answersParagraph}
-                      </Typography>
-                    </>
-                  )}
-                  {recommended.benefits && recommended.benefits.length > 0 && (
-                    <>
-                      <Typography className={classes.sectionLabel}>
-                        Benefits for you
-                      </Typography>
-                      <ul className={classes.benefitsList}>
-                        {recommended.benefits.map((benefit, i) => (
-                          <li key={i} className={classes.benefitItem}>
-                            <span className={classes.checkIconWrap}>
-                              <CheckIcon style={{ fontSize: 9 }} />
-                            </span>
-                            {benefit}
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
+                  <Typography component="h3" className={classes.whyHeading}>
+                    Why we recommend this plan for you
+                  </Typography>
+                  {recommendationReasons.map((reason, i) => (
+                    <Typography
+                      key={i}
+                      className={classes.whyParagraph}
+                      style={{
+                        marginBottom:
+                          i < recommendationReasons.length - 1 ? 12 : 0,
+                      }}
+                    >
+                      {reason}
+                    </Typography>
+                  ))}
                 </>
               )}
             </div>
@@ -507,7 +572,7 @@ function Result() {
                 className={classes.primaryBtn}
                 style={{ backgroundColor: recommended.color }}
               >
-                Talk to Sales
+                Contact Sales
               </Button>
             ) : (
               <Button
@@ -515,7 +580,11 @@ function Result() {
                 className={classes.primaryBtn}
                 onClick={handleCheckout}
               >
-                Proceed to checkout
+                {recommended.key === "starter"
+                  ? "Get Starter Plan"
+                  : recommended.key === "professional"
+                    ? "Get Professional Plan"
+                    : "Get Enterprise Plan"}
               </Button>
             )}
             <Typography
@@ -526,17 +595,33 @@ function Result() {
               Retake questionnaire
             </Typography>
           </div>
-        </Box>
 
-        <Typography component="h2" className={classes.compareTitle}>
-          Compare with other plans
-        </Typography>
-        <PricingCardGrid
-          billingPeriod="monthly"
-          showToggle={false}
-          recommendedPlanKey={recommended.key}
-          recommendedPlanColor={recommended.color}
-        />
+          <Box className={classes.persuasionBox}>
+            <Typography component="h3" className={classes.persuasionTitle}>
+              We recommend this plan because it’s the best for you
+            </Typography>
+            <ul className={classes.persuasionList}>
+              <li className={classes.persuasionItem}>
+                <CheckIcon className={classes.persuasionIcon} style={{ fontSize: 18 }} />
+                <span>
+                  <strong>Right fit, not guesswork.</strong> This plan gives you what you actually need—the right capacity, features, and support—so you’re never overpaying or left short. We’re pointing you here because it’s the better choice for your situation.
+                </span>
+              </li>
+              <li className={classes.persuasionItem}>
+                <CheckIcon className={classes.persuasionIcon} style={{ fontSize: 18 }} />
+                <span>
+                  <strong>Built for success.</strong> Thousands of businesses like yours run payroll on this plan every month. You get the right balance so you can start with confidence and grow when you’re ready—this is the plan we recommend when we want the best outcome for you.
+                </span>
+              </li>
+              <li className={classes.persuasionItem}>
+                <CheckIcon className={classes.persuasionIcon} style={{ fontSize: 18 }} />
+                <span>
+                  <strong>No pressure, full support.</strong> We stand behind this recommendation. There’s no long-term lock-in—start when you’re ready and we’ll be here to help. Choosing this plan is the move that’s better for you.
+                </span>
+              </li>
+            </ul>
+          </Box>
+        </Box>
       </Container>
     </div>
   );

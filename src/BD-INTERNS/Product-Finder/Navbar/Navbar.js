@@ -53,16 +53,18 @@ const useStyles = makeStyles((theme) => ({
     display: "block",
   },
   navLink: {
+    fontFamily: theme.typography.body1.fontFamily,
     fontWeight: 600,
     transition: "color 0.25s ease",
     "&:hover": {
-      color: "#FF7704",
+      color: "#DB6700",
     },
   },
   activeLink: {
-    color: "#FF7704 !important",
+    fontFamily: theme.typography.body1.fontFamily,
+    color: "#DB6700 !important",
     fontWeight: 700,
-    borderBottom: "2px solid #FF7704",
+    borderBottom: "2px solid #DB6700",
   },
   boxFlex: {
     display: "flex",
@@ -86,7 +88,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     gap: "1.8rem",
     "& a:hover": {
-      color: "#FF7704",
+      color: "#DB6700",
     },
   },
   boxSpacer: {

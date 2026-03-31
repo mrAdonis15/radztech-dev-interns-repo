@@ -24,11 +24,15 @@ import SqlFormatter from "./DEV-INTERNS/SQL Formatter/SqlFormatter";
 import Timelogstest from "./DEV-INTERNS/uiJSON/Adam/components/timelogstest";
 import AGR from "./DEV-INTERNS/AGR";
 import StarRatingPage from "./DEV-INTERNS/starRating";
+import BibleVerse from "./DEV-INTERNS/BibleVerse/bible";
 
 // BD routes
 import CalculatorLayout from "./BD-INTERNS/13thMonthPayCalculator/Layout/Layout";
+import Landing from "./BD-INTERNS/13thMonthPayCalculator/Landing/Landing";
 import Calculator from "./BD-INTERNS/13thMonthPayCalculator/Calculator/Calculator";
-import aboutCalculator from "./BD-INTERNS/13thMonthPayCalculator/About/About";
+import Result from "./BD-INTERNS/13thMonthPayCalculator/Result/Result";
+
+//Product Finder
 import ProductFinderLayout from "./BD-INTERNS/Product-Finder/Layout/Layout";
 import PFHero from "./BD-INTERNS/Product-Finder/Hero/Hero";
 import PFQuestionnaire from "./BD-INTERNS/Product-Finder/Questionnaire/Questionnaire";
@@ -111,6 +115,10 @@ const routes = [
         path: "/StarRating",
         element: StarRatingPage,
       },
+      {
+        path: "/verses",
+        element: BibleVerse,
+      }
     ],
   },
   {
@@ -148,8 +156,9 @@ const routes = [
     path: "/BDCalculator",
     element: CalculatorLayout,
     children: [
-      { index: true, element: Calculator },
-      { path: "About", element: aboutCalculator },
+      { index: true, element: Landing },
+      { path: "calculator", element: Calculator },
+      { path: "result", element: Result },
     ],
   },
   {

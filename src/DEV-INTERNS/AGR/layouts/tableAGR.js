@@ -229,6 +229,24 @@ const formatCell = (value, colKey) => {
   return isNumeric(value) ? formatNumber(value) : value;
 };
 
+const PIPE_VALUE_LABELS = {
+  skedValues: ["Date", "Amount", "Description"],
+  skedCurrent: ["Amount", "Rebate"],
+  skedValues_4266: ["Amount", "Rebate", "Balance"],
+};
+
+const getPipeValueObject = (value, colKey) => {
+  if (typeof value !== "string" || !value.includes("|")) return null;
+
+  const parts = value.split("|").map((part) => part.trim());
+  const labels = PIPE_VALUE_LABELS[colKey] || parts.map((_, index) => `Value ${index + 1}`);
+
+  return parts.reduce((acc, part, index) => {
+    acc[labels[index] || `Value ${index + 1}`] = part || "--";
+    return acc;
+  }, {});
+};
+
 const ROWS_PER_PAGE = 20;
 
 /**
@@ -411,8 +429,10 @@ export function TableAGR() {
   const handleSavePageChange = (event, newPage) => setSavePage(newPage);
 
   const handleCellClick = (value, columnName) => {
-    if (isJsonData(value)) {
-      setSelectedData(value);
+    const parsedPipeValue = getPipeValueObject(value, columnName);
+    const modalData = isJsonData(value) ? value : parsedPipeValue;
+    if (modalData) {
+      setSelectedData(modalData);
       setSelectedColumnName(columnName);
       setModalOpen(true);
     }
@@ -504,7 +524,8 @@ export function TableAGR() {
         {buildColumnsFromRows(executeRows).map((col, i) => {
           const value = col.key === null ? rowIndex + 1 : getCellValue(agr, col.key);
           const display = col.key === null ? String(rowIndex + 1) : formatCell(value, col.key);
-          const clickable = isJsonData(value);
+          const parsedPipeValue = getPipeValueObject(value, col.key);
+          const clickable = isJsonData(value) || Boolean(parsedPipeValue);
           const isErrorCell = isErrorRow && errorFocusExecute && col.key === errorFocusExecute.fieldKey;
           const expectedVal = isErrorCell && errorFocusExecute.detail && errorFocusExecute.detail.length >= 2
             ? errorFocusExecute.detail[1]
@@ -567,7 +588,8 @@ export function TableAGR() {
         {buildColumnsFromRows(saveTableData).map((col, i) => {
           const value = col.key === null ? rowIndex + 1 : getCellValue(agr, col.key);
           const display = col.key === null ? String(rowIndex + 1) : formatCell(value, col.key);
-          const clickable = isJsonData(value);
+          const parsedPipeValue = getPipeValueObject(value, col.key);
+          const clickable = isJsonData(value) || Boolean(parsedPipeValue);
           const isEditing = editingCell && editingCell.rowIndex === rowIndex && editingCell.colKey === col.key;
           const canEdit = col.key != null;
           const cellIsError = isErrorRow && errorFocusSave && col.key === errorFocusSave.fieldKey;

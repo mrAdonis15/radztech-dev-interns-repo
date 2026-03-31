@@ -11,12 +11,12 @@ import {
 import AssignmentIcon from "@material-ui/icons/Assignment";
 import VerifiedUserIcon from "@material-ui/icons/VerifiedUser";
 import FlashOnIcon from "@material-ui/icons/FlashOn";
-import heroManImg from "../Images/hero_person.png";
+import heroManImg from "../Images/ai.png";
 
 const useStyles = makeStyles((theme) => ({
   root: {
     overflow: "hidden",
-    backgroundColor: "#FAFAFB",
+    backgroundColor: "#FAFBFD",
     height: "calc(100vh - 60px)",
     minHeight: "calc(100vh - 60px)",
     display: "flex",
@@ -101,7 +101,7 @@ const useStyles = makeStyles((theme) => ({
   },
   heroImage: {
     width: "auto",
-    height: "100%",
+    height: "95%",
     maxHeight: "calc(100vh - 60px)",
     objectFit: "contain",
     objectPosition: "center bottom",
@@ -115,25 +115,31 @@ const useStyles = makeStyles((theme) => ({
     "0%": { opacity: 0, transform: "translateX(24px)" },
     "100%": { opacity: 1, transform: "translateX(0)" },
   },
+  "@keyframes miniCardFloat": {
+    "0%": { transform: "translateY(0)" },
+    "50%": { transform: "translateY(-6px)" },
+    "100%": { transform: "translateY(0)" },
+  },
   miniCard: {
     position: "absolute",
-    fontFamily: theme.typography.fontFamily,
+    fontFamily: theme.typography.body1.fontFamily,
     backgroundColor: "#fff",
     borderRadius: 12,
-    padding: theme.spacing(2, 2),
+    padding: theme.spacing(2.1, 2.1),
     boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
     maxWidth: 172,
     border: "1px solid rgba(0,0,0,0.06)",
     transition:
       "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+    animation: "$miniCardFloat 5s ease-in-out 1s infinite",
     "&:hover": {
       transform: "translateY(-4px) scale(1.02)",
       boxShadow: "0 12px 28px rgba(0,0,0,0.12)",
     },
     "& strong": {
-      fontFamily: theme.typography.fontFamily,
+      fontFamily: theme.typography.h6.fontFamily,
       color: "#DB6700",
-      fontSize: "0.8rem",
+      fontSize: "0.9rem",
       fontWeight: 600,
       display: "flex",
       alignItems: "center",
@@ -143,7 +149,7 @@ const useStyles = makeStyles((theme) => ({
     "& span": {
       fontFamily: theme.typography.body1.fontFamily,
       color: "#333",
-      fontSize: "0.8rem",
+      fontSize: "0.85rem",
       fontWeight: 500,
       display: "block",
       lineHeight: 1.4,
@@ -154,52 +160,49 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   miniCard1: {
-    top: "6%",
-    right: "-2%",
-    animation: "$cardFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.55s both",
+    top: "23%",
+    right: "12%",
     [theme.breakpoints.down("md")]: {
-      right: "2%",
-      top: "4%",
+      right: "5%",
+      top: "18%",
       padding: theme.spacing(1.5, 1.75),
       maxWidth: 150,
     },
     [theme.breakpoints.down("xs")]: {
-      right: "-4%",
-      top: "0%",
+      right: "4%",
+      top: "14%",
       padding: theme.spacing(1.25, 1.5),
       maxWidth: 130,
     },
   },
   miniCard2: {
-    bottom: "30%",
-    left: "-4%",
-    animation: "$cardFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.7s both",
+    bottom: "32%",
+    left: "8%",
     [theme.breakpoints.down("md")]: {
-      left: "0%",
-      bottom: "24%",
+      left: "6%",
+      bottom: "30%",
       padding: theme.spacing(1.5, 1.75),
       maxWidth: 150,
     },
     [theme.breakpoints.down("xs")]: {
-      left: "-6%",
-      bottom: "20%",
+      left: "4%",
+      bottom: "26%",
       padding: theme.spacing(1.25, 1.5),
       maxWidth: 130,
     },
   },
   miniCard3: {
-    bottom: "6%",
-    right: "2%",
-    animation: "$cardFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.85s both",
+    bottom: "16%",
+    right: "6%",
     [theme.breakpoints.down("md")]: {
       right: "6%",
-      bottom: "4%",
+      bottom: "12%",
       padding: theme.spacing(1.5, 1.75),
       maxWidth: 150,
     },
     [theme.breakpoints.down("xs")]: {
-      right: "0%",
-      bottom: "0%",
+      right: "5%",
+      bottom: "10%",
       padding: theme.spacing(1.25, 1.5),
       maxWidth: 130,
     },
@@ -209,7 +212,7 @@ const useStyles = makeStyles((theme) => ({
     "100%": { opacity: 1, transform: "translateY(0)" },
   },
   heroTitle: {
-    fontFamily: theme.typography.fontFamily,
+    fontFamily: theme.typography.h1.fontFamily,
     fontWeight: 600,
     fontSize: "3.5rem",
     lineHeight: 1.2,
@@ -316,14 +319,6 @@ const Home = () => {
                   className={classes.heroCtaBtn}
                 >
                   Find me a plan
-                </Button>
-                <Button
-                  component={RouterLink}
-                  to="/ProductFinder/ContactUs"
-                  variant="outlined"
-                  className={classes.heroCtaBtnOutlined}
-                >
-                  Book a demo
                 </Button>
               </Box>
             </Grid>

@@ -10,14 +10,13 @@ import {
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
 import PhoneIcon from "@material-ui/icons/Phone";
-import ChatBubbleOutlineIcon from "@material-ui/icons/ChatBubbleOutline";
 import { PricingCardGrid, PLANS } from "./PricingCardGrid";
 
 const useStyles = makeStyles((theme) => ({
   wrapper: {
     fontFamily: theme.typography.body1.fontFamily,
     minHeight: "100vh",
-    background: "#f7f9fc",
+    background: "#FAFBFD",
     paddingTop: theme.spacing(6),
     paddingBottom: 0,
     paddingLeft: theme.spacing(3),
@@ -56,7 +55,7 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(4),
   },
   title: {
-    fontFamily: theme.typography.fontFamily,
+    fontFamily: theme.typography.h1.fontFamily,
     fontSize: "1.75rem",
     fontWeight: 700,
     color: "#0f172a",
@@ -88,7 +87,7 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: "transparent",
     "&:hover": {
       backgroundColor: "transparent",
-      color: "#FF7704",
+      color: "#DB6700",
     },
     "& .MuiButton-endIcon": {
       marginLeft: theme.spacing(0.5),
@@ -194,16 +193,7 @@ export default function Pricing() {
                 className={classes.stillNotSureBtn}
                 startIcon={<PhoneIcon />}
               >
-                Schedule a Call
-              </Button>
-              <Button
-                component={RouterLink}
-                to="/ProductFinder/ContactUs"
-                variant="outlined"
-                className={classes.stillNotSureBtn}
-                startIcon={<ChatBubbleOutlineIcon />}
-              >
-                Chat with Sales
+                Contact Sales
               </Button>
             </Box>
           </Box>
@@ -211,7 +201,7 @@ export default function Pricing() {
           <Box className={classes.quizLinkWrap}>
             <Button
               component={RouterLink}
-              to="/questionnaire"
+              to="/ProductFinder/Questionnaire"
               className={classes.quizButton}
               endIcon={<ArrowForwardIcon style={{ fontSize: 18 }} />}
             >

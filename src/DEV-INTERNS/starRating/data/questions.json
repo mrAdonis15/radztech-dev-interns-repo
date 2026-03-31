@@ -2,33 +2,66 @@
   "questions": [
     {
       "id": "communication",
-      "label": "Communication",
-      "helperText": "How clearly does this intern communicate updates and ideas?",
-      "subQuestions": []
+      "parent": "Communication",
+      "questions": [
+        {
+          "id": "communication-clarity",
+          "question": "How clearly does the candidate communicate their ideas?",
+          "type": "rating"
+        },
+        {
+          "id": "communication-confidence",
+          "question": "How confident and professional is the candidate during the interview?",
+          "type": "rating"
+        },
+        {
+          "id": "communication-notes",
+          "question": "What stood out about the candidate's communication style?",
+          "type": "paragraph"
+        }
+      ]
     },
     {
-      "id": "quality",
-      "label": "Work quality",
-      "helperText": "How strong is the quality and consistency of the work delivered?",
-      "subQuestions": []
+      "id": "technical-skills",
+      "parent": "Technical Skills",
+      "questions": [
+        {
+          "id": "technical-fundamentals",
+          "question": "How strong is the candidate's understanding of core technical concepts?",
+          "type": "rating"
+        },
+        {
+          "id": "technical-problem-solving",
+          "question": "How well does the candidate solve technical problems during the interview?",
+          "type": "rating"
+        },
+        {
+          "id": "technical-feedback",
+          "question": "What are the candidate's strongest and weakest technical areas?",
+          "type": "paragraph"
+        }
+      ]
     },
     {
-      "id": "initiative",
-      "label": "Initiative",
-      "helperText": "How proactively does this intern take ownership and move tasks forward?",
-      "subQuestions": []
-    },
-    {
-      "id": "collaboration",
-      "label": "Collaboration",
-      "helperText": "How well does this intern work with the team?",
-      "subQuestions": []
-    },
-    {
-      "id": "reliability",
-      "label": "Reliability",
-      "helperText": "How dependable is this intern when handling assigned work?",
-      "subQuestions": []
+      "id": "behavioral-fit",
+      "parent": "Behavioral Fit",
+      "questions": [
+        {
+          "id": "behavioral-teamwork",
+          "question": "How well does the candidate demonstrate teamwork and collaboration?",
+          "type": "rating"
+        },
+        {
+          "id": "behavioral-adaptability",
+          "question": "How adaptable is the candidate when discussing challenges or change?",
+          "type": "rating"
+        },
+        {
+          "id": "behavioral-observations",
+          "question": "What behavioral observations are important for the hiring team to note?",
+          "type": "paragraph"
+        }
+      ]
     }
   ]
 }

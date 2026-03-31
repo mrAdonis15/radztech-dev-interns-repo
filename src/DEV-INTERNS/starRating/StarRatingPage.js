@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -6,18 +6,19 @@ import {
   Dialog,
   DialogContent,
   FormControl,
-  Grid,
   IconButton,
   InputAdornment,
   MenuItem,
   Paper,
   Select,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Tabs,
   TextField,
   makeStyles,
   Typography,
@@ -34,11 +35,15 @@ import useCategoryRatings from "./hooks/useCategoryRatings";
 import useEvaluationQuestions from "./hooks/useEvaluationQuestions";
 
 const SHOW_JSON_BUTTON = false;
+const GROUPS_STORAGE_KEY = "dev-interns-star-rating-groups";
+const ACTIVE_GROUP_STORAGE_KEY = "dev-interns-star-rating-active-group";
+const QUESTIONS_STORAGE_KEY = "dev-interns-star-rating-questions";
+const SETUP_JSON_STORAGE_KEY = "dev-interns-star-rating-setup-json";
 
 const useStyles = makeStyles((theme) => ({
   page: {
     minHeight: "100vh",
-    paddingTop: theme.spacing(14),
+    paddingTop: theme.spacing(10),
     paddingBottom: theme.spacing(8),
     fontFamily: '"Poppins", sans-serif',
     background:
@@ -63,7 +68,27 @@ const useStyles = makeStyles((theme) => ({
   heroSubtitle: {
     color: "#6b7280",
     marginTop: theme.spacing(1),
-    marginBottom: theme.spacing(3),
+    marginBottom: theme.spacing(2),
+  },
+  tabsRoot: {
+    minHeight: 0,
+  },
+  tabRoot: {
+    minHeight: 0,
+    padding: theme.spacing(1.25, 0),
+    marginRight: theme.spacing(3),
+    textTransform: "none",
+    fontSize: 15,
+    fontWeight: 700,
+    color: "#64748b",
+    fontFamily: '"Poppins", sans-serif',
+    "&.Mui-selected": {
+      color: "#ea580c",
+    },
+  },
+  tabsIndicator: {
+    backgroundColor: "#ea580c",
+    height: 3,
   },
   filterPanel: {
     borderRadius: 4,
@@ -181,10 +206,21 @@ const useStyles = makeStyles((theme) => ({
   },
   actions: {
     display: "flex",
+    alignItems: "center",
     gap: theme.spacing(2),
     padding: theme.spacing(1.5, 2),
     borderTop: "1px solid #e5e7eb",
     backgroundColor: "#ffffff",
+    [theme.breakpoints.down("sm")]: {
+      flexWrap: "wrap",
+    },
+  },
+  tabsActionWrap: {
+    minWidth: 0,
+    flex: "1 1 auto",
+  },
+  resetActionWrap: {
+    marginLeft: "auto",
   },
   resetButton: {
     borderRadius: 3,
@@ -432,13 +468,27 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "center",
     color: "#6b7280",
   },
+  setupJsonCodeBlock: {
+    margin: 0,
+    padding: theme.spacing(2),
+    borderRadius: 16,
+    overflowX: "auto",
+    backgroundColor: "#ffffff",
+    color: "#111827",
+    fontSize: 13,
+    lineHeight: 1.6,
+    border: "1px solid #d7dce1",
+  },
 }));
 
 function StarRatingPage() {
   const classes = useStyles();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [jsonPreviewCategory, setJsonPreviewCategory] = useState(null);
-  const [adminOpen, setAdminOpen] = useState(false);
+  const [setupJsonOutput, setSetupJsonOutput] = useState("");
+  const [setupJsonOpen, setSetupJsonOpen] = useState(false);
+  const [setupSaveVersion, setSetupSaveVersion] = useState(0);
+  const [activeTab, setActiveTab] = useState("manage");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [searchDraft, setSearchDraft] = useState("");
@@ -450,16 +500,9 @@ function StarRatingPage() {
     categories,
     handleSaveEvaluation,
     resetRatings,
-    handleSelectGroup,
+    handleSelectGroup: handleSelectGroupState,
     summary,
     displayMode,
-    addGroup,
-    updateGroup,
-    removeGroup,
-    addCategory,
-    updateCategory,
-    removeCategory,
-    resetGroups,
   } = useCategoryRatings();
   const {
     questions,
@@ -471,6 +514,56 @@ function StarRatingPage() {
     removeSubQuestion,
     resetQuestions,
   } = useEvaluationQuestions();
+
+  const handleSaveSetupJson = () => {
+    const groupPayload = categoryGroupList.reduce((accumulator, group) => {
+      accumulator[group.id] = group;
+      return accumulator;
+    }, {});
+
+    const questionPayload = {
+      questions,
+    };
+    const payload = {
+      setup: {
+        id: activeGroup?.id || activeGroupId,
+        label: activeGroup?.label || "",
+        description: activeGroup?.description || "",
+        itemLabelSingular: activeGroup?.itemLabelSingular || "Item",
+        itemLabelPlural: activeGroup?.itemLabelPlural || "Items",
+        categories: categories.map((category) => ({
+          id: category.id,
+          name: category.name,
+          averageRating: category.averageRating,
+          totalRatings: category.totalRatings,
+          currentUserRating: category.currentUserRating,
+          evaluationResult: category.evaluationResult,
+        })),
+      },
+      questions,
+    };
+    const formattedJson = JSON.stringify(payload, null, 2);
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(GROUPS_STORAGE_KEY, JSON.stringify(groupPayload));
+      window.localStorage.setItem(ACTIVE_GROUP_STORAGE_KEY, activeGroupId);
+      window.localStorage.setItem(QUESTIONS_STORAGE_KEY, JSON.stringify(questionPayload));
+      window.localStorage.setItem(SETUP_JSON_STORAGE_KEY, formattedJson);
+    }
+
+    setSetupJsonOutput(formattedJson);
+    setSetupJsonOpen(true);
+    setSetupSaveVersion((currentValue) => currentValue + 1);
+  };
+
+  const handleSelectGroup = (event) => {
+    handleSelectGroupState(event);
+    setSelectedCategory(null);
+    setJsonPreviewCategory(null);
+    setSearchTerm("");
+    setSearchDraft("");
+    setSearchDialogOpen(false);
+  };
 
   const handleOpenEvaluation = (category) => {
     setSelectedCategory(category);
@@ -494,12 +587,8 @@ function StarRatingPage() {
     return savedEvaluation;
   };
 
-  const handleOpenAdmin = () => {
-    setAdminOpen(true);
-  };
-
-  const handleCloseAdmin = () => {
-    setAdminOpen(false);
+  const handleCloseSetupJson = () => {
+    setSetupJsonOpen(false);
   };
 
   const handleOpenSearchDialog = () => {
@@ -523,17 +612,6 @@ function StarRatingPage() {
     setSearchDialogOpen(false);
   };
 
-  useEffect(() => {
-    setSelectedCategory(null);
-    setJsonPreviewCategory(null);
-  }, [activeGroupId]);
-
-  useEffect(() => {
-    setSearchTerm("");
-    setSearchDraft("");
-    setSearchDialogOpen(false);
-  }, [activeGroupId]);
-
   const filteredCategories = categories.filter((category) => {
     const matchesSearch = category.name
       .toLowerCase()
@@ -550,6 +628,7 @@ function StarRatingPage() {
   const searchResults = categories.filter((category) =>
     category.name.toLowerCase().includes(searchDraft.trim().toLowerCase())
   );
+  const evaluationDialogKey = `${activeGroupId}-${selectedCategory?.id || "none"}-${setupSaveVersion}-${JSON.stringify(questions)}`;
 
   return (
     <>
@@ -589,7 +668,11 @@ function StarRatingPage() {
                   </Box>
                   <Box className={classes.fieldBlock}>
                     <Typography className={classes.fieldLabel}>Rating Setup</Typography>
-                    <FormControl variant="outlined" size="small" className={classes.selectControl}>
+                    <FormControl
+                      variant="outlined"
+                      size="small"
+                      className={classes.selectControl}
+                    >
                       <Select
                         value={activeGroupId}
                         onChange={handleSelectGroup}
@@ -605,7 +688,11 @@ function StarRatingPage() {
                   </Box>
                   <Box className={classes.fieldBlock}>
                     <Typography className={classes.fieldLabel}>Status</Typography>
-                    <FormControl variant="outlined" size="small" className={classes.filterControl}>
+                    <FormControl
+                      variant="outlined"
+                      size="small"
+                      className={classes.filterControl}
+                    >
                       <Select
                         value={statusFilter}
                         onChange={(event) => setStatusFilter(event.target.value)}
@@ -648,26 +735,54 @@ function StarRatingPage() {
               </Box>
 
               <Box className={classes.actions}>
-                <Button
-                  variant="text"
-                  onClick={handleOpenAdmin}
-                  className={`${classes.resetButton} ${classes.manageButton}`}
-                >
-                  MANAGE SETUP
-                </Button>
-                <Button
-                  variant="text"
-                  startIcon={<ReplayIcon />}
-                  onClick={resetRatings}
-                  className={`${classes.resetButton} ${classes.manageButton}`}
-                >
-                  RESET RATINGS
-                </Button>
+                <Box className={classes.tabsActionWrap}>
+                  <Tabs
+                    value={activeTab}
+                    onChange={(_, nextValue) => setActiveTab(nextValue)}
+                    className={classes.tabsRoot}
+                    classes={{ indicator: classes.tabsIndicator }}
+                  >
+                    <Tab
+                      value="manage"
+                      label="Questions"
+                      disableRipple
+                      className={classes.tabRoot}
+                    />
+                    <Tab
+                      value="evaluation"
+                      label="Evaluation"
+                      disableRipple
+                      className={classes.tabRoot}
+                    />
+                  </Tabs>
+                </Box>
+                <Box className={classes.resetActionWrap}>
+                  <Button
+                    variant="text"
+                    startIcon={<ReplayIcon />}
+                    onClick={activeTab === "manage" ? handleSaveSetupJson : resetRatings}
+                    className={`${classes.resetButton} ${classes.manageButton}`}
+                  >
+                    {activeTab === "manage" ? "SAVE" : "RESET RATINGS"}
+                  </Button>
+                </Box>
               </Box>
             </Paper>
           </Paper>
 
-          {categories.length > 0 ? (
+          {activeTab === "manage" ? (
+            <QuestionAdminDialog
+              questions={questions}
+              onSaveJson={handleSaveSetupJson}
+              onAddQuestion={addQuestion}
+              onUpdateQuestion={updateQuestion}
+              onRemoveQuestion={removeQuestion}
+              onAddSubQuestion={addSubQuestion}
+              onUpdateSubQuestion={updateSubQuestion}
+              onRemoveSubQuestion={removeSubQuestion}
+              onResetQuestions={resetQuestions}
+            />
+          ) : categories.length > 0 ? (
             <TableContainer component={Paper} elevation={0} className={classes.tableShell}>
               <Box className={classes.tableTitleBar}>
                 <Box>
@@ -735,7 +850,7 @@ function StarRatingPage() {
                                 onClick={() => handleOpenJsonPreview(category)}
                                 disabled={!category.evaluationResult}
                               >
-                                View JSON
+                                View
                               </Button>
                             ) : null}
                             <Button
@@ -772,6 +887,7 @@ function StarRatingPage() {
           )}
 
           <EvaluationDialog
+            key={evaluationDialogKey}
             open={Boolean(selectedCategory)}
             category={selectedCategory}
             questions={questions}
@@ -848,26 +964,21 @@ function StarRatingPage() {
             </DialogContent>
           </Dialog>
 
-          <QuestionAdminDialog
-            open={adminOpen}
-            questions={questions}
-            activeGroup={activeGroup}
-            onClose={handleCloseAdmin}
-            onAddQuestion={addQuestion}
-            onUpdateQuestion={updateQuestion}
-            onRemoveQuestion={removeQuestion}
-            onAddSubQuestion={addSubQuestion}
-            onUpdateSubQuestion={updateSubQuestion}
-            onRemoveSubQuestion={removeSubQuestion}
-            onResetQuestions={resetQuestions}
-            onAddGroup={addGroup}
-            onUpdateGroup={updateGroup}
-            onRemoveGroup={removeGroup}
-            onResetGroups={resetGroups}
-            onAddCategory={addCategory}
-            onUpdateCategory={updateCategory}
-            onRemoveCategory={removeCategory}
-          />
+          <Dialog
+            open={setupJsonOpen}
+            onClose={handleCloseSetupJson}
+            fullWidth
+            maxWidth="md"
+          >
+            <DialogContent>
+              <pre className={classes.setupJsonCodeBlock}>{setupJsonOutput}</pre>
+            </DialogContent>
+            <Box display="flex" justifyContent="flex-end" padding="0 24px 24px">
+              <Button onClick={handleCloseSetupJson} color="primary">
+                Close
+              </Button>
+            </Box>
+          </Dialog>
         </Container>
       </Box>
     </>

@@ -11,7 +11,6 @@ const categoryGroups = {
   devInterns: {
     id: "devInterns",
     label: "DEV Interns",
-    description: "Rate the current DEV interns by selecting stars on each card.",
     itemLabelSingular: "Intern",
     itemLabelPlural: "Interns",
     categories: [

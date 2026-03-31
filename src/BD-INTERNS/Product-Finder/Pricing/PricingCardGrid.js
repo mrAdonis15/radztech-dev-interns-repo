@@ -90,6 +90,7 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(4),
   },
   toggleText: {
+    fontFamily: theme.typography.body1.fontFamily,
     fontSize: "0.8125rem",
     color: "#64748b",
     marginBottom: theme.spacing(1.5),
@@ -108,6 +109,7 @@ const useStyles = makeStyles((theme) => ({
     boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
   },
   toggleOption: {
+    fontFamily: theme.typography.body1.fontFamily,
     padding: theme.spacing(0.6, 1.5),
     fontSize: "0.8rem",
     fontWeight: 600,
@@ -117,10 +119,15 @@ const useStyles = makeStyles((theme) => ({
     color: "#64748b",
     backgroundColor: "transparent",
     "&:hover": { backgroundColor: "rgba(0,0,0,0.04)" },
-    "&$toggleActive": { backgroundColor: "#FF7704", color: "#fff" },
+    "&$toggleActive": { backgroundColor: "#DB6700", color: "#fff" },
   },
   toggleActive: {},
-  toggleAnnualLabel: { fontSize: "0.7rem", fontWeight: 500, marginLeft: 4 },
+  toggleAnnualLabel: {
+    fontFamily: theme.typography.body1.fontFamily,
+    fontSize: "0.7rem",
+    fontWeight: 500,
+    marginLeft: 4,
+  },
   grid: { marginBottom: theme.spacing(2) },
   card: {
     height: "100%",
@@ -135,7 +142,11 @@ const useStyles = makeStyles((theme) => ({
     overflow: "visible",
     "&:hover": { boxShadow: "0 10px 40px rgba(0,0,0,0.08)" },
   },
+  cardWithTopBadge: {
+    paddingTop: 44,
+  },
   badge: {
+    fontFamily: theme.typography.body1.fontFamily,
     position: "absolute",
     top: 0,
     left: 0,
@@ -145,12 +156,13 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 700,
     letterSpacing: "0.04em",
     color: "#fff",
-    backgroundColor: "#FF7704",
+    backgroundColor: "#DB6700",
     textAlign: "center",
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
   },
   cardName: {
+    fontFamily: theme.typography.h2.fontFamily,
     fontSize: "1.125rem",
     fontWeight: 700,
     color: "#0f172a",
@@ -159,6 +171,7 @@ const useStyles = makeStyles((theme) => ({
   },
   cardNameWithBadge: { marginTop: theme.spacing(3) },
   cardTagline: {
+    fontFamily: theme.typography.body1.fontFamily,
     fontSize: "0.8125rem",
     color: "#64748b",
     marginBottom: theme.spacing(2),
@@ -173,13 +186,20 @@ const useStyles = makeStyles((theme) => ({
     gap: 4,
   },
   priceCurrent: {
+    fontFamily: theme.typography.h2.fontFamily,
     fontSize: "1.5rem",
     fontWeight: 800,
     color: "#0f172a",
     letterSpacing: "-0.02em",
   },
-  priceMoLabel: { fontSize: "0.875rem", fontWeight: 500, color: "#64748b" },
+  priceMoLabel: {
+    fontFamily: theme.typography.body1.fontFamily,
+    fontSize: "0.875rem",
+    fontWeight: 500,
+    color: "#64748b",
+  },
   savePromo: {
+    fontFamily: theme.typography.body1.fontFamily,
     fontSize: "0.8125rem",
     color: "#22c55e",
     fontWeight: 600,
@@ -187,6 +207,7 @@ const useStyles = makeStyles((theme) => ({
     marginTop: 4,
   },
   bonusMonths: {
+    fontFamily: theme.typography.body1.fontFamily,
     fontSize: "0.8125rem",
     color: "#22c55e",
     fontWeight: 600,
@@ -195,6 +216,7 @@ const useStyles = makeStyles((theme) => ({
   },
   featureList: { listStyle: "none", padding: 0, margin: 0, flex: 1 },
   featureItem: {
+    fontFamily: theme.typography.body1.fontFamily,
     display: "flex",
     alignItems: "flex-start",
     gap: theme.spacing(2),
@@ -218,17 +240,19 @@ const useStyles = makeStyles((theme) => ({
   checkIcon: { fontSize: 9, color: "#22c55e" },
   ctaWrap: { marginTop: "auto", paddingTop: theme.spacing(2) },
   getPlanBtn: {
+    fontFamily: theme.typography.body1.fontFamily,
     width: "100%",
     padding: theme.spacing(1.25, 2),
     fontWeight: 600,
     fontSize: "0.875rem",
     textTransform: "none",
     borderRadius: 8,
-    backgroundColor: "#FF7704",
+    backgroundColor: "#DB6700",
     color: "#fff",
-    "&:hover": { backgroundColor: "#e66d04" },
+    "&:hover": { backgroundColor: "#C45D00" },
   },
   talkToSalesBtn: {
+    fontFamily: theme.typography.body1.fontFamily,
     width: "100%",
     padding: theme.spacing(1.25, 2),
     fontWeight: 600,
@@ -267,7 +291,7 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 700,
     letterSpacing: "0.03em",
     color: "#fff",
-    backgroundColor: "#FF7704",
+    backgroundColor: "#DB6700",
     borderRadius: 999,
   },
   topMatchBadge: {
@@ -355,10 +379,7 @@ export function PricingCardGrid({
           return (
             <Grid item xs={12} sm={6} md={3} key={plan.key}>
               <Box
-                className={classes.card}
-                style={{
-                  paddingTop: recommendedPlanKey != null ? 32 : undefined,
-                }}
+                className={`${classes.card} ${isRecommended || plan.badge ? classes.cardWithTopBadge : ""}`}
               >
                 {isRecommended && (
                   <div
@@ -373,27 +394,8 @@ export function PricingCardGrid({
                     {plan.badge.toUpperCase()}
                   </div>
                 )}
-                <Typography
-                  component="h3"
-                  className={`${classes.cardName} ${plan.badge ? classes.cardNameWithBadge : ""} ${plan.talkToSales && plan.cardTitle ? classes.cardCustomTitle : ""}`}
-                >
-                  {plan.cardTitle || plan.name}
-                </Typography>
-                {plan.talkToSales && plan.cardTitle && (
-                  <Typography className={classes.cardCustomName}>
-                    {plan.name}
-                  </Typography>
-                )}
-                <Typography className={classes.cardTagline}>
-                  {plan.tagline}
-                </Typography>
-                {plan.contactPricing && (
-                  <Typography className={classes.contactForPricing}>
-                    Contact for pricing
-                  </Typography>
-                )}
                 {priceDisplay && (
-                  <Box className={classes.priceRow}>
+                  <Box className={classes.priceRow} style={{ marginBottom: 16 }}>
                     <Box className={classes.priceCurrentWrap}>
                       <Typography
                         component="span"
@@ -422,6 +424,25 @@ export function PricingCardGrid({
                     )}
                   </Box>
                 )}
+                {plan.contactPricing && (
+                  <Typography className={classes.contactForPricing} style={{ marginBottom: 8 }}>
+                    Contact for pricing
+                  </Typography>
+                )}
+                <Typography
+                  component="h3"
+                  className={`${classes.cardName} ${plan.badge ? classes.cardNameWithBadge : ""} ${plan.talkToSales && plan.cardTitle ? classes.cardCustomTitle : ""}`}
+                >
+                  {plan.cardTitle || plan.name}
+                </Typography>
+                {plan.talkToSales && plan.cardTitle && (
+                  <Typography className={classes.cardCustomName}>
+                    {plan.name}
+                  </Typography>
+                )}
+                <Typography className={classes.cardTagline}>
+                  {plan.tagline}
+                </Typography>
                 <ul className={classes.featureList}>
                   {plan.features.map((feature, i) => (
                     <li key={i} className={classes.featureItem}>
@@ -441,7 +462,7 @@ export function PricingCardGrid({
                       className={classes.talkToSalesBtn}
                       startIcon={<PhoneIcon style={{ fontSize: 18 }} />}
                     >
-                      Talk to Sales
+                      Contact Sales
                     </Button>
                   ) : (
                     <Button
@@ -450,7 +471,7 @@ export function PricingCardGrid({
                       variant="contained"
                       className={classes.getPlanBtn}
                     >
-                      Get {plan.name}
+                      Get {plan.name} Plan
                     </Button>
                   )}
                 </Box>
