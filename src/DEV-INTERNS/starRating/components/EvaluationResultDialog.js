@@ -13,6 +13,7 @@ import {
 const useStyles = makeStyles((theme) => ({
   paper: {
     borderRadius: 20,
+    fontFamily: '"Poppins", sans-serif',
   },
   intro: {
     marginBottom: theme.spacing(2),
@@ -54,9 +55,11 @@ const useStyles = makeStyles((theme) => ({
     fontSize: 13,
     lineHeight: 1.6,
     border: "1px solid #d7dce1",
+    fontFamily: '"Poppins", sans-serif',
   },
   actions: {
     padding: theme.spacing(2, 3, 3),
+    fontFamily: '"Poppins", sans-serif',
   },
 }));
 
@@ -73,13 +76,10 @@ function EvaluationResultDialog({ open, category, onClose }) {
       maxWidth="md"
       classes={{ paper: classes.paper }}
     >
-      <DialogTitle>{category ? `${category.name} JSON Result` : "JSON Result"}</DialogTitle>
+      <DialogTitle>{category ? `${category.name} ` : "JSON Result"}</DialogTitle>
       <DialogContent>
         {evaluationResult ? (
           <>
-            <Typography variant="body2" className={classes.intro}>
-              This view shows the exact JSON payload currently stored for this evaluation.
-            </Typography>
 
             <Box className={classes.metaRow}>
               <Box className={classes.metaCard}>

@@ -1,22 +1,71 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import questionData from "../data/questions.json";
 
 const STORAGE_KEY = "dev-interns-star-rating-questions";
 const defaultQuestions = Array.isArray(questionData?.questions) ? questionData.questions : [];
+const createUniqueQuestionId = () =>
+  `question-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const normalizeQuestionType = (type) =>
+  type === "essay" || type === "paragraph" ? "paragraph" : "rating";
 
-const createQuestionPayload = (questions) => ({
-  questions: cloneQuestions(questions),
+const normalizeSourceQuestionEntry = (question) => ({
+  id: typeof question?.id === "string" ? question.id : createUniqueQuestionId(),
+  label:
+    typeof question?.question === "string"
+      ? question.question
+      : typeof question?.label === "string"
+        ? question.label
+        : "",
+  helperText: typeof question?.helperText === "string" ? question.helperText : "",
+  type: normalizeQuestionType(question?.type),
+});
+
+const normalizeQuestionEntry = (question) => ({
+  id: typeof question?.id === "string" ? question.id : createUniqueQuestionId(),
+  label: typeof question?.label === "string" ? question.label : "",
+  helperText: typeof question?.helperText === "string" ? question.helperText : "",
+  type: normalizeQuestionType(question?.type),
 });
 
 const cloneQuestions = (questions) =>
   questions.map((question) => ({
-    ...question,
-    subQuestions: Array.isArray(question.subQuestions)
-      ? question.subQuestions.map((subQuestion) => ({ ...subQuestion }))
-      : [],
+    id: typeof question?.id === "string" ? question.id : createUniqueQuestionId(),
+    label:
+      typeof question?.parent === "string"
+        ? question.parent
+        : typeof question?.label === "string"
+          ? question.label
+          : "",
+    helperText: typeof question?.helperText === "string" ? question.helperText : "",
+    subQuestions:
+      Array.isArray(question?.questions) && question.questions.length > 0
+        ? question.questions.map(normalizeSourceQuestionEntry)
+        : Array.isArray(question?.subQuestions) && question.subQuestions.length > 0
+          ? question.subQuestions.map(normalizeQuestionEntry)
+        : [
+            normalizeQuestionEntry({
+              id:
+                typeof question?.id === "string"
+                  ? `${question.id}-item`
+                  : createUniqueQuestionId(),
+              label: question?.label,
+              helperText: question?.helperText,
+              type: question?.type,
+            }),
+          ],
   }));
-const createUniqueQuestionId = () =>
-  `question-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+const createQuestionPayload = (questions) => ({
+  questions: questions.map((question) => ({
+    id: question.id,
+    parent: question.label,
+    questions: (question.subQuestions || []).map((subQuestion) => ({
+      id: subQuestion.id,
+      question: subQuestion.label,
+      type: normalizeQuestionType(subQuestion.type),
+    })),
+  })),
+});
 
 const isValidQuestionSet = (questions) =>
   Array.isArray(questions) &&
@@ -32,7 +81,11 @@ const isValidQuestionSet = (questions) =>
           subQuestion &&
           typeof subQuestion.id === "string" &&
           typeof subQuestion.label === "string" &&
-          typeof subQuestion.helperText === "string"
+          typeof subQuestion.helperText === "string" &&
+          (subQuestion.type === "essay" ||
+            subQuestion.type === "paragraph" ||
+            subQuestion.type === "rating" ||
+            typeof subQuestion.type === "undefined")
       )
   );
 
@@ -55,11 +108,15 @@ const getStoredQuestions = () => {
 
     const parsedValue = JSON.parse(storedValue);
     if (isValidStoredQuestionPayload(parsedValue)) {
-      return cloneQuestions(parsedValue.questions);
+      return parsedValue.questions.length > 0
+        ? cloneQuestions(parsedValue.questions)
+        : cloneQuestions(defaultQuestions);
     }
 
     return isValidQuestionSet(parsedValue)
-      ? cloneQuestions(parsedValue)
+      ? parsedValue.length > 0
+        ? cloneQuestions(parsedValue)
+        : cloneQuestions(defaultQuestions)
       : cloneQuestions(defaultQuestions);
   } catch (error) {
     return cloneQuestions(defaultQuestions);
@@ -69,68 +126,83 @@ const getStoredQuestions = () => {
 export default function useEvaluationQuestions() {
   const [questions, setQuestions] = useState(getStoredQuestions);
 
-  useEffect(() => {
+  const persistQuestions = (nextQuestions) => {
     if (typeof window === "undefined") {
       return;
     }
 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(createQuestionPayload(questions)));
-  }, [questions]);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(createQuestionPayload(nextQuestions)));
+  };
 
   const addQuestion = () => {
-    setQuestions((currentQuestions) => [
-      ...currentQuestions,
-      {
-        id: createUniqueQuestionId(),
-        label: "",
-        helperText: "",
-        subQuestions: [],
-      },
-    ]);
+    setQuestions((currentQuestions) => {
+      const nextQuestions = [
+        ...currentQuestions,
+        {
+          id: createUniqueQuestionId(),
+          label: "",
+          helperText: "Group related questions in this category.",
+          subQuestions: [],
+        },
+      ];
+      persistQuestions(nextQuestions);
+      return nextQuestions;
+    });
   };
 
   const updateQuestion = (questionId, field, value) => {
-    setQuestions((currentQuestions) =>
-      currentQuestions.map((question) =>
+    setQuestions((currentQuestions) => {
+      const nextQuestions = currentQuestions.map((question) =>
         question.id === questionId
           ? {
               ...question,
               [field]: value,
             }
           : question
-      )
-    );
+      );
+      persistQuestions(nextQuestions);
+      return nextQuestions;
+    });
   };
 
   const removeQuestion = (questionId) => {
-    setQuestions((currentQuestions) =>
-      currentQuestions.filter((question) => question.id !== questionId)
-    );
+    setQuestions((currentQuestions) => {
+      const nextQuestions = currentQuestions.filter((question) => question.id !== questionId);
+      persistQuestions(nextQuestions);
+      return nextQuestions;
+    });
   };
 
   const addSubQuestion = (questionId) => {
-    setQuestions((currentQuestions) =>
-      currentQuestions.map((question) =>
+    const nextSubQuestionId = createUniqueQuestionId();
+
+    setQuestions((currentQuestions) => {
+      const nextQuestions = currentQuestions.map((question) =>
         question.id === questionId
           ? {
               ...question,
               subQuestions: [
                 ...(question.subQuestions || []),
                 {
-                  id: createUniqueQuestionId(),
+                  id: nextSubQuestionId,
                   label: "",
                   helperText: "",
+                  type: "rating",
                 },
               ],
             }
           : question
-      )
-    );
+      );
+      persistQuestions(nextQuestions);
+      return nextQuestions;
+    });
+
+    return nextSubQuestionId;
   };
 
   const updateSubQuestion = (questionId, subQuestionId, field, value) => {
-    setQuestions((currentQuestions) =>
-      currentQuestions.map((question) =>
+    setQuestions((currentQuestions) => {
+      const nextQuestions = currentQuestions.map((question) =>
         question.id === questionId
           ? {
               ...question,
@@ -138,33 +210,40 @@ export default function useEvaluationQuestions() {
                 subQuestion.id === subQuestionId
                   ? {
                       ...subQuestion,
-                      [field]: value,
+                      [field]:
+                        field === "type" ? normalizeQuestionType(value) : value,
                     }
                   : subQuestion
               ),
             }
           : question
-      )
-    );
+      );
+      persistQuestions(nextQuestions);
+      return nextQuestions;
+    });
   };
 
   const removeSubQuestion = (questionId, subQuestionId) => {
-    setQuestions((currentQuestions) =>
-      currentQuestions.map((question) =>
+    setQuestions((currentQuestions) => {
+      const nextQuestions = currentQuestions.map((question) =>
         question.id === questionId
           ? {
               ...question,
               subQuestions: (question.subQuestions || []).filter(
                 (subQuestion) => subQuestion.id !== subQuestionId
-              ),
+                ),
             }
           : question
-      )
-    );
+      );
+      persistQuestions(nextQuestions);
+      return nextQuestions;
+    });
   };
 
   const resetQuestions = () => {
-    setQuestions(cloneQuestions(defaultQuestions));
+    const nextQuestions = cloneQuestions(defaultQuestions);
+    persistQuestions(nextQuestions);
+    setQuestions(nextQuestions);
   };
 
   return {
