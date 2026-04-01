@@ -11,7 +11,7 @@ import {
   makeStyles,
   Typography,
 } from "@material-ui/core";
-import StarRating from "./StarRating";
+import Stars from "./Stars";
 
 const isParagraphType = (type) => type !== "rating";
 
@@ -73,7 +73,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function EvaluationDialog({ open, category, questions, onClose, onSave }) {
+function RatingDialog({ open, category, questions, onClose, onSave }) {
   const classes = useStyles();
   const getDraftRatingsFromEvaluation = (evaluationResult) => {
     if (!evaluationResult || !Array.isArray(evaluationResult.ratings)) {
@@ -256,7 +256,7 @@ function EvaluationDialog({ open, category, questions, onClose, onSave }) {
                         }
                       />
                     ) : (
-                      <StarRating
+                      <Stars
                         value={draftRatings[subQuestion.id] || 0}
                         onChange={(rating) => handleRateQuestion(subQuestion.id, rating)}
                         showValue
@@ -302,4 +302,4 @@ function EvaluationDialog({ open, category, questions, onClose, onSave }) {
   );
 }
 
-export default EvaluationDialog;
+export default RatingDialog;

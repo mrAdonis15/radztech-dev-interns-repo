@@ -1,7 +1,7 @@
 import { useState } from "react";
 import questionData from "../data/questions.json";
 
-const STORAGE_KEY = "dev-interns-star-rating-questions";
+const QUESTIONS_STORAGE_KEY = "dev-interns-star-rating-questions";
 const defaultQuestions = Array.isArray(questionData?.questions) ? questionData.questions : [];
 const createUniqueQuestionId = () =>
   `question-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -100,7 +100,7 @@ const getStoredQuestions = () => {
   }
 
   try {
-    const storedValue = window.localStorage.getItem(STORAGE_KEY);
+    const storedValue = window.localStorage.getItem(QUESTIONS_STORAGE_KEY);
 
     if (!storedValue) {
       return cloneQuestions(defaultQuestions);
@@ -123,7 +123,7 @@ const getStoredQuestions = () => {
   }
 };
 
-export default function useEvaluationQuestions() {
+export default function useQuestions() {
   const [questions, setQuestions] = useState(getStoredQuestions);
 
   const persistQuestions = (nextQuestions) => {
@@ -131,7 +131,10 @@ export default function useEvaluationQuestions() {
       return;
     }
 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(createQuestionPayload(nextQuestions)));
+    window.localStorage.setItem(
+      QUESTIONS_STORAGE_KEY,
+      JSON.stringify(createQuestionPayload(nextQuestions))
+    );
   };
 
   const addQuestion = () => {

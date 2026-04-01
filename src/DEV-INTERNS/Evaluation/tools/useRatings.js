@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import categoryGroups, { defaultGroupId } from "../data/categories";
+import { requestSubGroups } from "../api/subLists";
 
-const STORAGE_KEY = "dev-interns-star-rating-groups";
+const GROUPS_STORAGE_KEY = "dev-interns-star-rating-groups";
 const ACTIVE_GROUP_STORAGE_KEY = "dev-interns-star-rating-active-group";
 
 const createUniqueId = (prefix) =>
@@ -15,6 +16,7 @@ const createEmptyCategory = () => ({
   currentUserRating: 0,
   evaluationResult: null,
 });
+
 
 const normalizeEvaluationRatings = (ratings) =>
   Array.isArray(ratings)
@@ -173,6 +175,40 @@ const cloneCategoryGroups = (groups) =>
     return accumulator;
   }, {});
 
+const mergeRemoteGroups = (currentGroups, remoteGroups) => {
+  if (!remoteGroups || Object.keys(remoteGroups).length === 0) {
+    return currentGroups;
+  }
+
+  const nextGroups = { ...currentGroups };
+
+  Object.keys(remoteGroups).forEach((groupId) => {
+    const remoteGroup = normalizeGroup(remoteGroups[groupId], groupId);
+    const existingGroup = currentGroups[groupId];
+    const existingCategoriesById = new Map(
+      (existingGroup?.categories || []).map((category) => [category.id, category])
+    );
+
+    nextGroups[groupId] = {
+      ...remoteGroup,
+      categories: remoteGroup.categories.map((category) => {
+        const existingCategory = existingCategoriesById.get(category.id);
+        return existingCategory
+          ? {
+              ...category,
+              averageRating: existingCategory.averageRating || 0,
+              totalRatings: existingCategory.totalRatings || 0,
+              currentUserRating: existingCategory.currentUserRating || 0,
+              evaluationResult: existingCategory.evaluationResult || null,
+            }
+          : category;
+      }),
+    };
+  });
+
+  return nextGroups;
+};
+
 const defaultCategoryGroups = cloneCategoryGroups(categoryGroups);
 
 const isValidStoredGroups = (storedGroups) =>
@@ -194,7 +230,7 @@ const getStoredCategoryGroups = () => {
   }
 
   try {
-    const storedValue = window.localStorage.getItem(STORAGE_KEY);
+    const storedValue = window.localStorage.getItem(GROUPS_STORAGE_KEY);
 
     if (!storedValue) {
       return cloneCategoryGroups(defaultCategoryGroups);
@@ -252,7 +288,7 @@ const getDisplayMode = (group) => {
 
 const clampRating = (rating) => Math.min(5, Math.max(1, rating));
 
-export default function useCategoryRatings() {
+export default function useRatings() {
   const [categoryState, setCategoryState] = useState(getStoredCategoryGroups);
   const getInitialActiveGroupId = () => {
     const storedActiveGroupId = getStoredActiveGroupId();
@@ -261,12 +297,13 @@ export default function useCategoryRatings() {
       : Object.keys(categoryState)[0] || defaultGroupId;
   };
   const [activeGroupId, setActiveGroupIdState] = useState(getInitialActiveGroupId);
+
   const persistCategoryState = (nextCategoryState) => {
     if (typeof window === "undefined") {
       return;
     }
 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextCategoryState));
+    window.localStorage.setItem(GROUPS_STORAGE_KEY, JSON.stringify(nextCategoryState));
   };
 
   const setPersistedActiveGroupId = (nextActiveGroupId) => {
@@ -279,6 +316,22 @@ export default function useCategoryRatings() {
     setActiveGroupIdState(nextActiveGroupId);
     return nextActiveGroupId;
   };
+
+  if (typeof window !== "undefined") {
+    const authToken = window.localStorage.getItem("authToken");
+
+    requestSubGroups(authToken).then((remoteGroups) => {
+      if (!remoteGroups || Object.keys(remoteGroups).length === 0) {
+        return;
+      }
+
+      setCategoryState((currentGroups) => {
+        const nextGroups = mergeRemoteGroups(currentGroups, remoteGroups);
+        persistCategoryState(nextGroups);
+        return nextGroups;
+      });
+    });
+  }
 
   const handleSaveEvaluation = (categoryId, evaluationResult) => {
     const sanitizedEvaluationResult = normalizeEvaluationResult(evaluationResult);
