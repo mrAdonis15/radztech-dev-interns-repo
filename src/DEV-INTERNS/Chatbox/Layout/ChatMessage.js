@@ -8,7 +8,9 @@ import ChartRenderer from "./chartRenderer";
 
 function isImageOnlyContent(text) {
   if (!text || typeof text !== "string") return false;
-  const withoutImages = text.replace(/!\[[^\]]*\]\([^)]+\)/g, "").replace(/\s/g, "");
+  const withoutImages = text
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, "")
+    .replace(/\s/g, "");
   return withoutImages.length === 0;
 }
 
@@ -26,7 +28,8 @@ function ChatMessageInner({ msg }) {
   const isMe = msg.sender === "me";
   const isThinking = msg.status === "thinking" || msg.text === "...";
   const isChart = msg.type === "chart";
-  const isImg = msg.type === "img" && msg.data && Array.isArray(msg.data.images);
+  const isImg =
+    msg.type === "img" && msg.data && Array.isArray(msg.data.images);
 
   const [activeImage, setActiveImage] = useState(null);
   const [zoom, setZoom] = useState(1);
@@ -112,12 +115,21 @@ function ChatMessageInner({ msg }) {
             </div>
           ) : isImageOnlyContent(msg.text) ? (
             <div className="chat-message-image-only">
-              <Typography component="div" variant="body2" className="bubble-text left">
-                <ReactMarkdown components={markdownImgComponent}>{msg.text}</ReactMarkdown>
+              <Typography
+                component="div"
+                variant="body2"
+                className="bubble-text left"
+              >
+                <ReactMarkdown components={markdownImgComponent}>
+                  {msg.text}
+                </ReactMarkdown>
               </Typography>
             </div>
           ) : isThinking ? (
-            <div className="chat-thinking-bubble" aria-label="UlapAI is thinking">
+            <div
+              className="chat-thinking-bubble"
+              aria-label="UlapAI is thinking"
+            >
               <img
                 src={thinkingGif}
                 alt=""
@@ -136,7 +148,9 @@ function ChatMessageInner({ msg }) {
                   "bubble-text left" + (isThinking ? " chat-typing-text" : "")
                 }
               >
-                <ReactMarkdown components={markdownImgComponent}>{msg.text}</ReactMarkdown>
+                <ReactMarkdown components={markdownImgComponent}>
+                  {msg.text}
+                </ReactMarkdown>
               </Typography>
             </div>
           )}
@@ -147,6 +161,20 @@ function ChatMessageInner({ msg }) {
           >
             {msg.time}
           </Typography>
+          {msg.responseTimerLabel ? (
+            <Typography
+              variant="caption"
+              className="bubble-time left"
+              style={{
+                marginTop: 2,
+                marginLeft: 4,
+                display: "block",
+                opacity: 0.85,
+              }}
+            >
+              {msg.responseTimerLabel}
+            </Typography>
+          ) : null}
         </div>
       </div>
       {activeImage && (
@@ -168,7 +196,9 @@ function ChatMessageInner({ msg }) {
               >
                 −
               </button>
-              <span className="chat-image-overlay-zoom">{Math.round(zoom * 100)}%</span>
+              <span className="chat-image-overlay-zoom">
+                {Math.round(zoom * 100)}%
+              </span>
               <button
                 type="button"
                 onClick={() => setZoom((z) => Math.min(3, z + 0.25))}

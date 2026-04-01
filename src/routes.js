@@ -44,6 +44,9 @@ import PFContactUs from "./BD-INTERNS/Product-Finder/ContactUs/ContactUs";
 import PaymentComplete from "./BD-INTERNS/Product-Finder/PaymentComplete/PaymentComplete";
 
 const ChatboxPage = () => <Chatbox defaultOpen />;
+const PythonPrototypeChatbotPage = () => (
+  <Chatbox defaultOpen aiProvider="python" appTitle="PythonPrototype Chatbot" />
+);
 
 const routes = [
   {
@@ -118,7 +121,7 @@ const routes = [
       {
         path: "/verses",
         element: BibleVerse,
-      }
+      },
     ],
   },
   {
@@ -150,6 +153,11 @@ const routes = [
   {
     path: "/AGR",
     element: AGR,
+  },
+  {
+    path: "/PythonPrototypeChatbot",
+    element: ChatboxLayout,
+    children: [{ index: true, element: PythonPrototypeChatbotPage }],
   },
   // BD routes
   {

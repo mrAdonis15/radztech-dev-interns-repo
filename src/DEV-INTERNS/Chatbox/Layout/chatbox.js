@@ -18,6 +18,7 @@ import ExpandLessIcon from "@material-ui/icons/ExpandLess";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 
 import { sendMessage } from "../api/services/chatService.js";
+import { streamFromPythonBot } from "../api/services/pythonBotService.js";
 import {
   saveChatHistory,
   fetchChatHistoryBySessionId,
@@ -36,9 +37,9 @@ import {
 import {
   createMessage,
   formatTime,
-  saveMessages,
-  loadHistory,
-  saveHistoryToStorage,
+  saveMessagesByKey,
+  loadHistoryByKey,
+  saveHistoryToStorageByKey,
   addToHistory,
   updateHistoryItem,
   deleteHistoryItem,
@@ -51,7 +52,22 @@ import { useChatboxTheme } from "./useChatboxTheme.js";
 import ChatMessage from "./ChatMessage.js";
 import ChatInputArea from "./ChatInputArea.js";
 
-export default function Chatbox({ defaultOpen = false }) {
+export default function Chatbox({
+  defaultOpen = false,
+  aiProvider = "ulap",
+  appTitle = "UlapAI",
+}) {
+  const isPythonProvider = aiProvider === "python";
+  const messageStorageKey = isPythonProvider
+    ? "pythonprototype-chat-messages"
+    : "ulap-chat-messages";
+  const historyStorageKey = isPythonProvider
+    ? "pythonprototype-chat-history"
+    : "ulap-chat-history";
+  const sessionStorageKey = isPythonProvider
+    ? "pythonprototype-session_id"
+    : "session_id";
+
   const rootRef = useRef(null);
   const bodyRef = useRef(null);
   const inputRef = useRef(null);
@@ -65,7 +81,7 @@ export default function Chatbox({ defaultOpen = false }) {
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [panelPosition, setPanelPosition] = useState({ x: null, y: null });
-  const [history, setHistory] = useState(loadHistory());
+  const [history, setHistory] = useState(loadHistoryByKey(historyStorageKey));
   const [isExpanded, setIsExpanded] = useState(true);
   const [viewingHistoryId, setViewingHistoryId] = useState(null);
   const [currentConversationId, setCurrentConversationId] = useState(null);
@@ -77,6 +93,14 @@ export default function Chatbox({ defaultOpen = false }) {
   const [isSending, setIsSending] = useState(false);
 
   const theme = useChatboxTheme(rootRef);
+
+  const formatResponseTimer = (ms, finished = false) => {
+    if (!Number.isFinite(ms) || ms < 0) {
+      return finished ? "Responded in --" : "Responding: --";
+    }
+    const seconds = (ms / 1000).toFixed(1);
+    return finished ? `Responded in ${seconds}s` : `Responding: ${seconds}s`;
+  };
 
   const syncSessionIdToUrl = (sid) => {
     if (typeof window === "undefined") return;
@@ -107,8 +131,8 @@ export default function Chatbox({ defaultOpen = false }) {
 
   // Persist messages to localStorage when they change
   useEffect(() => {
-    saveMessages(messages);
-  }, [messages]);
+    saveMessagesByKey(messages, messageStorageKey);
+  }, [messages, messageStorageKey]);
 
   // Restore conversation from session_id in URL on mount (e.g. after page reload)
   // Prefer localStorage messages for this session when available so img/chart are preserved (same as charts).
@@ -120,34 +144,44 @@ export default function Chatbox({ defaultOpen = false }) {
     const trimmedSid = sid.trim();
     setSessionId(trimmedSid);
     setViewingHistoryId(`session-${trimmedSid}`);
-    const localHistory = loadHistory();
+    const localHistory = loadHistoryByKey(historyStorageKey);
     const localItem = localHistory.find(
-      (h) => (h.sessionId && h.sessionId === trimmedSid) || h.id === trimmedSid || h.id === `session-${trimmedSid}`,
+      (h) =>
+        (h.sessionId && h.sessionId === trimmedSid) ||
+        h.id === trimmedSid ||
+        h.id === `session-${trimmedSid}`,
     );
     const localMessages =
-      localItem?.messages && Array.isArray(localItem.messages) && localItem.messages.length > 0
+      localItem?.messages &&
+      Array.isArray(localItem.messages) &&
+      localItem.messages.length > 0
         ? localItem.messages
         : null;
     if (localMessages && localMessages.length > 0) {
       setMessages(normalizeToDisplayMessages(localMessages));
       const hasChart = localMessages.some((m) => m.type === "chart");
-      const hasImg = localMessages.some((m) => m.type === "img" && m.data?.images?.length);
+      const hasImg = localMessages.some(
+        (m) => m.type === "img" && m.data?.images?.length,
+      );
       if (hasChart || hasImg) setIsExpanded(true);
       return;
     }
+    if (isPythonProvider) return;
     fetchChatHistoryBySessionId(trimmedSid)
       .then((apiMessages) => {
         if (apiMessages && apiMessages.length > 0) {
           setMessages(normalizeToDisplayMessages(apiMessages));
           const hasChart = apiMessages.some((m) => m.type === "chart");
-          const hasImg = apiMessages.some((m) => m.type === "img" && m.data?.images?.length);
+          const hasImg = apiMessages.some(
+            (m) => m.type === "img" && m.data?.images?.length,
+          );
           if (hasChart || hasImg) setIsExpanded(true);
         }
       })
       .catch(() => {});
     // Run only once on mount when URL has session_id
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [historyStorageKey, isPythonProvider]);
 
   // Auto-save to chat history when there's a conversation (not when viewing a saved chat)
   useEffect(() => {
@@ -155,22 +189,38 @@ export default function Chatbox({ defaultOpen = false }) {
     if (!hasUserMessage || viewingHistoryId != null) return;
     const title = getTitleFromMessages(messages);
     if (currentConversationId) {
-      updateHistoryItem(currentConversationId, messages, sessionId ?? undefined);
-      setHistory(loadHistory());
-      if (sessionId) {
+      updateHistoryItem(
+        currentConversationId,
+        messages,
+        sessionId ?? undefined,
+        historyStorageKey,
+      );
+      setHistory(loadHistoryByKey(historyStorageKey));
+      if (sessionId && !isPythonProvider) {
         saveChatHistory(sessionId, { title, messages }).catch(() => {});
       }
     } else {
-      const next = addToHistory(messages, sessionId ?? undefined);
+      const next = addToHistory(
+        messages,
+        sessionId ?? undefined,
+        historyStorageKey,
+      );
       if (next.length > 0) {
         setCurrentConversationId(next[0].id);
         setHistory(next);
-        if (sessionId) {
+        if (sessionId && !isPythonProvider) {
           saveChatHistory(sessionId, { title, messages }).catch(() => {});
         }
       }
     }
-  }, [messages, viewingHistoryId, currentConversationId, sessionId]);
+  }, [
+    messages,
+    viewingHistoryId,
+    currentConversationId,
+    sessionId,
+    historyStorageKey,
+    isPythonProvider,
+  ]);
 
   // Click/touch outside to close emoji picker
   useEffect(() => {
@@ -288,19 +338,51 @@ export default function Chatbox({ defaultOpen = false }) {
     setShowEmoji(false);
 
     const placeholderId = crypto.randomUUID();
+    const startedAt = Date.now();
     const typingMsg = createMessage(placeholderId, "bot", "", {
       status: "thinking",
+      responseTimerLabel: formatResponseTimer(0, false),
     });
     setMessages((prev) => [...prev, userMsg, typingMsg]);
 
+    const timerHandle = setInterval(() => {
+      const elapsedMs = Date.now() - startedAt;
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === placeholderId
+            ? {
+                ...msg,
+                responseTimerLabel: formatResponseTimer(elapsedMs, false),
+              }
+            : msg,
+        ),
+      );
+    }, 100);
+
     const messageForAi = text || "Hello";
 
-    sendMessage(
-      messageForAi,
-      messages,
-      controller.signal,
-      sessionId ?? undefined,
-    )
+    const requestPromise = isPythonProvider
+      ? streamFromPythonBot(messageForAi, {
+          signal: controller.signal,
+          onToken: (token) => {
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === placeholderId
+                  ? { ...msg, text: (msg.text || "") + token }
+                  : msg,
+              ),
+            );
+          },
+        })
+      : sendMessage(
+          messageForAi,
+          messages,
+          controller.signal,
+          sessionId ?? undefined,
+          aiProvider,
+        );
+
+    requestPromise
       .then((reply) => {
         const isChart = reply && reply.type === "chart";
         const isImg = reply && reply.type === "img";
@@ -311,6 +393,8 @@ export default function Chatbox({ defaultOpen = false }) {
         }
         if (isChart) setIsExpanded(true);
         const receivedTime = formatTime();
+        const elapsedMs = Date.now() - startedAt;
+        clearInterval(timerHandle);
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === placeholderId
@@ -321,6 +405,8 @@ export default function Chatbox({ defaultOpen = false }) {
                     data: reply,
                     text,
                     time: receivedTime,
+                    status: undefined,
+                    responseTimerLabel: formatResponseTimer(elapsedMs, true),
                   }
                 : isImg
                   ? {
@@ -329,8 +415,16 @@ export default function Chatbox({ defaultOpen = false }) {
                       data: { images: (reply.images || []).slice(0, 10) },
                       text: "",
                       time: receivedTime,
+                      status: undefined,
+                      responseTimerLabel: formatResponseTimer(elapsedMs, true),
                     }
-                  : { ...msg, text, time: receivedTime, status: undefined }
+                  : {
+                      ...msg,
+                      text: text || msg.text,
+                      time: receivedTime,
+                      status: undefined,
+                      responseTimerLabel: formatResponseTimer(elapsedMs, true),
+                    }
               : msg,
           ),
         );
@@ -341,6 +435,8 @@ export default function Chatbox({ defaultOpen = false }) {
           err?.code === "ERR_CANCELED" ||
           err?.message === "canceled";
         const receivedTime = formatTime();
+        const elapsedMs = Date.now() - startedAt;
+        clearInterval(timerHandle);
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === placeholderId
@@ -351,12 +447,14 @@ export default function Chatbox({ defaultOpen = false }) {
                     : "Sorry, something went wrong. Please try again.",
                   time: receivedTime,
                   status: undefined,
+                  responseTimerLabel: formatResponseTimer(elapsedMs, true),
                 }
               : msg,
           ),
         );
       })
       .finally(() => {
+        clearInterval(timerHandle);
         abortControllerRef.current = null;
         isSendingRef.current = false;
         setIsSending(false);
@@ -373,8 +471,8 @@ export default function Chatbox({ defaultOpen = false }) {
     setCurrentConversationId(null);
     setSessionId(null);
     syncSessionIdToUrl(null);
-    setHistory(loadHistory());
-    localStorage.removeItem("session_id");
+    setHistory(loadHistoryByKey(historyStorageKey));
+    localStorage.removeItem(sessionStorageKey);
   };
 
   const handleSelectHistoryChat = (item) => {
@@ -383,46 +481,58 @@ export default function Chatbox({ defaultOpen = false }) {
     const sid = item.sessionId ?? null;
     setSessionId(sid);
     syncSessionIdToUrl(sid);
-    if (sid) {
+    if (sid && !isPythonProvider) {
       fetchChatHistoryBySessionId(sid)
         .then((apiMessages) => {
-          const toShow = apiMessages?.length > 0 ? apiMessages : item.messages || [];
+          const toShow =
+            apiMessages?.length > 0 ? apiMessages : item.messages || [];
           setMessages(normalizeToDisplayMessages(toShow));
           const hasChart = (toShow || []).some((m) => m.type === "chart");
-          const hasImg = (toShow || []).some((m) => m.type === "img" && m.data?.images?.length);
+          const hasImg = (toShow || []).some(
+            (m) => m.type === "img" && m.data?.images?.length,
+          );
           if (hasChart || hasImg) setIsExpanded(true);
         })
         .catch(() => {
           setMessages(normalizeToDisplayMessages(item.messages || []));
-          const hasChart = (item.messages || []).some((m) => m.type === "chart");
-          const hasImg = (item.messages || []).some((m) => m.type === "img" && m.data?.images?.length);
+          const hasChart = (item.messages || []).some(
+            (m) => m.type === "chart",
+          );
+          const hasImg = (item.messages || []).some(
+            (m) => m.type === "img" && m.data?.images?.length,
+          );
           if (hasChart || hasImg) setIsExpanded(true);
         });
     } else {
       setMessages(normalizeToDisplayMessages(item.messages || []));
       const hasChart = (item.messages || []).some((m) => m.type === "chart");
-      const hasImg = (item.messages || []).some((m) => m.type === "img" && m.data?.images?.length);
+      const hasImg = (item.messages || []).some(
+        (m) => m.type === "img" && m.data?.images?.length,
+      );
       if (hasChart || hasImg) setIsExpanded(true);
     }
   };
 
   const handleDeleteHistoryChat = (id) => {
-    setHistory(deleteHistoryItem(id));
+    setHistory(deleteHistoryItem(id, historyStorageKey));
   };
 
   const historyMenuOpen = Boolean(optionsMenuAnchor);
 
   const handleOpenHistoryMenu = (anchorEl) => {
-    const local = loadHistory();
+    const local = loadHistoryByKey(historyStorageKey);
     setHistory(local);
     setOptionsMenuAnchor(anchorEl);
+    if (isPythonProvider) return;
     getChatHistoryList()
       .then((raw) => {
         const serverItems = (raw || [])
           .map((item, i) => mapServerHistoryItem(item, i))
           .filter(Boolean);
         if (serverItems.length === 0) return;
-        const bySession = new Map(serverItems.map((h) => [h.sessionId || h.id, h]));
+        const bySession = new Map(
+          serverItems.map((h) => [h.sessionId || h.id, h]),
+        );
         const merged = [...serverItems];
         local.forEach((item) => {
           const sid = item.sessionId || item.id;
@@ -433,7 +543,7 @@ export default function Chatbox({ defaultOpen = false }) {
         });
         merged.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         setHistory(merged.slice(0, 50));
-        saveHistoryToStorage(merged.slice(0, 50));
+        saveHistoryToStorageByKey(merged.slice(0, 50), historyStorageKey);
       })
       .catch(() => {});
   };
@@ -560,6 +670,7 @@ export default function Chatbox({ defaultOpen = false }) {
               />
               <div className="chat-ulap-main">
                 <UlapAIMainHeader
+                  title={appTitle}
                   onMinimize={() => {
                     // Go to minimized/popup version instead of closing the chat
                     setIsOpen(true);
@@ -630,7 +741,7 @@ export default function Chatbox({ defaultOpen = false }) {
                       onDragStart={handleDragStart}
                       themeProps={theme}
                       isExpanded={true}
-                      placeholder="Ask UlapAI"
+                      placeholder={`Ask ${appTitle}`}
                     />
                   </>
                 )}
@@ -648,6 +759,7 @@ export default function Chatbox({ defaultOpen = false }) {
             style={panelStyle}
           >
             <ChatHeader
+              title={appTitle}
               maintenanceOpen={maintenanceOpen}
               onMaintenanceChange={setMaintenanceOpen}
               onMinimize={() => {

@@ -1,0 +1,145 @@
+{
+  "company_website": {
+    "url": "https://clone.ulap.biz/api/reports/inv/sc",
+    "is_json_api": true,
+    "api_method": "POST",
+    "api_data_path": "data",
+    "api_fixed_auth_header": "x-access-tokens",
+    "api_fixed_auth_token": "",
+    "api_fixed_cookie": "devID=6515450",
+    "api_fixed_headers": {
+      "Referer": "https://clone.ulap.biz/app/reports/sc",
+      "Accept": "application/json",
+      "Content-Type": "application/json"
+    },
+    "api_default_body": {
+      "ixProd": 15583,
+      "dt1": "2026-03-01T00:00:00+08:00",
+      "dt2": "2026-03-31T23:59:59+08:00",
+      "ixWH": 4282,
+      "SN": "",
+      "SN2": ""
+    },
+    "selector": "div.content, p, table, tr, td, th",
+    "inventory_paths": [
+      "/api/reports/inv/sc"
+    ],
+    "products_selector": "tr, .product-item, .inventory-row",
+    "fallback_urls": [
+      "https://clone.ulap.biz/inventory",
+      "https://clone.ulap.biz/stock-card"
+    ],
+    "description": "JSON API endpoint - uses x-access-tokens header (plural)"
+  },
+  "chart_data": {
+    "url": "https://clone.ulap.biz/api/reports/inv/sc/graph",
+    "is_json_api": true,
+    "api_method": "POST",
+    "api_fixed_auth_header": "x-access-tokens",
+    "api_fixed_auth_token": "",
+    "api_fixed_cookie": "devID=6515450",
+    "api_fixed_headers": {
+      "Referer": "https://clone.ulap.biz/app/reports/sc",
+      "Accept": "application/json",
+      "Content-Type": "application/json"
+    },
+    "api_default_body": {
+      "ixProd": 15583,
+      "dt1": "2025-12-31T23:59:59+08:00",
+      "dt2": "2026-12-31T23:59:59+08:00",
+      "ixWH": 4282,
+      "SN": "",
+      "SN2": ""
+    },
+    "description": "Graph/chart endpoint - yearly movement history"
+  },
+  "products_list": {
+    "url": "https://clone.ulap.biz/api/lib/prod",
+    "is_json_api": true,
+    "api_method": "POST",
+    "api_fixed_auth_header": "x-access-tokens",
+    "api_fixed_auth_token": "",
+    "api_fixed_cookie": "devID=6515450",
+    "api_fixed_headers": {
+      "Referer": "https://clone.ulap.biz/app/reports/sc",
+      "Accept": "application/json",
+      "Content-Type": "application/json"
+    },
+    "api_default_body": {},
+    "description": "Product catalog - returns all products with ixProd IDs"
+  },
+  "general_ledger_accounts": {
+    "url": "https://clone.ulap.biz/api/lib/acc",
+    "is_json_api": true,
+    "api_method": "POST",
+    "api_fixed_auth_header": "x-access-tokens",
+    "api_fixed_auth_token": "",
+    "api_fixed_cookie": "devID=6515450",
+    "api_fixed_headers": {
+      "Referer": "https://clone.ulap.biz/app/reports/gl",
+      "Origin": "https://clone.ulap.biz",
+      "Accept": "application/json",
+      "Content-Type": "application/json"
+    },
+    "api_default_body": {},
+    "description": "General Ledger accounts catalog endpoint"
+  },
+  "general_ledger_report": {
+    "url": "https://clone.ulap.biz/api/reports/gl",
+    "is_json_api": true,
+    "api_method": "POST",
+    "api_fixed_auth_header": "x-access-tokens",
+    "api_fixed_auth_token": "",
+    "api_fixed_cookie": "devID=6515450",
+    "api_fixed_headers": {
+      "Referer": "https://clone.ulap.biz/app/reports/gl",
+      "Origin": "https://clone.ulap.biz",
+      "Accept": "application/json",
+      "Content-Type": "application/json"
+    },
+    "api_default_body": {
+      "showZero": true,
+      "acc_others": []
+    },
+    "description": "General Ledger report rows endpoint"
+  },
+  "general_ledger_graph": {
+    "url": "https://clone.ulap.biz/api/reports/gl/graph",
+    "is_json_api": true,
+    "api_method": "POST",
+    "api_fixed_auth_header": "x-access-tokens",
+    "api_fixed_auth_token": "",
+    "api_fixed_cookie": "devID=6515450",
+    "api_fixed_headers": {
+      "Referer": "https://clone.ulap.biz/app/reports/gl",
+      "Origin": "https://clone.ulap.biz",
+      "Accept": "application/json",
+      "Content-Type": "application/json"
+    },
+    "api_default_body": {
+      "showZero": true,
+      "acc_others": []
+    },
+    "description": "General Ledger graph endpoint"
+  },
+  "example_site": {
+    "url": "https://example.com",
+    "selector": "p"
+  },
+  "accounts_receivable": {
+    "url": "https://clone.ulap.biz/api/reports/ar",
+    "is_json_api": true,
+    "api_method": "POST",
+    "api_fixed_auth_header": "x-access-tokens",
+    "api_fixed_auth_token": "",
+    "api_fixed_cookie": "devID=6515450",
+    "api_fixed_headers": {
+      "Referer": "https://clone.ulap.biz/app/reports/ar",
+      "Origin": "https://clone.ulap.biz",
+      "Accept": "application/json",
+      "Content-Type": "application/json"
+    },
+    "api_default_body": {},
+    "description": "Accounts Receivable report - customers with outstanding balances"
+  }
+}

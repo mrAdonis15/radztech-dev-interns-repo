@@ -85,8 +85,12 @@ export function applyThemeToElement(el, theme) {
 // --- chatStorage ---
 
 export function loadMessages() {
+  return loadMessagesByKey(CHAT_STORAGE_KEY);
+}
+
+export function loadMessagesByKey(storageKey = CHAT_STORAGE_KEY) {
   try {
-    const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) return null;
@@ -107,18 +111,26 @@ export function loadMessages() {
 }
 
 export function saveMessages(messages) {
+  saveMessagesByKey(messages, CHAT_STORAGE_KEY);
+}
+
+export function saveMessagesByKey(messages, storageKey = CHAT_STORAGE_KEY) {
   try {
     if (!messages || messages.length === 0) {
-      localStorage.removeItem(CHAT_STORAGE_KEY);
+      localStorage.removeItem(storageKey);
       return;
     }
-    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
+    localStorage.setItem(storageKey, JSON.stringify(messages));
   } catch (_) {}
 }
 
 export function loadHistory() {
+  return loadHistoryByKey(CHAT_HISTORY_STORAGE_KEY);
+}
+
+export function loadHistoryByKey(storageKey = CHAT_HISTORY_STORAGE_KEY) {
   try {
-    const raw = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
@@ -128,12 +140,19 @@ export function loadHistory() {
 }
 
 export function saveHistoryToStorage(history) {
+  saveHistoryToStorageByKey(history, CHAT_HISTORY_STORAGE_KEY);
+}
+
+export function saveHistoryToStorageByKey(
+  history,
+  storageKey = CHAT_HISTORY_STORAGE_KEY,
+) {
   try {
-    localStorage.setItem(CHAT_HISTORY_STORAGE_KEY, JSON.stringify(history));
+    localStorage.setItem(storageKey, JSON.stringify(history));
   } catch (_) {}
 }
-function saveHistory(history) {
-  saveHistoryToStorage(history);
+function saveHistory(history, storageKey = CHAT_HISTORY_STORAGE_KEY) {
+  saveHistoryToStorageByKey(history, storageKey);
 }
 
 const MAX_TITLE_LEN = 42;
@@ -179,18 +198,23 @@ export function getTitleFromMessages(messages) {
  * @param {string} [sessionId] - Optional session id from the chat endpoint to store in history
  * @returns {Array} updated history
  */
-export function addToHistory(messages, sessionId = undefined) {
-  if (!messages || messages.length === 0) return loadHistory();
-  const history = loadHistory();
+export function addToHistory(
+  messages,
+  sessionId = undefined,
+  storageKey = CHAT_HISTORY_STORAGE_KEY,
+) {
+  if (!messages || messages.length === 0) return loadHistoryByKey(storageKey);
+  const history = loadHistoryByKey(storageKey);
   const item = {
     id: Date.now().toString(),
     title: getTitleFromMessages(messages),
     messages: [...messages],
     createdAt: Date.now(),
-    ...(sessionId != null && sessionId !== "" && { sessionId: String(sessionId) }),
+    ...(sessionId != null &&
+      sessionId !== "" && { sessionId: String(sessionId) }),
   };
   const next = [item, ...history].slice(0, 50);
-  saveHistory(next);
+  saveHistory(next, storageKey);
   return next;
 }
 
@@ -201,9 +225,15 @@ export function addToHistory(messages, sessionId = undefined) {
  * @param {string} [sessionId] - Optional session id from the chat endpoint to store in history
  * @returns {Array} updated history
  */
-export function updateHistoryItem(id, messages, sessionId = undefined) {
-  if (!id || !messages || messages.length === 0) return loadHistory();
-  const history = loadHistory();
+export function updateHistoryItem(
+  id,
+  messages,
+  sessionId = undefined,
+  storageKey = CHAT_HISTORY_STORAGE_KEY,
+) {
+  if (!id || !messages || messages.length === 0)
+    return loadHistoryByKey(storageKey);
+  const history = loadHistoryByKey(storageKey);
   const idx = history.findIndex((h) => h.id === id);
   if (idx === -1) return history;
   const next = [...history];
@@ -212,20 +242,21 @@ export function updateHistoryItem(id, messages, sessionId = undefined) {
     title: getTitleFromMessages(messages),
     messages: [...messages],
     updatedAt: Date.now(),
-    ...(sessionId != null && sessionId !== "" && { sessionId: String(sessionId) }),
+    ...(sessionId != null &&
+      sessionId !== "" && { sessionId: String(sessionId) }),
   };
-  saveHistory(next);
+  saveHistory(next, storageKey);
   return next;
 }
 
-export function deleteHistoryItem(id) {
-  const history = loadHistory().filter((h) => h.id !== id);
-  saveHistory(history);
+export function deleteHistoryItem(id, storageKey = CHAT_HISTORY_STORAGE_KEY) {
+  const history = loadHistoryByKey(storageKey).filter((h) => h.id !== id);
+  saveHistory(history, storageKey);
   return history;
 }
 
-export function getHistoryItem(id) {
-  return loadHistory().find((h) => h.id === id) || null;
+export function getHistoryItem(id, storageKey = CHAT_HISTORY_STORAGE_KEY) {
+  return loadHistoryByKey(storageKey).find((h) => h.id === id) || null;
 }
 
 // --- chatboxChartUtils ---
@@ -693,6 +724,7 @@ export function getStockInOutChart() {
 // --- ChatHeader (component) ---
 
 export function ChatHeader({
+  title = "UlapAI",
   maintenanceOpen,
   onMaintenanceChange,
   onClose,
@@ -712,7 +744,7 @@ export function ChatHeader({
       <div className="chat-titleArea">
         <Avatar src={radzLogo} className="chat-header-avatar" />
         <Typography variant="h6" className="chat-titleText">
-          UlapAI
+          {title}
         </Typography>
       </div>
       <div className="chat-controlIcons">
@@ -749,11 +781,11 @@ export function ChatHeader({
 }
 
 // --- UlapAI Main Header (for two-panel expanded layout) ---
-export function UlapAIMainHeader({ onMinimize, onMore }) {
+export function UlapAIMainHeader({ title = "UlapAI", onMinimize, onMore }) {
   return (
     <header className="chat-ulap-main-header">
       <Typography variant="h6" className="chat-ulap-main-header-title">
-        UlapAI
+        {title}
       </Typography>
       <div className="chat-ulap-main-header-right">
         {onMore && (
