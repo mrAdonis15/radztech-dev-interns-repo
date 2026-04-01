@@ -1,30 +1,49 @@
-
+// DEV-INTERNS routes
 import DefaultLayout from "./layouts/DefaultLayout";
-import ChatboxLayout from "./layouts/ChatboxLayout";
-import Login from "./Login/Login";
-import BizUI from "./components/bizUI";
-import Ulap from "./components/Ulap/Ulap";
-import DisplayPage from "./components/Kurt/pages/DisplayPage";
-import Graphs from "./components/HistoricalGraph/pages/graphs";
-import Jayson from "./components/Adam/components/jsontask";
-import AdvancedSettings from "./components/Merlvin/AdvancedSettings";
-import JsonData from "./components/Brayan/JsonData";
-import ChatboxGC from "./ChatboxGC/ChatbboxGC";
-import EvaluationLayout from "./Evaluation/Navbar";
-import Applicant from "./Evaluation/Applicant";
-import Category from "./Evaluation/Category";
-import Criteria from "./Evaluation/Criteria";
-import Evaluation from "./Evaluation/Evaluation";
-import ListofApplicants from "./Evaluation/ListofApplicants";
-import UlapChatBot from "./components/Marth/UlapChatbot";
-import Chatbox from "./Chatbox/chatbox";
-import MenuDisplay from "./components/Merlvin/MenuDisplay";
-import ImageCompressor from "./ImageCompress/ImageCompressor";
-import SqlFormatter from "./components/SQL Formatter/SqlFormatter";
-import Timelogstest from "./components/Adam/components/timelogstest";
+import ChatboxLayout from "./DEV-INTERNS/Chatbox/Layout";
+import Login from "./Auth/Login/Login";
+import BizUI from "./Auth/selectBIZ";
+import ChooseApp from "./Auth/ChooseApp";
+import DisplayPage from "./DEV-INTERNS/uiJSON/Kurt/pages/DisplayPage";
+import Graphs from "./DEV-INTERNS/HistoricalGraph/pages/graphs";
+import Jayson from "./DEV-INTERNS/uiJSON/Adam/components/jsontask";
+import AdvancedSettings from "./DEV-INTERNS/uiJSON/Merlvin/AdvancedSettings";
+import JsonData from "./DEV-INTERNS/uiJSON/Brayan/JsonData";
+import ChatboxGC from "./DEV-INTERNS/ChatboxGC/ChatbboxGC";
+import EvaluationLayout from "./DEV-INTERNS/Evaluation/Navbar";
+import Applicant from "./DEV-INTERNS/Evaluation/Applicant";
+import Category from "./DEV-INTERNS/Evaluation/Category";
+import Criteria from "./DEV-INTERNS/Evaluation/Criteria";
+import Evaluation from "./DEV-INTERNS/Evaluation/Evaluation";
+import ListofApplicants from "./DEV-INTERNS/Evaluation/ListofApplicants";
+import UlapChatBot from "./DEV-INTERNS/uiJSON/Marth/UlapChatbot";
+import Chatbox from "./DEV-INTERNS/Chatbox/Layout/chatbox";
+import MenuDisplay from "./DEV-INTERNS/uiJSON/Merlvin/MenuDisplay";
+import ImageCompressor from "./DEV-INTERNS/ImageCompress/ImageCompressor";
+import SqlFormatter from "./DEV-INTERNS/SQL Formatter/SqlFormatter";
+import Timelogstest from "./DEV-INTERNS/uiJSON/Adam/components/timelogstest";
+import AGR from "./DEV-INTERNS/AGR";
+import StarRatingPage from "./DEV-INTERNS/starRating";
+import BibleVerse from "./DEV-INTERNS/BibleVerse/bible";
+
+// BD routes
+import CalculatorLayout from "./BD-INTERNS/13thMonthPayCalculator/Layout/Layout";
+import Landing from "./BD-INTERNS/13thMonthPayCalculator/Landing/Landing";
+import Calculator from "./BD-INTERNS/13thMonthPayCalculator/Calculator/Calculator";
+import Result from "./BD-INTERNS/13thMonthPayCalculator/Result/Result";
+
+//Product Finder
+import ProductFinderLayout from "./BD-INTERNS/Product-Finder/Layout/Layout";
+import PFHero from "./BD-INTERNS/Product-Finder/Hero/Hero";
+import PFQuestionnaire from "./BD-INTERNS/Product-Finder/Questionnaire/Questionnaire";
+import PFResults from "./BD-INTERNS/Product-Finder/Result/Result";
+import PFPricing from "./BD-INTERNS/Product-Finder/Pricing/Pricing";
+import PFCheckout from "./BD-INTERNS/Product-Finder/Checkout/Checkout";
+import PFReciept from "./BD-INTERNS/Product-Finder/Receipt/Receipt";
+import PFContactUs from "./BD-INTERNS/Product-Finder/ContactUs/ContactUs";
+import PaymentComplete from "./BD-INTERNS/Product-Finder/PaymentComplete/PaymentComplete";
 
 const ChatboxPage = () => <Chatbox defaultOpen />;
-
 
 const routes = [
   {
@@ -36,6 +55,10 @@ const routes = [
     element: BizUI,
   },
   {
+    path: "/choose-app",
+    element: ChooseApp,
+  },
+  {
     path: "/Chatbox",
     element: ChatboxLayout,
     children: [{ index: true, element: ChatboxPage }],
@@ -44,10 +67,6 @@ const routes = [
     path: "/",
     element: DefaultLayout,
     children: [
-      {
-        path: "/Ulap",
-        element: Ulap,
-      },
       {
         path: "/KurtJSON",
         element: DisplayPage,
@@ -92,6 +111,14 @@ const routes = [
         path: "/TimeLogs",
         element: Timelogstest,
       },
+      {
+        path: "/StarRating",
+        element: StarRatingPage,
+      },
+      {
+        path: "/verses",
+        element: BibleVerse,
+      }
     ],
   },
   {
@@ -118,6 +145,34 @@ const routes = [
         path: "list-applicants",
         element: ListofApplicants,
       },
+    ],
+  },
+  {
+    path: "/AGR",
+    element: AGR,
+  },
+  // BD routes
+  {
+    path: "/BDCalculator",
+    element: CalculatorLayout,
+    children: [
+      { index: true, element: Landing },
+      { path: "calculator", element: Calculator },
+      { path: "result", element: Result },
+    ],
+  },
+  {
+    path: "/ProductFinder",
+    element: ProductFinderLayout,
+    children: [
+      { index: true, element: PFHero },
+      { path: "Questionnaire", element: PFQuestionnaire },
+      { path: "Results", element: PFResults },
+      { path: "Pricing", element: PFPricing },
+      { path: "Checkout", element: PFCheckout },
+      { path: "Receipt", element: PFReciept },
+      { path: "ContactUs", element: PFContactUs },
+      { path: "PaymentComplete", element: PaymentComplete },
     ],
   },
 ];

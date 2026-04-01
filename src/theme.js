@@ -1,44 +1,61 @@
 import { createTheme } from "@material-ui/core";
 
 const typography = {
-  fontFamily: "Poppins, sans-serif",
+  fontFamily: '"Roboto", sans-serif',
   h1: {
+    fontFamily: '"Fira Sans", sans-serif',
     fontWeight: 500,
     fontSize: 35,
     letterSpacing: "-0.24px",
   },
   h2: {
+    fontFamily: '"Fira Sans", sans-serif',
     fontWeight: 500,
     fontSize: 29,
     letterSpacing: "-0.24px",
   },
   h3: {
+    fontFamily: '"Fira Sans", sans-serif',
     fontWeight: 500,
     fontSize: 24,
     letterSpacing: "-0.06px",
   },
   h4: {
+    fontFamily: '"Fira Sans", sans-serif',
     fontWeight: 500,
     fontSize: 20,
     letterSpacing: "-0.06px",
   },
   h5: {
+    fontFamily: '"Fira Sans", sans-serif',
     fontWeight: 500,
     fontSize: 16,
     letterSpacing: "-0.05px",
   },
   h6: {
+    fontFamily: '"Fira Sans", sans-serif',
     fontWeight: 500,
     fontSize: 14,
     letterSpacing: "-0.05px",
   },
+  body1: {
+    fontFamily: '"Roboto", sans-serif',
+    fontWeight: 400,
+  },
+  body2: {
+    fontFamily: '"Roboto", sans-serif',
+    fontWeight: 400,
+  },
   overline: {
     fontWeight: 500,
+    fontFamily: '"Roboto", sans-serif',
   },
   subtitle1: {
+    fontFamily: '"Roboto", sans-serif',
     fontWeight: 400,
   },
   subtitle2: {
+    fontFamily: '"Roboto", sans-serif',
     fontWeight: 400,
   },
 };
@@ -98,7 +115,7 @@ const themeSettings = {
   palette: {
     type: "light",
     background: {
-      default: "#FAFAFA",
+      default: "#f5f5f5",
       paper: "#FFFFFF",
       navbar: "#FF7504",
       dark: "#f4f6f8",
@@ -108,8 +125,8 @@ const themeSettings = {
       contrastText: "rgba(255,255,255,0.87)",
     },
     secondary: {
-      main: "#FF7504",
-      contrastText: "rgba(255,255,255,0.87)",
+      main: "#ff0808",
+      contrastText: "rgba(255, 255, 255, 0.87)",
     },
     text: {
       primary: "#282C34",
