@@ -25,7 +25,8 @@ import Timelogstest from "./DEV-INTERNS/uiJSON/Adam/components/timelogstest";
 import AGR from "./DEV-INTERNS/AGR";
 import StarRatingPage from "./DEV-INTERNS/starRating";
 import BibleVerse from "./DEV-INTERNS/BibleVerse/bible";
-
+import Sheets from "./DEV-INTERNS/react_sheet/sheet";
+import Docs from "./DEV-INTERNS/react_sheet/docs";
 // BD routes
 import CalculatorLayout from "./BD-INTERNS/13thMonthPayCalculator/Layout/Layout";
 import Landing from "./BD-INTERNS/13thMonthPayCalculator/Landing/Landing";
@@ -116,9 +117,19 @@ const routes = [
         element: StarRatingPage,
       },
       {
+        path: "/sheet",
+        element: Sheets,
+      },
+    
+      {
+        path: "/docs",
+        element: Docs,
+      },
+
+      {
         path: "/verses",
         element: BibleVerse,
-      }
+      },
     ],
   },
   {
