@@ -28,7 +28,7 @@ export default function ChooseApp() {
   };
 
   const goToStarRating = () => {
-    navigate("/StarRating", { replace: true });
+    navigate("/Evaluation", { replace: true });
   };
 
   if (!token) return <Navigate to="/login" replace />;
