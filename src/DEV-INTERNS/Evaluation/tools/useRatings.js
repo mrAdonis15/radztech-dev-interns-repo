@@ -1,9 +1,26 @@
 import { useMemo, useState } from "react";
-import categoryGroups, { defaultGroupId } from "../data/categories";
 import { requestSubGroups } from "../api/subLists";
 
 const GROUPS_STORAGE_KEY = "dev-interns-star-rating-groups";
 const ACTIVE_GROUP_STORAGE_KEY = "dev-interns-star-rating-active-group";
+const defaultGroupId = "sub1";
+const LEGACY_SAMPLE_NAMES = new Set([
+  "Adam Quincy D. Colobong",
+  "Kurt Lawrence B. Manandig",
+  "Marth Justine Ramirez",
+  "Brayan John Aquino",
+  "Merlvin Jake Garcia",
+]);
+const defaultCategoryGroups = {
+  [defaultGroupId]: {
+    id: defaultGroupId,
+    label: "Interns",
+    description: "Loaded from sub1.",
+    itemLabelSingular: "Intern",
+    itemLabelPlural: "Interns",
+    categories: [],
+  },
+};
 
 const createUniqueId = (prefix) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -175,23 +192,30 @@ const cloneCategoryGroups = (groups) =>
     return accumulator;
   }, {});
 
-const mergeRemoteGroups = (currentGroups, remoteGroups) => {
+const replaceWithRemoteGroups = (currentGroups, remoteGroups) => {
   if (!remoteGroups || Object.keys(remoteGroups).length === 0) {
     return currentGroups;
   }
 
-  const nextGroups = { ...currentGroups };
+  const remoteGroup = remoteGroups.sub1 || remoteGroups[Object.keys(remoteGroups)[0]];
+  if (!remoteGroup) {
+    return currentGroups;
+  }
 
-  Object.keys(remoteGroups).forEach((groupId) => {
-    const remoteGroup = normalizeGroup(remoteGroups[groupId], groupId);
-    const existingGroup = currentGroups[groupId];
-    const existingCategoriesById = new Map(
-      (existingGroup?.categories || []).map((category) => [category.id, category])
-    );
+  const baseGroup =
+    currentGroups[defaultGroupId] ||
+    defaultCategoryGroups[defaultGroupId] ||
+    currentGroups[Object.keys(currentGroups)[0]];
+  const normalizedBaseGroup = normalizeGroup(baseGroup, defaultGroupId);
+  const normalizedRemoteGroup = normalizeGroup(remoteGroup, defaultGroupId);
+  const existingCategoriesById = new Map(
+    (normalizedBaseGroup.categories || []).map((category) => [category.id, category])
+  );
 
-    nextGroups[groupId] = {
-      ...remoteGroup,
-      categories: remoteGroup.categories.map((category) => {
+  return {
+    [defaultGroupId]: {
+      ...normalizedBaseGroup,
+      categories: normalizedRemoteGroup.categories.map((category) => {
         const existingCategory = existingCategoriesById.get(category.id);
         return existingCategory
           ? {
@@ -203,13 +227,9 @@ const mergeRemoteGroups = (currentGroups, remoteGroups) => {
             }
           : category;
       }),
-    };
-  });
-
-  return nextGroups;
+    },
+  };
 };
-
-const defaultCategoryGroups = cloneCategoryGroups(categoryGroups);
 
 const isValidStoredGroups = (storedGroups) =>
   storedGroups &&
@@ -224,6 +244,20 @@ const isValidStoredGroups = (storedGroups) =>
       Array.isArray(group.categories)
   );
 
+const hasLegacySampleCategories = (groups) =>
+  Object.values(groups || {}).some((group) => {
+    const categoryNames = new Set(
+      (group?.categories || []).map((category) =>
+        typeof category?.name === "string" ? category.name.trim() : ""
+      )
+    );
+
+    return (
+      LEGACY_SAMPLE_NAMES.size > 0 &&
+      Array.from(LEGACY_SAMPLE_NAMES).every((name) => categoryNames.has(name))
+    );
+  });
+
 const getStoredCategoryGroups = () => {
   if (typeof window === "undefined") {
     return cloneCategoryGroups(defaultCategoryGroups);
@@ -237,9 +271,11 @@ const getStoredCategoryGroups = () => {
     }
 
     const parsedValue = JSON.parse(storedValue);
-    return isValidStoredGroups(parsedValue)
-      ? cloneCategoryGroups(parsedValue)
-      : cloneCategoryGroups(defaultCategoryGroups);
+    if (!isValidStoredGroups(parsedValue) || hasLegacySampleCategories(parsedValue)) {
+      return cloneCategoryGroups(defaultCategoryGroups);
+    }
+
+    return cloneCategoryGroups(parsedValue);
   } catch (error) {
     return cloneCategoryGroups(defaultCategoryGroups);
   }
@@ -326,8 +362,15 @@ export default function useRatings() {
       }
 
       setCategoryState((currentGroups) => {
-        const nextGroups = mergeRemoteGroups(currentGroups, remoteGroups);
+        const nextGroups = replaceWithRemoteGroups(currentGroups, remoteGroups);
+        const nextGroupIds = Object.keys(nextGroups);
+
         persistCategoryState(nextGroups);
+
+        if (nextGroupIds.length > 0 && !nextGroups[activeGroupId]) {
+          setPersistedActiveGroupId(nextGroupIds[0]);
+        }
+
         return nextGroups;
       });
     });
