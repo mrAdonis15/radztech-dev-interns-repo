@@ -1,17 +1,13 @@
 import { ENDPOINT, SUB_LIST_KEYS } from "../api/endpoints";
 
+const SUB_LIST_RESPONSE_KEY = "sub_list";
+
 const REMOTE_GROUP_META = {
   [SUB_LIST_KEYS.interns]: {
     label: "Interns",
-    description: "Loaded from sub1.",
+    description: "Loaded from sub_list.",
     itemLabelSingular: "Intern",
     itemLabelPlural: "Interns",
-  },
-  [SUB_LIST_KEYS.evaluators]: {
-    label: "Evaluators",
-    description: "Loaded from sub2.",
-    itemLabelSingular: "Evaluator",
-    itemLabelPlural: "Evaluators",
   },
 };
 
@@ -50,6 +46,8 @@ const getDisplayName = (item) => {
   }
 
   const candidateKeys = [
+    "sub_title",
+    "sSub",
     "name",
     "label",
     "title",
@@ -95,22 +93,18 @@ const normalizeRemoteList = (groupId, values) => {
     seenIds.add(id);
     items.push(createRatingItem(id, name));
     return items;
-  }, []);
+  }, []).slice(0, 10);
 };
 
 const extractRemotePayload = (payload) => {
   if (Array.isArray(payload)) {
-    const sub1 = payload
-      .map((item) => (item && typeof item === "object" ? item[SUB_LIST_KEYS.interns] : null))
-      .filter(Boolean);
-    const sub2 = payload
-      .map((item) => (item && typeof item === "object" ? item[SUB_LIST_KEYS.evaluators] : null))
+    const subList = payload
+      .map((item) => (item && typeof item === "object" ? item[SUB_LIST_RESPONSE_KEY] : null))
       .filter(Boolean);
 
-    if (sub1.length || sub2.length) {
+    if (subList.length) {
       return {
-        [SUB_LIST_KEYS.interns]: sub1,
-        [SUB_LIST_KEYS.evaluators]: sub2,
+        [SUB_LIST_KEYS.interns]: subList,
       };
     }
 
@@ -121,11 +115,10 @@ const extractRemotePayload = (payload) => {
     return null;
   }
 
-  if (
-    Array.isArray(payload[SUB_LIST_KEYS.interns]) ||
-    Array.isArray(payload[SUB_LIST_KEYS.evaluators])
-  ) {
-    return payload;
+  if (Array.isArray(payload[SUB_LIST_RESPONSE_KEY])) {
+    return {
+      [SUB_LIST_KEYS.interns]: payload[SUB_LIST_RESPONSE_KEY],
+    };
   }
 
   const nestedKeys = ["data", "result", "results", "payload", "items"];
