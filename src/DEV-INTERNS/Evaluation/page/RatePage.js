@@ -27,12 +27,12 @@ import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
 import CloseIcon from "@material-ui/icons/Close";
 import ReplayIcon from "@material-ui/icons/Replay";
 import SearchIcon from "@material-ui/icons/Search";
-import LoginToolbar from "../../Auth/Login/LoginToolbar";
-import EvaluationDialog from "./components/EvaluationDialog";
-import EvaluationResultDialog from "./components/EvaluationResultDialog";
-import QuestionAdminDialog from "./components/QuestionAdminDialog";
-import useCategoryRatings from "./hooks/useCategoryRatings";
-import useEvaluationQuestions from "./hooks/useEvaluationQuestions";
+import LoginToolbar from "../../../Auth/Login/LoginToolbar";
+import SetupQuestions from "../components/SetupQuestions";
+import RatingDialog from "../components/RatingDialog";
+import ResultDialog from "../components/ResultDialog";
+import useRatings from "../tools/useRatings";
+import useQuestions from "../tools/useQuestions";
 
 const SHOW_JSON_BUTTON = false;
 const GROUPS_STORAGE_KEY = "dev-interns-star-rating-groups";
@@ -481,7 +481,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function StarRatingPage() {
+function RatePage() {
   const classes = useStyles();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [jsonPreviewCategory, setJsonPreviewCategory] = useState(null);
@@ -503,7 +503,7 @@ function StarRatingPage() {
     handleSelectGroup: handleSelectGroupState,
     summary,
     displayMode,
-  } = useCategoryRatings();
+  } = useRatings();
   const {
     questions,
     addQuestion,
@@ -513,7 +513,7 @@ function StarRatingPage() {
     updateSubQuestion,
     removeSubQuestion,
     resetQuestions,
-  } = useEvaluationQuestions();
+  } = useQuestions();
 
   const handleSaveSetupJson = () => {
     const groupPayload = categoryGroupList.reduce((accumulator, group) => {
@@ -771,7 +771,7 @@ function StarRatingPage() {
           </Paper>
 
           {activeTab === "manage" ? (
-            <QuestionAdminDialog
+            <SetupQuestions
               questions={questions}
               onSaveJson={handleSaveSetupJson}
               onAddQuestion={addQuestion}
@@ -886,7 +886,7 @@ function StarRatingPage() {
             </Paper>
           )}
 
-          <EvaluationDialog
+          <RatingDialog
             key={evaluationDialogKey}
             open={Boolean(selectedCategory)}
             category={selectedCategory}
@@ -895,7 +895,7 @@ function StarRatingPage() {
             onSave={handleSaveCategoryEvaluation}
           />
 
-          <EvaluationResultDialog
+          <ResultDialog
             open={Boolean(jsonPreviewCategory)}
             category={jsonPreviewCategory}
             onClose={handleCloseJsonPreview}
@@ -985,4 +985,4 @@ function StarRatingPage() {
   );
 }
 
-export default StarRatingPage;
+export default RatePage;

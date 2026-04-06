@@ -63,7 +63,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function EvaluationResultDialog({ open, category, onClose }) {
+function ResultDialog({ open, category, onClose }) {
   const classes = useStyles();
   const evaluationResult = category?.evaluationResult || null;
   const jsonValue = evaluationResult ? JSON.stringify(evaluationResult, null, 2) : "";
@@ -120,4 +120,4 @@ function EvaluationResultDialog({ open, category, onClose }) {
   );
 }
 
-export default EvaluationResultDialog;
+export default ResultDialog;

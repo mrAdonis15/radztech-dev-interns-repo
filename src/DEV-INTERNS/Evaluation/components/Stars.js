@@ -39,7 +39,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function StarRating({
+function Stars({
   value,
   onChange,
   readOnly = false,
@@ -87,4 +87,4 @@ function StarRating({
   );
 }
 
-export default StarRating;
+export default Stars;

@@ -28,7 +28,7 @@ export default function ChooseApp() {
   };
 
   const goToStarRating = () => {
-    navigate("/StarRating", { replace: true });
+    navigate("/Evaluation", { replace: true });
   };
 
   if (!token) return <Navigate to="/login" replace />;
@@ -82,10 +82,10 @@ export default function ChooseApp() {
                 </Box>
                 <Box className="choose-app-card-details">
                   <Typography variant="h6" component="h2" className="choose-app-card-label">
-                    Star Rating
+                    Evaluation
                   </Typography>
                   <Typography variant="body2" className="choose-app-card-desc">
-                    Category evaluation dashboard
+                    Evaluation Rating
                   </Typography>
                 </Box>
               </CardActionArea>
