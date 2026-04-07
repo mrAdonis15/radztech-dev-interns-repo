@@ -7,7 +7,6 @@ import CardActionArea from "@material-ui/core/CardActionArea";
 import ChatIcon from "@material-ui/icons/Chat";
 import AssessmentIcon from "@material-ui/icons/Toc";
 import StarIcon from "@material-ui/icons/Star";
-import CodeIcon from "@material-ui/icons/Code";
 import LoginToolbar from "../Login/LoginToolbar";
 import "./ChooseApp.css";
 
@@ -16,12 +15,9 @@ export default function ChooseApp() {
   const location = useLocation();
   const token = localStorage.getItem("authToken");
   const from = location.state?.from;
-  const chatboxSearch =
-    from?.pathname === "/Chatbox" ||
-    (typeof from?.pathname === "string" &&
-      from?.pathname?.startsWith?.("/Chatbox"))
-      ? from?.search || ""
-      : "";
+  const chatboxSearch = from?.pathname === "/Chatbox" || (typeof from?.pathname === "string" && from?.pathname?.startsWith?.("/Chatbox"))
+    ? (from?.search || "")
+    : "";
 
   const goToChatbox = () => {
     navigate("/Chatbox" + chatboxSearch, { replace: true });
@@ -32,11 +28,7 @@ export default function ChooseApp() {
   };
 
   const goToStarRating = () => {
-    navigate("/StarRating", { replace: true });
-  };
-
-  const goToPythonPrototype = () => {
-    navigate("/PythonPrototypeChatbot", { replace: true });
+    navigate("/Evaluation", { replace: true });
   };
 
   if (!token) return <Navigate to="/login" replace />;
@@ -48,21 +40,14 @@ export default function ChooseApp() {
         <div className="choose-app-content-wrap">
           <Box className="choose-app-cards">
             <Card className="choose-app-card" elevation={0}>
-              <CardActionArea
-                onClick={goToChatbox}
-                className="choose-app-card-action"
-              >
+              <CardActionArea onClick={goToChatbox} className="choose-app-card-action">
                 <Box className="choose-app-card-icon-container">
                   <Box className="choose-app-card-icon-circle">
                     <ChatIcon className="choose-app-card-icon" />
                   </Box>
                 </Box>
                 <Box className="choose-app-card-details">
-                  <Typography
-                    variant="h6"
-                    component="h2"
-                    className="choose-app-card-label"
-                  >
+                  <Typography variant="h6" component="h2" className="choose-app-card-label">
                     UlapAI
                   </Typography>
                   <Typography variant="body2" className="choose-app-card-desc">
@@ -72,21 +57,14 @@ export default function ChooseApp() {
               </CardActionArea>
             </Card>
             <Card className="choose-app-card" elevation={0}>
-              <CardActionArea
-                onClick={goToAGR}
-                className="choose-app-card-action"
-              >
+              <CardActionArea onClick={goToAGR} className="choose-app-card-action">
                 <Box className="choose-app-card-icon-container">
                   <Box className="choose-app-card-icon-circle">
                     <AssessmentIcon className="choose-app-card-icon" />
                   </Box>
                 </Box>
                 <Box className="choose-app-card-details">
-                  <Typography
-                    variant="h6"
-                    component="h2"
-                    className="choose-app-card-label"
-                  >
+                  <Typography variant="h6" component="h2" className="choose-app-card-label">
                     AGR
                   </Typography>
                   <Typography variant="body2" className="choose-app-card-desc">
@@ -96,49 +74,18 @@ export default function ChooseApp() {
               </CardActionArea>
             </Card>
             <Card className="choose-app-card" elevation={0}>
-              <CardActionArea
-                onClick={goToStarRating}
-                className="choose-app-card-action"
-              >
+              <CardActionArea onClick={goToStarRating} className="choose-app-card-action">
                 <Box className="choose-app-card-icon-container">
                   <Box className="choose-app-card-icon-circle">
                     <StarIcon className="choose-app-card-icon" />
                   </Box>
                 </Box>
                 <Box className="choose-app-card-details">
-                  <Typography
-                    variant="h6"
-                    component="h2"
-                    className="choose-app-card-label"
-                  >
-                    Star Rating
+                  <Typography variant="h6" component="h2" className="choose-app-card-label">
+                    Evaluation
                   </Typography>
                   <Typography variant="body2" className="choose-app-card-desc">
-                    Category evaluation dashboard
-                  </Typography>
-                </Box>
-              </CardActionArea>
-            </Card>
-            <Card className="choose-app-card" elevation={0}>
-              <CardActionArea
-                onClick={goToPythonPrototype}
-                className="choose-app-card-action"
-              >
-                <Box className="choose-app-card-icon-container">
-                  <Box className="choose-app-card-icon-circle">
-                    <CodeIcon className="choose-app-card-icon" />
-                  </Box>
-                </Box>
-                <Box className="choose-app-card-details">
-                  <Typography
-                    variant="h6"
-                    component="h2"
-                    className="choose-app-card-label"
-                  >
-                    PythonPrototype Chatbot
-                  </Typography>
-                  <Typography variant="body2" className="choose-app-card-desc">
-                    Integrated local PythonBotAI
+                    Evaluation Rating
                   </Typography>
                 </Box>
               </CardActionArea>

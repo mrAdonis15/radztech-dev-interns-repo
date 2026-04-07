@@ -1,17 +1,16 @@
 import React, { useMemo, useState } from "react";
 import {
   Box,
-  Button,
   ClickAwayListener,
   IconButton,
   TextField,
+  Tooltip,
   makeStyles,
   Typography,
 } from "@material-ui/core";
 import AddCircleOutlineIcon from "@material-ui/icons/AddCircleOutline";
 import DeleteOutlineIcon from "@material-ui/icons/DeleteOutline";
 import PlaylistAddIcon from "@material-ui/icons/PlaylistAdd";
-import ReplayIcon from "@material-ui/icons/Replay";
 
 const isParagraphType = (type) => type !== "rating";
 
@@ -66,13 +65,12 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(2.5),
   },
   categoryRow: {
-    display: "grid",
-    gridTemplateColumns: "minmax(0, 1fr) 72px",
-    gap: theme.spacing(1.5),
-    alignItems: "start",
+    position: "relative",
     marginBottom: theme.spacing(2),
+    paddingRight: 88,
     [theme.breakpoints.down("xs")]: {
-      gridTemplateColumns: "1fr",
+      paddingRight: 0,
+      paddingBottom: 56,
     },
   },
   itemCard: {
@@ -81,6 +79,8 @@ const useStyles = makeStyles((theme) => ({
     border: "1px solid #d7dce1",
     backgroundColor: "#ffffff",
     boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
+    width: "100%",
+    boxSizing: "border-box",
   },
   itemHeader: {
     display: "flex",
@@ -202,14 +202,15 @@ const useStyles = makeStyles((theme) => ({
     gap: theme.spacing(0.5),
   },
   railSlot: {
-    width: 72,
+    position: "absolute",
+    top: 0,
+    right: 0,
     display: "flex",
     justifyContent: "center",
-    alignSelf: "start",
-    flexShrink: 0,
     [theme.breakpoints.down("xs")]: {
-      width: "100%",
-      justifyContent: "flex-end",
+      top: "auto",
+      right: 0,
+      bottom: 0,
     },
   },
   sideRail: {
@@ -250,7 +251,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function QuestionAdminDialog({
+function SetupQuestions({
   questions,
   onSaveJson,
   onAddQuestion,
@@ -488,20 +489,24 @@ function QuestionAdminDialog({
                   <Box className={classes.railSlot}>
                     {isActiveRailCategory ? (
                       <Box className={classes.sideRail}>
-                        <IconButton
-                          className={classes.sideRailButton}
-                          onClick={onAddQuestion}
-                          aria-label="Add category"
-                        >
-                          <AddCircleOutlineIcon />
-                        </IconButton>
-                        <IconButton
-                          className={classes.sideRailButton}
-                          onClick={() => handleAddQuestion(question.id)}
-                          aria-label="Add question"
-                        >
-                          <PlaylistAddIcon />
-                        </IconButton>
+                        <Tooltip title="Add category" placement="left" arrow>
+                          <IconButton
+                            className={classes.sideRailButton}
+                            onClick={onAddQuestion}
+                            aria-label="Add category"
+                          >
+                            <AddCircleOutlineIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Add question" placement="left" arrow>
+                          <IconButton
+                            className={classes.sideRailButton}
+                            onClick={() => handleAddQuestion(question.id)}
+                            aria-label="Add question"
+                          >
+                            <PlaylistAddIcon />
+                          </IconButton>
+                        </Tooltip>
                       </Box>
                     ) : null}
                   </Box>
@@ -516,4 +521,4 @@ function QuestionAdminDialog({
   );
 }
 
-export default QuestionAdminDialog;
+export default SetupQuestions;

@@ -10,12 +10,6 @@ import Jayson from "./DEV-INTERNS/uiJSON/Adam/components/jsontask";
 import AdvancedSettings from "./DEV-INTERNS/uiJSON/Merlvin/AdvancedSettings";
 import JsonData from "./DEV-INTERNS/uiJSON/Brayan/JsonData";
 import ChatboxGC from "./DEV-INTERNS/ChatboxGC/ChatbboxGC";
-import EvaluationLayout from "./DEV-INTERNS/Evaluation/Navbar";
-import Applicant from "./DEV-INTERNS/Evaluation/Applicant";
-import Category from "./DEV-INTERNS/Evaluation/Category";
-import Criteria from "./DEV-INTERNS/Evaluation/Criteria";
-import Evaluation from "./DEV-INTERNS/Evaluation/Evaluation";
-import ListofApplicants from "./DEV-INTERNS/Evaluation/ListofApplicants";
 import UlapChatBot from "./DEV-INTERNS/uiJSON/Marth/UlapChatbot";
 import Chatbox from "./DEV-INTERNS/Chatbox/Layout/chatbox";
 import MenuDisplay from "./DEV-INTERNS/uiJSON/Merlvin/MenuDisplay";
@@ -23,9 +17,10 @@ import ImageCompressor from "./DEV-INTERNS/ImageCompress/ImageCompressor";
 import SqlFormatter from "./DEV-INTERNS/SQL Formatter/SqlFormatter";
 import Timelogstest from "./DEV-INTERNS/uiJSON/Adam/components/timelogstest";
 import AGR from "./DEV-INTERNS/AGR";
-import StarRatingPage from "./DEV-INTERNS/starRating";
+import RatePage from "./DEV-INTERNS/Evaluation/page/RatePage";
 import BibleVerse from "./DEV-INTERNS/BibleVerse/bible";
-
+import Sheets from "./DEV-INTERNS/react_sheet/sheet";
+import Docs from "./DEV-INTERNS/react_sheet/docs";
 // BD routes
 import CalculatorLayout from "./BD-INTERNS/13thMonthPayCalculator/Layout/Layout";
 import Landing from "./BD-INTERNS/13thMonthPayCalculator/Landing/Landing";
@@ -44,9 +39,6 @@ import PFContactUs from "./BD-INTERNS/Product-Finder/ContactUs/ContactUs";
 import PaymentComplete from "./BD-INTERNS/Product-Finder/PaymentComplete/PaymentComplete";
 
 const ChatboxPage = () => <Chatbox defaultOpen />;
-const PythonPrototypeChatbotPage = () => (
-  <Chatbox defaultOpen aiProvider="python" appTitle="PythonPrototype Chatbot" />
-);
 
 const routes = [
   {
@@ -115,9 +107,19 @@ const routes = [
         element: Timelogstest,
       },
       {
-        path: "/StarRating",
-        element: StarRatingPage,
+        path: "/Evaluation",
+        element: RatePage,
       },
+      {
+        path: "/sheet",
+        element: Sheets,
+      },
+    
+      {
+        path: "/docs",
+        element: Docs,
+      },
+
       {
         path: "/verses",
         element: BibleVerse,
@@ -125,39 +127,8 @@ const routes = [
     ],
   },
   {
-    path: "/evaluation",
-    element: EvaluationLayout,
-    children: [
-      {
-        path: "applicant",
-        element: Applicant,
-      },
-      {
-        path: "category",
-        element: Category,
-      },
-      {
-        path: "criteria",
-        element: Criteria,
-      },
-      {
-        path: "evaluation",
-        element: Evaluation,
-      },
-      {
-        path: "list-applicants",
-        element: ListofApplicants,
-      },
-    ],
-  },
-  {
     path: "/AGR",
     element: AGR,
-  },
-  {
-    path: "/PythonPrototypeChatbot",
-    element: ChatboxLayout,
-    children: [{ index: true, element: PythonPrototypeChatbotPage }],
   },
   // BD routes
   {

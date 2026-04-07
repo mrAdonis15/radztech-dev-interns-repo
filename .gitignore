@@ -15,8 +15,3 @@ package.json copy
 package-lock.json copy
 .gitignore copy
 
-# Allow metadata for imported PythonBotAI project
-!src/DEV-INTERNS/PythonBotAI/package.json
-!src/DEV-INTERNS/PythonBotAI/package-lock.json
-!src/DEV-INTERNS/PythonBotAI/.gitignore
-
