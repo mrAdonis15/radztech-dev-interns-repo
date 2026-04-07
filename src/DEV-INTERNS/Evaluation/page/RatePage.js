@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -614,6 +614,7 @@ const renderStarPreview = (value) => {
 
 function RatePage() {
   const classes = useStyles();
+  const hasRequestedEvaluators = useRef(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [jsonPreviewCategory, setJsonPreviewCategory] = useState(null);
   const [setupJsonOutput, setSetupJsonOutput] = useState("");
@@ -651,22 +652,14 @@ function RatePage() {
     resetQuestions,
   } = useQuestions();
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return undefined;
-    }
-
+  if (typeof window !== "undefined" && !hasRequestedEvaluators.current) {
+    hasRequestedEvaluators.current = true;
     const authToken = window.localStorage.getItem("authToken");
-    let isActive = true;
 
     setEvaluatorsLoading(true);
 
     requestSubListItems(authToken, SUB_LIST_KEYS.evaluators)
       .then((items) => {
-        if (!isActive) {
-          return;
-        }
-
         setEvaluators(items);
         setSelectedEvaluator((currentEvaluator) => {
           if (!currentEvaluator?.id) {
@@ -678,15 +671,9 @@ function RatePage() {
         });
       })
       .finally(() => {
-        if (isActive) {
-          setEvaluatorsLoading(false);
-        }
+        setEvaluatorsLoading(false);
       });
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
+  }
 
   const handleSaveSetupJson = () => {
     const groupPayload = categoryGroupList.reduce((accumulator, group) => {
