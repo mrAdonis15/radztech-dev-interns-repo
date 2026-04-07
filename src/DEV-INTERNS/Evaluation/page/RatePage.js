@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -28,6 +28,8 @@ import CloseIcon from "@material-ui/icons/Close";
 import ReplayIcon from "@material-ui/icons/Replay";
 import SearchIcon from "@material-ui/icons/Search";
 import LoginToolbar from "../../../Auth/Login/LoginToolbar";
+import { SUB_LIST_KEYS } from "../api/endpoints";
+import { requestSubListItems } from "../api/subLists";
 import SetupQuestions from "../components/SetupQuestions";
 import RatingDialog from "../components/RatingDialog";
 import ResultDialog from "../components/ResultDialog";
@@ -39,6 +41,7 @@ const GROUPS_STORAGE_KEY = "dev-interns-star-rating-groups";
 const ACTIVE_GROUP_STORAGE_KEY = "dev-interns-star-rating-active-group";
 const QUESTIONS_STORAGE_KEY = "dev-interns-star-rating-questions";
 const SETUP_JSON_STORAGE_KEY = "dev-interns-star-rating-setup-json";
+const SELECTED_EVALUATOR_STORAGE_KEY = "dev-interns-star-rating-selected-evaluator";
 
 const useStyles = makeStyles((theme) => ({
   page: {
@@ -115,43 +118,67 @@ const useStyles = makeStyles((theme) => ({
     minWidth: 0,
     flex: "1 1 320px",
   },
+  searchFieldBlock: {
+    minWidth: 0,
+    flex: "1.6 1 360px",
+  },
   fieldLabel: {
     fontSize: 11,
     color: "#6b7280",
     marginBottom: theme.spacing(0.5),
     minHeight: 16,
   },
-  searchButtonWrap: {
+  evaluatorFieldBlock: {
+    minWidth: 0,
+    flex: "1.6 1 360px",
+  },
+  evaluatorSelector: {
     display: "flex",
     alignItems: "center",
-    minHeight: 40,
-    gap: theme.spacing(1.5),
-  },
-  searchButton: {
-    minWidth: 48,
-    width: 48,
-    height: 40,
+    minHeight: 48,
     borderRadius: 4,
     border: "1px solid #cfd6dd",
-    color: "#6b7280",
     backgroundColor: "#ffffff",
+    overflow: "hidden",
+    transition: "border-color 0.16s ease, box-shadow 0.16s ease",
     "&:hover": {
-      backgroundColor: "#f8fafc",
       borderColor: "#b8c1cc",
     },
   },
-  searchSpacer: {
-    minHeight: 16,
-    marginBottom: theme.spacing(0.5),
+  evaluatorSelectorButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 0,
+    color: "#757575",
+    flexShrink: 0,
   },
-  searchSelectedLabel: {
-    color: "#1f3b64",
-    fontSize: 16,
+  evaluatorSelectorValue: {
+    flex: 1,
+    minWidth: 0,
+    padding: theme.spacing(0, 0.25),
+    cursor: "pointer",
+  },
+  evaluatorSelectorText: {
+    color: "#111827",
+    fontSize: 14,
     fontWeight: 500,
     whiteSpace: "nowrap",
     overflow: "hidden",
     textOverflow: "ellipsis",
-    cursor: "pointer",
+  },
+  evaluatorSelectorPlaceholder: {
+    color: "#a3a3a3",
+    fontSize: 14,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  evaluatorSelectorClear: {
+    width: 48,
+    height: 48,
+    borderRadius: 0,
+    color: "#ef4444",
+    flexShrink: 0,
   },
   selectControl: {
     width: "100%",
@@ -257,7 +284,8 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: 4,
     border: "1px solid #d7dce1",
     boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
-    overflow: "hidden",
+    overflowX: "auto",
+    overflowY: "visible",
     backgroundColor: "#ffffff",
     marginTop: theme.spacing(2.5),
   },
@@ -287,12 +315,19 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 700,
     fontSize: 12,
     borderBottom: "1px solid #dfe4ea",
+    position: "sticky",
+    top: 0,
+    zIndex: 2,
   },
   tableRow: {
-    transition: "background-color 0.16s ease",
+    transition: "background-color 0.16s ease, box-shadow 0.16s ease",
     "&:hover": {
-      backgroundColor: "#f8fafc",
+      backgroundColor: "#fff7ed",
+      boxShadow: "inset 3px 0 0 #f97316",
     },
+  },
+  tableRowRated: {
+    backgroundColor: "#fffdf8",
   },
   nameCell: {
     fontWeight: 600,
@@ -307,7 +342,7 @@ const useStyles = makeStyles((theme) => ({
   statusWrap: {
     display: "inline-flex",
     alignItems: "center",
-    gap: theme.spacing(0.75),
+    gap: theme.spacing(1),
   },
   statusDot: {
     width: 8,
@@ -323,7 +358,45 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: "#22c55e",
   },
   statusPending: {
-    backgroundColor: "#f59e0b",
+    backgroundColor: "#ef4444",
+  },
+  statusBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: theme.spacing(0.75),
+    padding: theme.spacing(0.55, 1.1),
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: "0.01em",
+    border: "1px solid transparent",
+  },
+  statusBadgeReady: {
+    color: "#166534",
+    backgroundColor: "#f0fdf4",
+    borderColor: "#bbf7d0",
+  },
+  statusBadgePending: {
+    color: "#b91c1c",
+    backgroundColor: "#fef2f2",
+    borderColor: "#fecaca",
+  },
+  ratingPreviewWrap: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: theme.spacing(1),
+    whiteSpace: "nowrap",
+  },
+  ratingStars: {
+    color: "#f59e0b",
+    letterSpacing: "0.08em",
+    fontSize: 14,
+    lineHeight: 1,
+  },
+  ratingValue: {
+    color: "#475569",
+    fontSize: 13,
+    fontWeight: 600,
   },
   actionCell: {
     whiteSpace: "nowrap",
@@ -432,6 +505,9 @@ const useStyles = makeStyles((theme) => ({
   searchDialogAction: {
     color: "#ef4444",
   },
+  searchDialogClose: {
+    color: "#6b7280",
+  },
   searchList: {
     overflowY: "auto",
     flex: 1,
@@ -463,6 +539,27 @@ const useStyles = makeStyles((theme) => ({
     color: "#6b7280",
     justifySelf: "end",
   },
+  evaluatorListRow: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr) 48px",
+    alignItems: "center",
+    minHeight: 72,
+    padding: theme.spacing(0, 2),
+    borderBottom: "1px solid #eceff3",
+    cursor: "pointer",
+    transition: "background-color 0.16s ease",
+    "&:hover": {
+      backgroundColor: "#fafafa",
+    },
+  },
+  evaluatorListIdentity: {
+    minWidth: 0,
+  },
+  evaluatorListName: {
+    color: "#202124",
+    fontSize: 16,
+    fontWeight: 500,
+  },
   searchEmptyState: {
     padding: theme.spacing(4),
     textAlign: "center",
@@ -481,6 +578,40 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const getStoredSelectedEvaluator = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const storedValue = window.localStorage.getItem(SELECTED_EVALUATOR_STORAGE_KEY);
+    if (!storedValue) {
+      return null;
+    }
+
+    const parsedValue = JSON.parse(storedValue);
+    return parsedValue && typeof parsedValue === "object" ? parsedValue : null;
+  } catch (error) {
+    return null;
+  }
+};
+
+const serializeEvaluator = (evaluator) =>
+  evaluator
+    ? {
+        id: evaluator.id,
+        name: evaluator.name || "",
+        code: evaluator.code || "",
+        subtitle: evaluator.subtitle || "",
+        location: evaluator.location || "",
+      }
+    : null;
+
+const renderStarPreview = (value) => {
+  const filledStars = Math.round(value);
+  return `${"★".repeat(filledStars)}${"☆".repeat(Math.max(0, 5 - filledStars))}`;
+};
+
 function RatePage() {
   const classes = useStyles();
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -492,6 +623,11 @@ function RatePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [searchDraft, setSearchDraft] = useState("");
+  const [selectedEvaluator, setSelectedEvaluator] = useState(getStoredSelectedEvaluator);
+  const [evaluatorDialogOpen, setEvaluatorDialogOpen] = useState(false);
+  const [evaluatorDraft, setEvaluatorDraft] = useState("");
+  const [evaluators, setEvaluators] = useState([]);
+  const [evaluatorsLoading, setEvaluatorsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const {
     activeGroupId,
@@ -514,6 +650,43 @@ function RatePage() {
     removeSubQuestion,
     resetQuestions,
   } = useQuestions();
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    const authToken = window.localStorage.getItem("authToken");
+    let isActive = true;
+
+    setEvaluatorsLoading(true);
+
+    requestSubListItems(authToken, SUB_LIST_KEYS.evaluators)
+      .then((items) => {
+        if (!isActive) {
+          return;
+        }
+
+        setEvaluators(items);
+        setSelectedEvaluator((currentEvaluator) => {
+          if (!currentEvaluator?.id) {
+            return currentEvaluator;
+          }
+
+          const matchedEvaluator = items.find((item) => item.id === currentEvaluator.id);
+          return matchedEvaluator ? serializeEvaluator(matchedEvaluator) : currentEvaluator;
+        });
+      })
+      .finally(() => {
+        if (isActive) {
+          setEvaluatorsLoading(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const handleSaveSetupJson = () => {
     const groupPayload = categoryGroupList.reduce((accumulator, group) => {
@@ -582,13 +755,55 @@ function RatePage() {
   };
 
   const handleSaveCategoryEvaluation = (categoryId, evaluationResult) => {
-    const savedEvaluation = handleSaveEvaluation(categoryId, evaluationResult);
+    const savedEvaluation = handleSaveEvaluation(categoryId, {
+      ...evaluationResult,
+      evaluator: serializeEvaluator(selectedEvaluator),
+    });
     setSelectedCategory(null);
     return savedEvaluation;
   };
 
   const handleCloseSetupJson = () => {
     setSetupJsonOpen(false);
+  };
+
+  const persistSelectedEvaluator = (evaluator) => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (evaluator) {
+      window.localStorage.setItem(
+        SELECTED_EVALUATOR_STORAGE_KEY,
+        JSON.stringify(serializeEvaluator(evaluator))
+      );
+      return;
+    }
+
+    window.localStorage.removeItem(SELECTED_EVALUATOR_STORAGE_KEY);
+  };
+
+  const handleOpenEvaluatorDialog = () => {
+    setEvaluatorDraft(selectedEvaluator?.name || "");
+    setEvaluatorDialogOpen(true);
+  };
+
+  const handleCloseEvaluatorDialog = () => {
+    setEvaluatorDialogOpen(false);
+  };
+
+  const handleSelectEvaluator = (evaluator) => {
+    setSelectedEvaluator(serializeEvaluator(evaluator));
+    persistSelectedEvaluator(evaluator);
+    setEvaluatorDraft(evaluator?.name || "");
+    setEvaluatorDialogOpen(false);
+  };
+
+  const handleClearEvaluator = () => {
+    setSelectedEvaluator(null);
+    persistSelectedEvaluator(null);
+    setEvaluatorDraft("");
+    setEvaluatorDialogOpen(false);
   };
 
   const handleOpenSearchDialog = () => {
@@ -612,6 +827,11 @@ function RatePage() {
     setSearchDialogOpen(false);
   };
 
+  const handleClearSearchSelection = () => {
+    setSearchTerm("");
+    setSearchDraft("");
+  };
+
   const filteredCategories = categories.filter((category) => {
     const matchesSearch = category.name
       .toLowerCase()
@@ -628,6 +848,17 @@ function RatePage() {
   const searchResults = categories.filter((category) =>
     category.name.toLowerCase().includes(searchDraft.trim().toLowerCase())
   );
+  const evaluatorResults = evaluators.filter((evaluator) => {
+    const searchValue = evaluatorDraft.trim().toLowerCase();
+
+    if (!searchValue) {
+      return true;
+    }
+
+    return [evaluator.name, evaluator.code, evaluator.subtitle, evaluator.location]
+      .filter(Boolean)
+      .some((value) => value.toLowerCase().includes(searchValue));
+  });
   const evaluationDialogKey = `${activeGroupId}-${selectedCategory?.id || "none"}-${setupSaveVersion}-${JSON.stringify(questions)}`;
 
   return (
@@ -640,30 +871,79 @@ function RatePage() {
             <Typography variant="h3" className={classes.heroTitle}>
               {activeGroup?.label || displayMode.heading}
             </Typography>
-            <Typography variant="body1" className={classes.heroSubtitle}>
-              {activeGroup?.description}
-            </Typography>
+            {activeGroup?.description ? (
+              <Typography variant="body1" className={classes.heroSubtitle}>
+                {activeGroup.description}
+              </Typography>
+            ) : null}
 
             <Paper elevation={0} className={classes.filterPanel}>
               <Box className={classes.filterBody}>
                 <Box className={classes.filtersGrid}>
-                  <Box className={classes.fieldBlock}>
-                    <Box className={classes.searchSpacer} />
-                    <Box className={classes.searchButtonWrap}>
+                  <Box className={classes.searchFieldBlock}>
+                    <Typography className={classes.fieldLabel}>Search Interns</Typography>
+                    <Box className={classes.evaluatorSelector}>
                       <IconButton
-                        className={classes.searchButton}
+                        className={classes.evaluatorSelectorButton}
                         onClick={handleOpenSearchDialog}
                         aria-label={`Search ${summary.itemLabelPlural.toLowerCase()}`}
                       >
-                        <SearchIcon fontSize="small" />
+                        <SearchIcon />
                       </IconButton>
-                      <Typography
-                        variant="body2"
-                        className={classes.searchSelectedLabel}
+                      <Box
+                        className={classes.evaluatorSelectorValue}
                         onClick={handleOpenSearchDialog}
                       >
-                        Search {summary.itemLabelPlural.toLowerCase()}
-                      </Typography>
+                        <Typography
+                          className={
+                            searchTerm
+                              ? classes.evaluatorSelectorText
+                              : classes.evaluatorSelectorPlaceholder
+                          }
+                        >
+                          {searchTerm || `Please select ${summary.itemLabelSingular.toLowerCase()}...`}
+                        </Typography>
+                      </Box>
+                      <IconButton
+                        className={classes.evaluatorSelectorClear}
+                        onClick={handleClearSearchSelection}
+                        aria-label="Clear selected intern search"
+                      >
+                        <CloseIcon />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                  <Box className={classes.evaluatorFieldBlock}>
+                    <Typography className={classes.fieldLabel}>Evaluator</Typography>
+                    <Box className={classes.evaluatorSelector}>
+                      <IconButton
+                        className={classes.evaluatorSelectorButton}
+                        onClick={handleOpenEvaluatorDialog}
+                        aria-label="Search evaluators"
+                      >
+                        <SearchIcon />
+                      </IconButton>
+                      <Box
+                        className={classes.evaluatorSelectorValue}
+                        onClick={handleOpenEvaluatorDialog}
+                      >
+                        <Typography
+                          className={
+                            selectedEvaluator
+                              ? classes.evaluatorSelectorText
+                              : classes.evaluatorSelectorPlaceholder
+                          }
+                        >
+                          {selectedEvaluator?.name || "Please select an Evaluator"}
+                        </Typography>
+                      </Box>
+                      <IconButton
+                        className={classes.evaluatorSelectorClear}
+                        onClick={handleClearEvaluator}
+                        aria-label="Clear evaluator"
+                      >
+                        <CloseIcon />
+                      </IconButton>
                     </Box>
                   </Box>
                   <Box className={classes.fieldBlock}>
@@ -798,7 +1078,7 @@ function RatePage() {
                   {filteredCategories.length} shown
                 </Typography>
               </Box>
-              <Table>
+              <Table stickyHeader>
                 <TableHead>
                   <TableRow>
                     <TableCell className={classes.tableHeaderCell}>
@@ -817,22 +1097,45 @@ function RatePage() {
                     const hasRating = category.currentUserRating > 0;
 
                     return (
-                      <TableRow key={category.id} className={classes.tableRow} hover>
+                      <TableRow
+                        key={category.id}
+                        className={`${classes.tableRow} ${
+                          hasRating ? classes.tableRowRated : ""
+                        }`}
+                        hover
+                      >
                         <TableCell className={classes.nameCell}>{category.name}</TableCell>
                         <TableCell className={classes.metricCell}>
-                          <Box className={classes.statusWrap}>
+                          <Box
+                            className={`${classes.statusBadge} ${
+                              hasRating
+                                ? classes.statusBadgeReady
+                                : classes.statusBadgePending
+                            }`}
+                          >
                             <Box
                               className={`${classes.statusDot} ${
                                 hasRating ? classes.statusReady : classes.statusPending
                               }`}
                             />
-                            <Typography className={classes.statusText}>
-                              {hasRating ? "Rated" : "Not rated"}
+                            <Typography className={classes.statusText} component="span">
+                              {hasRating ? "Completed" : "Not Rated"}
                             </Typography>
                           </Box>
                         </TableCell>
                         <TableCell className={classes.metricCell}>
-                          {hasRating ? `${category.currentUserRating.toFixed(1)} / 5` : "-"}
+                          {hasRating ? (
+                            <Box className={classes.ratingPreviewWrap}>
+                              <Typography className={classes.ratingStars} component="span">
+                                {renderStarPreview(category.currentUserRating)}
+                              </Typography>
+                              <Typography className={classes.ratingValue} component="span">
+                                {category.currentUserRating.toFixed(1)} / 5
+                              </Typography>
+                            </Box>
+                          ) : (
+                            "-"
+                          )}
                         </TableCell>
                         <TableCell className={classes.metricCell}>
                           {category.totalRatings > 0
@@ -900,6 +1203,74 @@ function RatePage() {
             category={jsonPreviewCategory}
             onClose={handleCloseJsonPreview}
           />
+
+          <Dialog
+            open={evaluatorDialogOpen}
+            onClose={handleCloseEvaluatorDialog}
+            fullWidth
+            maxWidth="md"
+            classes={{ paper: classes.searchDialogPaper }}
+          >
+            <DialogContent className={classes.searchDialogContent}>
+              <Box className={classes.searchDialogHeader}>
+                <TextField
+                  autoFocus
+                  variant="outlined"
+                  label="Evaluator"
+                  placeholder="Evaluator"
+                  value={evaluatorDraft}
+                  onChange={(event) => setEvaluatorDraft(event.target.value)}
+                  className={classes.searchDialogInput}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon className={classes.searchDialogIcon} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          className={classes.searchDialogClose}
+                          aria-label="Close evaluator picker"
+                          onClick={handleCloseEvaluatorDialog}
+                          edge="end"
+                        >
+                          <CloseIcon />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Box>
+
+              <Box className={classes.searchList}>
+                {evaluatorsLoading ? (
+                  <Typography variant="body2" className={classes.searchEmptyState}>
+                    Loading evaluators...
+                  </Typography>
+                ) : evaluatorResults.length > 0 ? (
+                  evaluatorResults.map((evaluator) => (
+                    <Box
+                      key={evaluator.id}
+                      className={classes.evaluatorListRow}
+                      onClick={() => handleSelectEvaluator(evaluator)}
+                    >
+                      <Box className={classes.evaluatorListIdentity}>
+                        <Typography className={classes.evaluatorListName}>
+                          {evaluator.name}
+                        </Typography>
+                      </Box>
+                      <ArrowForwardIcon className={classes.searchListArrow} />
+                    </Box>
+                  ))
+                ) : (
+                  <Typography variant="body2" className={classes.searchEmptyState}>
+                    No matching evaluators found.
+                  </Typography>
+                )}
+              </Box>
+            </DialogContent>
+          </Dialog>
 
           <Dialog
             open={searchDialogOpen}
@@ -986,3 +1357,4 @@ function RatePage() {
 }
 
 export default RatePage;
+

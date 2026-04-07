@@ -5,25 +5,47 @@ const SUB_LIST_RESPONSE_KEY = "sub_list";
 const REMOTE_GROUP_META = {
   [SUB_LIST_KEYS.interns]: {
     label: "Interns",
-    description: "Loaded from sub_list.",
+    description: "",
     itemLabelSingular: "Intern",
     itemLabelPlural: "Interns",
   },
+  [SUB_LIST_KEYS.evaluators]: {
+    label: "Evaluators",
+    description: "",
+    itemLabelSingular: "Evaluator",
+    itemLabelPlural: "Evaluators",
+  },
 };
 
-let remoteGroupsRequest = null;
-let remoteGroupsResolved = false;
+const SUB_LIST_REQUESTS = {
+  [SUB_LIST_KEYS.interns]: {
+    ixSubType: 206,
+    q: "h",
+    showInactive: false,
+  },
+  [SUB_LIST_KEYS.evaluators]: {
+    ixSubType: 206,
+    q: "h",
+    showInactive: false,
+  },
+};
+
+const subListRequestCache = new Map();
 
 const createUniqueId = (prefix) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-const createRatingItem = (id, name) => ({
+const createRatingItem = (id, name, details = {}) => ({
   id,
   name,
   averageRating: 0,
   totalRatings: 0,
   currentUserRating: 0,
   evaluationResult: null,
+  code: details.code || "",
+  subtitle: details.subtitle || "",
+  location: details.location || "",
+  rawItem: details.rawItem || null,
 });
 
 const sanitizeItemId = (value, fallbackPrefix) => {
@@ -36,16 +58,31 @@ const sanitizeItemId = (value, fallbackPrefix) => {
   return normalizedValue || createUniqueId(fallbackPrefix);
 };
 
+const getStringFromCandidateKeys = (item, candidateKeys) => {
+  if (!item || typeof item !== "object") {
+    return "";
+  }
+
+  for (const key of candidateKeys) {
+    const candidateValue = item[key];
+    if (typeof candidateValue === "string" && candidateValue.trim()) {
+      return candidateValue.trim();
+    }
+
+    if (typeof candidateValue === "number" && Number.isFinite(candidateValue)) {
+      return String(candidateValue);
+    }
+  }
+
+  return "";
+};
+
 const getDisplayName = (item) => {
   if (typeof item === "string") {
     return item.trim();
   }
 
-  if (!item || typeof item !== "object") {
-    return "";
-  }
-
-  const candidateKeys = [
+  return getStringFromCandidateKeys(item, [
     "sub_title",
     "sSub",
     "name",
@@ -57,17 +94,43 @@ const getDisplayName = (item) => {
     "description",
     "value",
     "text",
-  ];
-
-  for (const key of candidateKeys) {
-    const candidateValue = item[key];
-    if (typeof candidateValue === "string" && candidateValue.trim()) {
-      return candidateValue.trim();
-    }
-  }
-
-  return "";
+  ]);
 };
+
+const getItemCode = (item) =>
+  getStringFromCandidateKeys(item, [
+    "sub_code",
+    "code",
+    "sCode",
+    "employeeNo",
+    "employeeNumber",
+    "empNo",
+    "idNo",
+    "id",
+    "ixSub",
+  ]);
+
+const getItemSubtitle = (item, groupId) =>
+  getStringFromCandidateKeys(item, [
+    "sub_type",
+    "type",
+    "designation",
+    "position",
+    "jobTitle",
+    "title2",
+    "role",
+  ]) || (groupId === SUB_LIST_KEYS.evaluators ? "Employee" : "");
+
+const getItemLocation = (item) =>
+  getStringFromCandidateKeys(item, [
+    "branch",
+    "sBrch",
+    "sBranch",
+    "location",
+    "branchName",
+    "office",
+    "address",
+  ]);
 
 const normalizeRemoteList = (groupId, values) => {
   if (!Array.isArray(values)) {
@@ -84,112 +147,108 @@ const normalizeRemoteList = (groupId, values) => {
       return items;
     }
 
-    const id = sanitizeItemId(name, `${groupId}-${index + 1}`);
+    const code = getItemCode(item);
+    const id = sanitizeItemId(code || name, `${groupId}-${index + 1}`);
 
     if (seenIds.has(id)) {
       return items;
     }
 
     seenIds.add(id);
-    items.push(createRatingItem(id, name));
+    items.push(
+      createRatingItem(id, name, {
+        code,
+        subtitle: getItemSubtitle(item, groupId),
+        location: getItemLocation(item),
+        rawItem: item && typeof item === "object" ? item : null,
+      })
+    );
     return items;
   }, []).slice(0, 10);
 };
 
-const extractRemotePayload = (payload) => {
+const extractRemoteList = (payload) => {
   if (Array.isArray(payload)) {
-    const subList = payload
-      .map((item) => (item && typeof item === "object" ? item[SUB_LIST_RESPONSE_KEY] : null))
+    const nestedLists = payload
+      .map((item) =>
+        item && typeof item === "object" && Array.isArray(item[SUB_LIST_RESPONSE_KEY])
+          ? item[SUB_LIST_RESPONSE_KEY]
+          : null
+      )
       .filter(Boolean);
 
-    if (subList.length) {
-      return {
-        [SUB_LIST_KEYS.interns]: subList,
-      };
-    }
-
-    return null;
+    return nestedLists.length > 0 ? nestedLists.flat() : payload;
   }
 
   if (!payload || typeof payload !== "object") {
-    return null;
+    return [];
   }
 
   if (Array.isArray(payload[SUB_LIST_RESPONSE_KEY])) {
-    return {
-      [SUB_LIST_KEYS.interns]: payload[SUB_LIST_RESPONSE_KEY],
-    };
+    return payload[SUB_LIST_RESPONSE_KEY];
   }
 
   const nestedKeys = ["data", "result", "results", "payload", "items"];
 
   for (const key of nestedKeys) {
     const nestedValue = payload[key];
-    if (nestedValue && typeof nestedValue === "object") {
-      const extractedNestedValue = extractRemotePayload(nestedValue);
-      if (extractedNestedValue) {
-        return extractedNestedValue;
-      }
+    const extractedNestedValue = extractRemoteList(nestedValue);
+
+    if (extractedNestedValue.length > 0) {
+      return extractedNestedValue;
     }
   }
 
-  return null;
+  return [];
 };
 
-const buildRemoteGroups = (payload) => {
-  const extractedPayload = extractRemotePayload(payload);
+const createRequestHeaders = (token) => {
+  const headers = {
+    "Content-Type": "application/json",
+  };
 
-  if (!extractedPayload) {
-    return {};
+  if (token) {
+    headers["x-access-tokens"] = token;
   }
 
-  return Object.keys(REMOTE_GROUP_META).reduce((groups, groupId) => {
-    const categories = normalizeRemoteList(groupId, extractedPayload[groupId]);
-
-    if (!categories.length) {
-      return groups;
-    }
-
-    groups[groupId] = {
-      id: groupId,
-      ...REMOTE_GROUP_META[groupId],
-      categories,
-    };
-
-    return groups;
-  }, {});
+  return headers;
 };
 
-export const requestSubGroups = (token) => {
-  if (remoteGroupsResolved) {
-    return Promise.resolve({});
+const createRequestCacheKey = (groupId, requestBody) => JSON.stringify({ groupId, requestBody });
+
+export const requestSubListItems = (token, groupId) => {
+  const requestBody = SUB_LIST_REQUESTS[groupId];
+  if (!requestBody) {
+    return Promise.resolve([]);
   }
 
-  if (!remoteGroupsRequest) {
-    const headers = {
-      "Content-Type": "application/json",
-    };
-
-    if (token) {
-      headers["x-access-tokens"] = token;
-    }
-
-    remoteGroupsRequest = fetch(ENDPOINT, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        ixSubType: 206,
-        q: "h",
-        showInactive: false,
-      }),
-    })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((payload) => buildRemoteGroups(payload))
-      .catch(() => ({}))
-      .finally(() => {
-        remoteGroupsResolved = true;
-      });
+  const cacheKey = createRequestCacheKey(groupId, requestBody);
+  if (!subListRequestCache.has(cacheKey)) {
+    subListRequestCache.set(
+      cacheKey,
+      fetch(ENDPOINT, {
+        method: "POST",
+        headers: createRequestHeaders(token),
+        body: JSON.stringify(requestBody),
+      })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((payload) => normalizeRemoteList(groupId, extractRemoteList(payload)))
+        .catch(() => [])
+    );
   }
 
-  return remoteGroupsRequest;
+  return subListRequestCache.get(cacheKey);
 };
+
+export const requestSubGroups = (token) =>
+  requestSubListItems(token, SUB_LIST_KEYS.interns).then((categories) =>
+    categories.length > 0
+      ? {
+          [SUB_LIST_KEYS.interns]: {
+            id: SUB_LIST_KEYS.interns,
+            ...REMOTE_GROUP_META[SUB_LIST_KEYS.interns],
+            categories,
+          },
+        }
+      : {}
+  );
