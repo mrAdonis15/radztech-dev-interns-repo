@@ -66,6 +66,109 @@ function closeConnectPanel() {
   connectPanel.classList.add("hidden");
 }
 
+function parseStoredJson(value) {
+  if (!value) return null;
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    return null;
+  }
+}
+
+function getSelectedBizStorage() {
+  return parseStoredJson(localStorage.getItem("selectedBiz"));
+}
+
+function getSelectedBiz() {
+  const data = getSelectedBizStorage();
+  if (data && data.biz && typeof data.biz === "object") return data.biz;
+  if (data && typeof data === "object" && !Array.isArray(data)) return data;
+  return null;
+}
+
+function getBizName() {
+  const biz = getSelectedBiz();
+  return biz?.name || biz?.sBiz || biz?.businessName || null;
+}
+
+function getBizIxBiz() {
+  const biz = getSelectedBiz();
+  return biz?.ixBiz || null;
+}
+
+function getBizToken() {
+  const raw = getSelectedBizStorage();
+  const biz = getSelectedBiz();
+  return (
+    biz?.token ||
+    biz?.dataAccessToken ||
+    biz?.accessToken ||
+    raw?.token ||
+    raw?.dataAccessToken ||
+    raw?.accessToken ||
+    raw?.access_token ||
+    raw?.auth_token ||
+    raw?.bizToken ||
+    raw?.data?.token ||
+    raw?.biz?.token ||
+    null
+  );
+}
+
+function getBizContext() {
+  const biz = getSelectedBiz();
+  if (!biz) return null;
+
+  return {
+    bizName: getBizName() || biz?.name || biz?.sBiz || "Unknown",
+    bizId: getBizIxBiz() || biz?.ixBiz || biz?.id,
+    bizInfo: biz,
+  };
+}
+
+function getStoredAuthContext() {
+  const authContext = {};
+
+  const selectedBizToken = getBizToken();
+  if (selectedBizToken) authContext.user_auth_token = selectedBizToken;
+
+  const token =
+    localStorage.getItem("siteUserAuthToken") ||
+    localStorage.getItem("user_auth_token") ||
+    localStorage.getItem("siteAuthToken") ||
+    localStorage.getItem("cloneUlapToken");
+  if (token && !authContext.user_auth_token)
+    authContext.user_auth_token = token;
+
+  const cookie =
+    localStorage.getItem("siteUserCookie") ||
+    localStorage.getItem("user_cookie");
+  if (cookie) authContext.user_cookie = cookie;
+
+  const csrfToken =
+    localStorage.getItem("siteCsrfToken") || localStorage.getItem("csrf_token");
+  if (csrfToken) authContext.csrf_token = csrfToken;
+
+  const authHeaderName =
+    localStorage.getItem("siteAuthHeaderName") ||
+    localStorage.getItem("auth_header_name");
+  if (authHeaderName) authContext.auth_header_name = authHeaderName;
+
+  const csrfHeaderName =
+    localStorage.getItem("siteCsrfHeaderName") ||
+    localStorage.getItem("csrf_header_name");
+  if (csrfHeaderName) authContext.csrf_header_name = csrfHeaderName;
+
+  const extraHeaders =
+    parseStoredJson(localStorage.getItem("siteExtraHeaders")) ||
+    parseStoredJson(localStorage.getItem("extra_headers"));
+  if (extraHeaders && typeof extraHeaders === "object") {
+    authContext.extra_headers = extraHeaders;
+  }
+
+  return Object.keys(authContext).length ? authContext : null;
+}
+
 connectBtn.addEventListener("click", () => {
   const isOpen = connectPanel.classList.contains("visible");
   isOpen ? closeConnectPanel() : openConnectPanel();
@@ -121,10 +224,15 @@ connectForm.addEventListener("submit", async (e) => {
   connectStatus.className = "connect-status";
 
   try {
+    const storedAuthContext = getStoredAuthContext();
     const res = await fetch("/api/auth/site-login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({
+        username,
+        password,
+        ...(storedAuthContext || {}),
+      }),
     });
     const data = await res.json();
     if (res.ok && data.success) {
@@ -577,12 +685,18 @@ async function sendMessage(event) {
   }, 100);
 
   try {
+    const bizContext = getBizContext();
+    const storedAuthContext = getStoredAuthContext();
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ message: message }),
+      body: JSON.stringify({
+        message,
+        ...(bizContext ? { bizContext } : {}),
+        ...(storedAuthContext ? { authContext: storedAuthContext } : {}),
+      }),
     });
 
     const data = await response.json();
@@ -628,7 +742,7 @@ async function sendMessage(event) {
       updateStatus("Ready", "success");
     } else {
       addMessage(
-        data.response || "Something went wrong. Please try again.",
+        data.response || "Sorry, Something went wrong. Please try again",
         false,
         elapsedMs,
       );

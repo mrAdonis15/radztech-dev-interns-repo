@@ -134,11 +134,75 @@ function getCurrentSiteConnectionStatus() {
   );
 
   return {
-    connected: hasSavedCreds && hasToken,
+    connected: hasToken,
     hasSavedCreds,
     hasToken,
     username: (process.env.SITE_USERNAME || "").trim() || null,
   };
+}
+
+function getTokenMaxAgeMs() {
+  const rawHours = Number(process.env.SITE_TOKEN_MAX_AGE_HOURS || "20");
+  const safeHours = Number.isFinite(rawHours) && rawHours > 0 ? rawHours : 20;
+  return safeHours * 60 * 60 * 1000;
+}
+
+function isSavedTokenStale() {
+  const updatedAt = (process.env.SITE_TOKEN_UPDATED_AT || "").trim();
+  if (!updatedAt) return true;
+
+  const ts = Date.parse(updatedAt);
+  if (!Number.isFinite(ts)) return true;
+
+  return Date.now() - ts >= getTokenMaxAgeMs();
+}
+
+let tokenRefreshPromise = null;
+
+async function ensureValidSiteToken({ force = false } = {}) {
+  const username = (process.env.SITE_USERNAME || "").trim();
+  const password = (process.env.SITE_PASSWORD || "").trim();
+  const devId = (process.env.SITE_DEV_ID || "").trim();
+
+  if (!username || !password) {
+    return { refreshed: false, skipped: true, reason: "missing_credentials" };
+  }
+
+  const status = getCurrentSiteConnectionStatus();
+  const shouldRefresh = force || !status.hasToken || isSavedTokenStale();
+  if (!shouldRefresh) {
+    return { refreshed: false, skipped: true, reason: "token_still_fresh" };
+  }
+
+  if (tokenRefreshPromise) {
+    return tokenRefreshPromise;
+  }
+
+  tokenRefreshPromise = (async () => {
+    const token = await loginToSite(username, password, devId);
+    const check = await validateSiteApiToken(token, devId);
+    if (!check.ok && isStrictTokenValidationEnabled()) {
+      const err = new Error(
+        `Refreshed token rejected by validation endpoint (${check.statusCode}): ${check.body}`,
+      );
+      err.statusCode = 401;
+      throw err;
+    }
+
+    updateScraperToken(token);
+    saveEnvKey("SITE_TOKEN_UPDATED_AT", new Date().toISOString());
+
+    return {
+      refreshed: true,
+      validation: check,
+    };
+  })();
+
+  try {
+    return await tokenRefreshPromise;
+  } finally {
+    tokenRefreshPromise = null;
+  }
 }
 
 function extractToken(payload, tokenField) {
@@ -155,7 +219,7 @@ function extractToken(payload, tokenField) {
   );
 }
 
-function loginAttempt({ loginUrl, headers, method, tokenField }) {
+function loginAttempt({ loginUrl, headers, method, tokenField, body }) {
   return new Promise((resolve, reject) => {
     const parsed = new URL(loginUrl);
     const lib = parsed.protocol === "https:" ? https : http;
@@ -215,7 +279,7 @@ function loginAttempt({ loginUrl, headers, method, tokenField }) {
     });
 
     if (method === "POST") {
-      req.write("{}");
+      req.write(body || "{}");
     }
     req.end();
   });
@@ -227,13 +291,34 @@ async function loginToSite(username, password, devId) {
     process.env.SITE_LOGIN_URL || "https://clone.ulap.biz/api/login";
   const tokenField = process.env.SITE_TOKEN_FIELD || "token";
   const effectiveDevId = devId || process.env.SITE_DEV_ID || "";
+  const loginOrigin = process.env.SITE_LOGIN_ORIGIN || "https://clone.ulap.biz";
+  const loginReferer =
+    process.env.SITE_LOGIN_REFERER || "https://clone.ulap.biz/app/login";
   const credentials = Buffer.from(`${username}:${password}`).toString("base64");
+
+  let bodyObject = { username, password };
+  if (effectiveDevId) {
+    bodyObject.devID = effectiveDevId;
+  }
+
+  const customBody = (process.env.SITE_LOGIN_BODY_JSON || "").trim();
+  if (customBody) {
+    try {
+      bodyObject = JSON.parse(customBody);
+    } catch (e) {
+      console.warn("[Auth] Invalid SITE_LOGIN_BODY_JSON, using default body.");
+    }
+  }
+  const postBody = JSON.stringify(bodyObject || {});
+
   const reqHeaders = {
     Authorization: `Basic ${credentials}`,
     Accept: "application/json, text/plain, */*",
     "Content-Type": "application/json",
+    Origin: loginOrigin,
+    Referer: loginReferer,
     "User-Agent":
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36",
   };
 
   if (effectiveDevId) {
@@ -241,7 +326,7 @@ async function loginToSite(username, password, devId) {
   }
 
   const preferredMethod = (
-    process.env.SITE_LOGIN_METHOD || "GET"
+    process.env.SITE_LOGIN_METHOD || "POST"
   ).toUpperCase();
   const methods =
     preferredMethod === "POST" ? ["POST", "GET"] : ["GET", "POST"];
@@ -254,6 +339,7 @@ async function loginToSite(username, password, devId) {
         headers: reqHeaders,
         method,
         tokenField,
+        body: postBody,
       });
     } catch (err) {
       lastError = err;
@@ -354,6 +440,7 @@ async function tryAutoLogin() {
       return;
     }
     updateScraperToken(token);
+    saveEnvKey("SITE_TOKEN_UPDATED_AT", new Date().toISOString());
     console.log("[Auth] Auto-login successful. Site token refreshed.");
   } catch (e) {
     console.warn("[Auth] Auto-login failed:", e.message);
@@ -387,6 +474,16 @@ function resolvePythonPath() {
   if (process.env.PYTHON_PATH) return process.env.PYTHON_PATH;
   const workspaceVenvPython = path.join(__dirname, ".venv", "bin", "python");
   if (fs.existsSync(workspaceVenvPython)) return workspaceVenvPython;
+  const repoRootVenvPython = path.join(
+    __dirname,
+    "..",
+    "..",
+    "..",
+    ".venv",
+    "bin",
+    "python",
+  );
+  if (fs.existsSync(repoRootVenvPython)) return repoRootVenvPython;
   if (process.env.VIRTUAL_ENV) {
     return path.join(process.env.VIRTUAL_ENV, "bin", "python");
   }
@@ -422,6 +519,12 @@ function startPythonProcess() {
 
     clearTimeout(current.timer);
 
+    // Keep FIFO alignment intact: if a request already timed out,
+    // consume and ignore this response instead of assigning it to the next request.
+    if (current.expired) {
+      return;
+    }
+
     try {
       const parsed = JSON.parse(line);
       if (parsed && parsed.success) {
@@ -450,7 +553,7 @@ function startPythonProcess() {
   });
 }
 
-function runPythonResponse(message) {
+function runPythonResponse(message, authContext = null) {
   return new Promise((resolve, reject) => {
     if (!pythonProcess || !pythonReady) {
       startPythonProcess();
@@ -461,17 +564,25 @@ function runPythonResponse(message) {
       return;
     }
 
-    const timer = setTimeout(() => {
-      const idx = pendingRequests.findIndex(
-        (entry) => entry.resolve === resolve,
-      );
-      if (idx >= 0) pendingRequests.splice(idx, 1);
-      reject(new Error("Python request timed out"));
+    const request = {
+      resolve,
+      reject,
+      timer: null,
+      expired: false,
+    };
+
+    request.timer = setTimeout(() => {
+      request.expired = true;
+      reject(new Error("Request Timed Out"));
     }, 120000);
 
-    pendingRequests.push({ resolve, reject, timer });
+    pendingRequests.push(request);
 
-    pythonProcess.stdin.write(`${JSON.stringify({ message })}\n`);
+    const payload = { message };
+    if (authContext && typeof authContext === "object") {
+      payload.auth_context = authContext;
+    }
+    pythonProcess.stdin.write(`${JSON.stringify(payload)}\n`);
   });
 }
 
@@ -502,10 +613,31 @@ async function warmupModel() {
   }
 }
 
+function isCurrentBizPrompt(input) {
+  const normalized = String(input || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[?.!]+$/g, "")
+    .replace(/\s+/g, " ");
+
+  const directPrompts = new Set([
+    "what is the current biz",
+    "what's the current biz",
+    "current biz",
+    "which biz",
+    "which is the current biz",
+    "what is the selected biz",
+    "selected biz",
+    "active biz",
+  ]);
+
+  return directPrompts.has(normalized);
+}
+
 // Chat endpoint
 app.post("/api/chat", async (req, res) => {
   try {
-    const { message, bizContext } = req.body;
+    const { message, bizContext, authContext, auth_context } = req.body;
 
     if (!message || message.trim() === "") {
       return res.status(400).json({ error: "Message is required" });
@@ -513,11 +645,7 @@ app.post("/api/chat", async (req, res) => {
 
     const normalized = String(message).toLowerCase().trim();
 
-    if (
-      /what\s+is\s+the\s+current\s+biz|current\s+biz|selected\s+biz|active\s+biz|which\s+biz/.test(
-        normalized,
-      )
-    ) {
+    if (isCurrentBizPrompt(normalized)) {
       const bizName = bizContext?.bizName || "No business selected";
       return res.json({
         response: `Current business is: ${bizName}`,
@@ -550,30 +678,52 @@ app.post("/api/chat", async (req, res) => {
     const messageWithContext = contextNote
       ? `${message}${contextNote}`
       : message;
-    const response = await runPythonResponse(messageWithContext);
+
+    const resolvedAuthContext = authContext || auth_context || null;
+
+    // Keep the rotating x-access token fresh using saved credentials.
+    try {
+      await ensureValidSiteToken();
+    } catch (authErr) {
+      console.warn(
+        "[Auth] Token refresh skipped/failed before /api/chat:",
+        authErr.message,
+      );
+    }
+
+    const response = await runPythonResponse(
+      messageWithContext,
+      resolvedAuthContext,
+    );
     return res.json({
       response,
       type: "text",
     });
   } catch (error) {
     console.error("Endpoint error:", error);
-    res.status(500).json({ error: "Server error" });
+    if (error && error.message === "Request Timed Out") {
+      return res.status(408).json({
+        response: "Request Timed Out",
+        error: "Request Timed Out",
+      });
+    }
+
+    res.status(500).json({
+      response: "Sorry, Something went wrong. Please try again",
+      error: "Server error",
+    });
   }
 });
 
 app.post("/api/chat/stream", async (req, res) => {
   try {
-    const { message, bizContext } = req.body || {};
+    const { message, bizContext, authContext, auth_context } = req.body || {};
     if (!message || String(message).trim() === "") {
       return res.status(400).json({ error: "Message is required" });
     }
 
     const normalized = String(message).toLowerCase().trim();
-    if (
-      /what\s+is\s+the\s+current\s+biz|current\s+biz|selected\s+biz|active\s+biz|which\s+biz/.test(
-        normalized,
-      )
-    ) {
+    if (isCurrentBizPrompt(normalized)) {
       const bizName = bizContext?.bizName || "No business selected";
       const text = `Current business is: ${bizName}`;
 
@@ -596,7 +746,21 @@ app.post("/api/chat/stream", async (req, res) => {
     const messageWithContext = contextNote
       ? `${message}${contextNote}`
       : message;
-    const fullText = String(await runPythonResponse(messageWithContext));
+
+    const resolvedAuthContext = authContext || auth_context || null;
+
+    try {
+      await ensureValidSiteToken();
+    } catch (authErr) {
+      console.warn(
+        "[Auth] Token refresh skipped/failed before /api/chat/stream:",
+        authErr.message,
+      );
+    }
+
+    const fullText = String(
+      await runPythonResponse(messageWithContext, resolvedAuthContext),
+    );
 
     res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
     res.setHeader("Cache-Control", "no-cache");
@@ -615,6 +779,12 @@ app.post("/api/chat/stream", async (req, res) => {
   } catch (err) {
     console.error("Stream endpoint error:", err?.message || err);
     if (!res.headersSent) {
+      if (err && err.message === "Request Timed Out") {
+        return res.status(408).json({
+          response: "Request Timed Out",
+          error: "Request Timed Out",
+        });
+      }
       return res.status(500).json({ error: "Streaming failed" });
     }
     return res.end();
@@ -632,16 +802,41 @@ app.get("/api/health", (req, res) => {
 
 // Site login — accepts user credentials, logs into the target site, stores the token
 app.post("/api/auth/site-login", async (req, res) => {
-  const { username, password, dev_id } = req.body || {};
-  if (!username || !password) {
+  const {
+    username,
+    password,
+    dev_id,
+    user_auth_token,
+    authContext,
+    auth_context,
+  } = req.body || {};
+
+  const providedAuthContext =
+    authContext ||
+    auth_context ||
+    (user_auth_token ? { user_auth_token } : null);
+
+  if (
+    !username &&
+    !password &&
+    !(providedAuthContext && providedAuthContext.user_auth_token)
+  ) {
     return res
       .status(400)
-      .json({ error: "Username and password are required." });
+      .json({ error: "Username/password or a valid auth token is required." });
   }
 
   try {
     const effectiveDevId = dev_id || process.env.SITE_DEV_ID || "";
-    const token = await loginToSite(username, password, effectiveDevId);
+    let token = null;
+
+    if (providedAuthContext && providedAuthContext.user_auth_token) {
+      token = String(providedAuthContext.user_auth_token).trim();
+    }
+
+    if (!token) {
+      token = await loginToSite(username, password, effectiveDevId);
+    }
 
     const check = await validateSiteApiToken(token, effectiveDevId);
     const strictValidation = isStrictTokenValidationEnabled();
@@ -653,6 +848,7 @@ app.post("/api/auth/site-login", async (req, res) => {
 
     // Apply the fresh token immediately to all scraper config sections
     updateScraperToken(token);
+    saveEnvKey("SITE_TOKEN_UPDATED_AT", new Date().toISOString());
 
     if (!check.ok && strictValidation) {
       return res.status(401).json({
@@ -692,6 +888,7 @@ app.post("/api/auth/site-logout", async (_req, res) => {
       "SITE_PASSWORD",
       "SITE_DEV_ID",
       "SITE_LOGIN_METHOD",
+      "SITE_TOKEN_UPDATED_AT",
     ]);
     updateScraperToken("");
 
@@ -717,6 +914,14 @@ app.listen(PORT, () => {
   warmupModel();
   // Attempt token refresh on startup if credentials are already saved
   tryAutoLogin();
+
+  // Keep daily-rotating site tokens fresh in long-running sessions.
+  const refreshIntervalMs = 60 * 60 * 1000;
+  setInterval(() => {
+    ensureValidSiteToken().catch((err) => {
+      console.warn("[Auth] Background token refresh failed:", err.message);
+    });
+  }, refreshIntervalMs).unref();
 });
 
 // Graceful shutdown

@@ -6,11 +6,15 @@
     "api_data_path": "data",
     "api_fixed_auth_header": "x-access-tokens",
     "api_fixed_auth_token": "",
-    "api_fixed_cookie": "devID=6515450",
+    "api_fixed_cookie": "devID=1580",
     "api_fixed_headers": {
+      "Accept": "application/json, text/plain, */*",
+      "Content-Type": "application/json",
       "Referer": "https://clone.ulap.biz/app/reports/sc",
-      "Accept": "application/json",
-      "Content-Type": "application/json"
+      "sec-ch-ua": "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\"",
+      "sec-ch-ua-mobile": "?1",
+      "sec-ch-ua-platform": "\"Android\"",
+      "User-Agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36"
     },
     "api_default_body": {
       "ixProd": 15583,
@@ -21,9 +25,7 @@
       "SN2": ""
     },
     "selector": "div.content, p, table, tr, td, th",
-    "inventory_paths": [
-      "/api/reports/inv/sc"
-    ],
+    "inventory_paths": ["/api/reports/inv/sc"],
     "products_selector": "tr, .product-item, .inventory-row",
     "fallback_urls": [
       "https://clone.ulap.biz/inventory",
@@ -37,11 +39,15 @@
     "api_method": "POST",
     "api_fixed_auth_header": "x-access-tokens",
     "api_fixed_auth_token": "",
-    "api_fixed_cookie": "devID=6515450",
+    "api_fixed_cookie": "devID=1580",
     "api_fixed_headers": {
+      "Accept": "application/json, text/plain, */*",
+      "Content-Type": "application/json",
       "Referer": "https://clone.ulap.biz/app/reports/sc",
-      "Accept": "application/json",
-      "Content-Type": "application/json"
+      "sec-ch-ua": "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\"",
+      "sec-ch-ua-mobile": "?1",
+      "sec-ch-ua-platform": "\"Android\"",
+      "User-Agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36"
     },
     "api_default_body": {
       "ixProd": 15583,
@@ -59,11 +65,15 @@
     "api_method": "POST",
     "api_fixed_auth_header": "x-access-tokens",
     "api_fixed_auth_token": "",
-    "api_fixed_cookie": "devID=6515450",
+    "api_fixed_cookie": "devID=1580",
     "api_fixed_headers": {
+      "Accept": "application/json, text/plain, */*",
+      "Content-Type": "application/json",
       "Referer": "https://clone.ulap.biz/app/reports/sc",
-      "Accept": "application/json",
-      "Content-Type": "application/json"
+      "sec-ch-ua": "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\"",
+      "sec-ch-ua-mobile": "?1",
+      "sec-ch-ua-platform": "\"Android\"",
+      "User-Agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36"
     },
     "api_default_body": {},
     "description": "Product catalog - returns all products with ixProd IDs"
@@ -74,7 +84,7 @@
     "api_method": "POST",
     "api_fixed_auth_header": "x-access-tokens",
     "api_fixed_auth_token": "",
-    "api_fixed_cookie": "devID=6515450",
+    "api_fixed_cookie": "devID=1580",
     "api_fixed_headers": {
       "Referer": "https://clone.ulap.biz/app/reports/gl",
       "Origin": "https://clone.ulap.biz",
@@ -90,7 +100,7 @@
     "api_method": "POST",
     "api_fixed_auth_header": "x-access-tokens",
     "api_fixed_auth_token": "",
-    "api_fixed_cookie": "devID=6515450",
+    "api_fixed_cookie": "devID=1580",
     "api_fixed_headers": {
       "Referer": "https://clone.ulap.biz/app/reports/gl",
       "Origin": "https://clone.ulap.biz",
@@ -109,7 +119,7 @@
     "api_method": "POST",
     "api_fixed_auth_header": "x-access-tokens",
     "api_fixed_auth_token": "",
-    "api_fixed_cookie": "devID=6515450",
+    "api_fixed_cookie": "devID=1580",
     "api_fixed_headers": {
       "Referer": "https://clone.ulap.biz/app/reports/gl",
       "Origin": "https://clone.ulap.biz",
@@ -132,7 +142,7 @@
     "api_method": "POST",
     "api_fixed_auth_header": "x-access-tokens",
     "api_fixed_auth_token": "",
-    "api_fixed_cookie": "devID=6515450",
+    "api_fixed_cookie": "devID=1580",
     "api_fixed_headers": {
       "Referer": "https://clone.ulap.biz/app/reports/ar",
       "Origin": "https://clone.ulap.biz",

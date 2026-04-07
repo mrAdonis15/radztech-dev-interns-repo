@@ -1,5 +1,11 @@
 import axios from "axios";
-import { getSelectedBiz, getBizName, getBizIxBiz } from "../selectedBiz";
+import {
+  getSelectedBiz,
+  getSelectedBizStorage,
+  getBizName,
+  getBizIxBiz,
+  getBizToken,
+} from "../selectedBiz";
 
 const PYTHON_BOT_CHAT_URL =
   (typeof process !== "undefined" &&
@@ -7,7 +13,7 @@ const PYTHON_BOT_CHAT_URL =
   "http://localhost:3001/api/chat";
 
 const FALLBACK_MESSAGE =
-  "PythonPrototype Chatbot is unavailable. Make sure PythonBotAI is running.";
+  "I can't access the live business data right now. Please reconnect the logged-in business account and try again.";
 
 function parseChunkLine(line) {
   try {
@@ -28,12 +34,72 @@ function getBizContext() {
   };
 }
 
+function parseStoredJson(value) {
+  if (!value) return null;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+function getAuthContext() {
+  const authContext = {};
+  const selectedBizToken = getBizToken();
+  if (selectedBizToken) {
+    authContext.user_auth_token = selectedBizToken;
+  }
+
+  const fallbackToken =
+    localStorage.getItem("siteUserAuthToken") ||
+    localStorage.getItem("user_auth_token") ||
+    localStorage.getItem("siteAuthToken") ||
+    localStorage.getItem("cloneUlapToken");
+  if (fallbackToken && !authContext.user_auth_token) {
+    authContext.user_auth_token = fallbackToken;
+  }
+
+  const selectedBiz = getSelectedBizStorage();
+  const cookie =
+    localStorage.getItem("siteUserCookie") ||
+    localStorage.getItem("user_cookie") ||
+    (selectedBiz?.cookie && String(selectedBiz.cookie)) ||
+    (selectedBiz?.biz?.cookie && String(selectedBiz.biz.cookie)) ||
+    (typeof document !== "undefined" ? document.cookie : "");
+  if (cookie) authContext.user_cookie = cookie;
+
+  const csrfToken =
+    localStorage.getItem("siteCsrfToken") || localStorage.getItem("csrf_token");
+  if (csrfToken) authContext.csrf_token = csrfToken;
+
+  const authHeaderName =
+    localStorage.getItem("siteAuthHeaderName") ||
+    localStorage.getItem("auth_header_name");
+  if (authHeaderName) authContext.auth_header_name = authHeaderName;
+
+  const csrfHeaderName =
+    localStorage.getItem("siteCsrfHeaderName") ||
+    localStorage.getItem("csrf_header_name");
+  if (csrfHeaderName) authContext.csrf_header_name = csrfHeaderName;
+
+  const extraHeaders =
+    parseStoredJson(localStorage.getItem("siteExtraHeaders")) ||
+    parseStoredJson(localStorage.getItem("extra_headers"));
+  if (extraHeaders && typeof extraHeaders === "object") {
+    authContext.extra_headers = extraHeaders;
+  }
+
+  return Object.keys(authContext).length ? authContext : null;
+}
+
 export async function sendToPythonBot(userMessage, signal = undefined) {
   try {
     const bizContext = getBizContext();
+    const authContext = getAuthContext();
     const payload = {
       message: userMessage,
       ...(bizContext && { bizContext }),
+      ...(authContext && { authContext }),
     };
 
     const response = await axios.post(PYTHON_BOT_CHAT_URL, payload, { signal });
@@ -76,6 +142,7 @@ export async function streamFromPythonBot(
   { signal, onToken, onDone } = {},
 ) {
   const bizContext = getBizContext();
+  const authContext = getAuthContext();
   const response = await fetch(
     PYTHON_BOT_CHAT_URL.replace(/\/api\/chat$/, "/api/chat/stream"),
     {
@@ -84,6 +151,7 @@ export async function streamFromPythonBot(
       body: JSON.stringify({
         message: userMessage,
         ...(bizContext && { bizContext }),
+        ...(authContext && { authContext }),
       }),
       signal,
     },

@@ -1,4 +1,5 @@
 import json
+import concurrent.futures
 import os
 import re
 import sys
@@ -62,6 +63,8 @@ ARTICLES_DB = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "
 
 # Global cache for articles database
 articles_cache = None
+knowledge_cache = None
+knowledge_cache_mtime = 0.0
 last_chart_context = None
 balance_context = None  # Track the last balance query for chart generation
 live_site_cache = None
@@ -197,6 +200,102 @@ def get_relevant_history(query, max_results=3):
     # Sort by relevance and return top results
     relevant.sort(key=lambda x: x['relevance'], reverse=True)
     return relevant[:max_results]
+
+
+def get_recent_inventory_answer(user_input, allow_company_fallback=False):
+    """Return a prior inventory answer when the same or similar request was already answered."""
+    load_conversation_store()
+    cleaned_query = normalize_text(strip_business_context_suffix(user_input))
+    query_tokens = set(tokenize(cleaned_query))
+    wants_motorcycles = "motorcycle" in cleaned_query or "motorcycles" in cleaned_query
+    inventory_markers = (
+        "inventory",
+        "stocked",
+        "current inventory",
+        "in stock",
+        "products are in stock",
+        "motorcycles are in stock",
+    )
+    motorcycle_markers = ("motorcycle", "cbr", "cb")
+    fallback_markers = ("widget", "gadget", "company_data.json", "your company name")
+
+    for exchange in reversed(conversation_history):
+        user_text = normalize_text(strip_business_context_suffix(exchange.get("user", "")))
+        ai_response = exchange.get("ai", "")
+        ai_text = ai_response if isinstance(ai_response, str) else str(ai_response)
+        lowered = ai_text.lower()
+        if not any(marker in lowered for marker in inventory_markers):
+            continue
+
+        is_company_fallback = any(marker in lowered for marker in fallback_markers)
+        if is_company_fallback and not allow_company_fallback:
+            continue
+
+        if wants_motorcycles:
+            if any(marker in lowered for marker in fallback_markers) and not any(
+                marker in lowered for marker in motorcycle_markers
+            ):
+                continue
+            if not any(marker in lowered for marker in motorcycle_markers):
+                continue
+
+        if cleaned_query and cleaned_query == user_text:
+            return ai_text.strip()
+
+        if query_tokens:
+            user_tokens = set(tokenize(user_text))
+            if len(query_tokens.intersection(user_tokens)) >= 2:
+                return ai_text.strip()
+
+        if "motorcycle" in cleaned_query and "motorcycle" in lowered:
+            return ai_text.strip()
+
+    return None
+
+
+def extract_motorcycle_only_response(text):
+    """Extract only motorcycle items from a mixed inventory response."""
+    value = str(text or "").strip()
+    if not value:
+        return value
+
+    section_match = re.search(
+        r"\*\*\s*Motorcycles\s*:\s*\*\*\s*(.*?)(?:\n\s*\*\*[^\n]+\*\*|\Z)",
+        value,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if section_match:
+        section = section_match.group(1)
+        bullets = re.findall(r"^\s*[*-]\s+.+$", section, flags=re.MULTILINE)
+        if bullets:
+            return "Motorcycles currently in inventory:\n\n" + "\n".join(bullets)
+
+    if "motorcycle" in value.lower():
+        lines = value.splitlines()
+        kept = []
+        for line in lines:
+            low = line.lower()
+            if "motorcycle" in low or re.search(r"\b(?:cb|cbr)\w*\b", low):
+                kept.append(line.strip())
+            elif re.match(r"^\s*[*-]\s+", line) and re.search(r"\b(?:cb|cbr)\w*\b", low):
+                kept.append(line.strip())
+        if kept:
+            bullets = [ln if re.match(r"^\s*[*-]\s+", ln) else f"* {ln}" for ln in kept]
+            return "Motorcycles currently in inventory:\n\n" + "\n".join(bullets)
+
+    return value
+
+
+def run_with_timeout(callable_fn, timeout_seconds=12):
+    """Run a blocking function and return None if it exceeds the timeout."""
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+    future = executor.submit(callable_fn)
+    try:
+        return future.result(timeout=timeout_seconds)
+    except concurrent.futures.TimeoutError:
+        return None
+    finally:
+        executor.shutdown(wait=False, cancel_futures=True)
 
 
 def build_context_reminder():
@@ -471,32 +570,161 @@ def search_articles(query, max_results=3):
 
 
 def load_knowledge():
+    global knowledge_cache, knowledge_cache_mtime
+
     if not os.path.exists(FILE_NAME):
         with open(FILE_NAME, "w") as f:
             json.dump({"knowledge": []}, f)
 
+    try:
+        current_mtime = os.path.getmtime(FILE_NAME)
+        if knowledge_cache is not None and knowledge_cache_mtime == current_mtime:
+            return knowledge_cache
+    except OSError:
+        current_mtime = 0.0
+
     with open(FILE_NAME, "r") as f:
-        return json.load(f)
+        data = json.load(f)
+
+    knowledge_cache = data
+    try:
+        knowledge_cache_mtime = os.path.getmtime(FILE_NAME)
+    except OSError:
+        knowledge_cache_mtime = 0.0
+
+    return data
 
 
 def save_knowledge(data):
+    global knowledge_cache, knowledge_cache_mtime
+
     with open(FILE_NAME, "w") as f:
         json.dump(data, f, indent=4)
+
+    knowledge_cache = data
+    try:
+        knowledge_cache_mtime = os.path.getmtime(FILE_NAME)
+    except OSError:
+        knowledge_cache_mtime = 0.0
 
 
 def add_knowledge(pattern, response):
     if not response.strip():
-        return 
+        return False
 
     data = load_knowledge()
 
-    data["knowledge"].append({
-        "pattern": pattern,
-        "response": response
-    })
+    normalized_pattern = normalize_text(pattern)
+    updated = False
+
+    for item in data.get("knowledge", []):
+        if normalize_text(item.get("pattern", "")) == normalized_pattern:
+            item["response"] = response
+            updated = True
+            break
+
+    if not updated:
+        data["knowledge"].append({
+            "pattern": pattern,
+            "response": response
+        })
 
     save_knowledge(data)
     print("Knowledge saved!")
+    return True
+
+
+def strip_business_context_suffix(text):
+    value = str(text or "").strip()
+    return re.sub(r"\s*\[current business:.*?\]\s*$", "", value, flags=re.IGNORECASE).strip()
+
+
+def extract_learning_instruction(user_input):
+    cleaned = strip_business_context_suffix(user_input)
+
+    patterns = [
+        r"^/(?:command_teach|comman_teach)\s+(.+?)\s*(?:\|+|=>|->|=|::)\s*(.+)$",
+        r"^(?:learn|remember)\s*:\s*(.+?)\s*(?:=>|->|=)\s*(.+)$",
+        r"^question\s*:\s*(.+?)\s+answer\s*:\s*(.+)$",
+        r"^when\s+i\s+ask\s+[\"']?(.+?)[\"']?\s*,?\s*(?:please\s+)?(?:answer|respond\s+with)\s+[\"']?(.+?)[\"']?$",
+    ]
+
+    for pattern in patterns:
+        match = re.match(pattern, cleaned, flags=re.IGNORECASE)
+        if match:
+            question = match.group(1).strip()
+            answer = match.group(2).strip()
+            if question and answer:
+                return question, answer
+
+    return None, None
+
+
+def extract_correction_answer(user_input):
+    cleaned = strip_business_context_suffix(user_input)
+    match = re.match(
+        r"^(?:the\s+)?(?:correct\s+)?answer\s*(?:is|:)\s*(.+)$",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        return None
+    return match.group(1).strip() or None
+
+
+def is_positive_feedback(user_input):
+    cleaned = normalize_text(strip_business_context_suffix(user_input))
+    if not cleaned:
+        return False
+    feedback_terms = {
+        "thanks",
+        "thank you",
+        "thats correct",
+        "that's correct",
+        "correct",
+        "got it",
+        "nice",
+        "great",
+        "awesome",
+        "perfect",
+    }
+    return cleaned in feedback_terms
+
+
+def handle_self_learning(user_input, history):
+    cleaned = strip_business_context_suffix(user_input)
+
+    if re.match(r"^/(?:command_teach|comman_teach)\b", cleaned, flags=re.IGNORECASE):
+        command_example = "/command_teach what is adonis favorite color | blue"
+        question, answer = extract_learning_instruction(cleaned)
+        if not question or not answer:
+            return (
+                "Teach format:\n"
+                f"{command_example}\n"
+                "Use | or => between question and answer."
+            )
+
+    question, answer = extract_learning_instruction(user_input)
+    if question and answer:
+        add_knowledge(question, answer)
+        return f"Got it. I learned this:\nQ: {question}\nA: {answer}"
+
+    correction = extract_correction_answer(user_input)
+    if correction and history:
+        last_question = strip_business_context_suffix(history[-1].get("user", ""))
+        if last_question and normalize_text(last_question) not in {"warm up model", "hello", "hi"}:
+            add_knowledge(last_question, correction)
+            return f"Thanks. I updated my answer for: {last_question}"
+
+    if is_positive_feedback(user_input) and history:
+        last_question = strip_business_context_suffix(history[-1].get("user", ""))
+        last_answer = history[-1].get("ai", "")
+        if isinstance(last_answer, str) and last_question and last_answer.strip():
+            if normalize_text(last_question) not in {"warm up model", "hello", "hi"}:
+                add_knowledge(last_question, last_answer.strip())
+                return "Noted. I will remember that answer for similar questions."
+
+    return None
 
 
 def similar(a, b):
@@ -505,7 +733,8 @@ def similar(a, b):
 
 def check_knowledge(user_input):
     data = load_knowledge()
-    normalized_input = normalize_text(user_input)
+    cleaned_input = strip_business_context_suffix(user_input)
+    normalized_input = normalize_text(cleaned_input)
 
     if not normalized_input:
         return None, []
@@ -520,7 +749,7 @@ def check_knowledge(user_input):
 
     for item in data["knowledge"]:
         # Use combined similarity (token + string)
-        score = combined_similarity(user_input, item["pattern"])
+        score = combined_similarity(cleaned_input, item["pattern"])
         best_matches.append((item, score))
 
     # If no matches at all, return empty
@@ -772,18 +1001,67 @@ def get_live_company_data(force_refresh=False):
     return data
 
 
-def get_live_gl_data(force_refresh=False):
+def get_live_gl_data(force_refresh=False, auth_context=None):
     """
     Fetch live General Ledger data from website data.
-    Attempts to extract GL data from scraped website content.
-    Falls back to sample data if website data unavailable.
+    Attempts to extract GL data from configured APIs and scraped website content.
     """
     global live_site_cache, live_site_cache_timestamp
     
     try:
+        config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config", "scraper_config.json")
+        full_config = {}
+        if os.path.exists(config_path):
+            with open(config_path, "r") as f:
+                full_config = json.load(f)
+
+        auth_token = None
+        auth_header_name = "x-access-tokens"
+        csrf_token = None
+        csrf_header_name = "X-CSRF-Token"
+        extra_headers = None
+        cookies = None
+
+        if isinstance(auth_context, str):
+            auth_token = auth_context
+        elif isinstance(auth_context, dict):
+            auth_token = auth_context.get("user_auth_token")
+            auth_header_name = auth_context.get("auth_header_name") or auth_header_name
+            csrf_token = auth_context.get("csrf_token")
+            csrf_header_name = auth_context.get("csrf_header_name") or csrf_header_name
+            extra_headers = auth_context.get("extra_headers") if isinstance(auth_context.get("extra_headers"), dict) else None
+            raw_cookie = auth_context.get("user_cookie")
+            cookies = parse_cookie_header(raw_cookie)
+
+        gl_report = full_config.get("general_ledger_report", {})
+        report_url = gl_report.get("url")
+        if SCRAPER_AVAILABLE and report_url:
+            report_scraper = WebScraper(
+                proxy=None,
+                auth_token=auth_token,
+                auth_header_name=auth_header_name,
+                cookies=cookies,
+                csrf_token=csrf_token,
+                csrf_header_name=csrf_header_name,
+                extra_headers=extra_headers,
+                config=gl_report,
+            )
+            report_payload = gl_report.get("api_default_body", {})
+            gl_report_data = report_scraper.fetch_json_api(
+                report_url,
+                method=gl_report.get("api_method", "POST"),
+                payload=report_payload,
+            )
+            if "error" not in gl_report_data:
+                return {
+                    'source': 'live_gl_report_api',
+                    'data': gl_report_data,
+                    'timestamp': datetime.now().isoformat()
+                }
+
         # Primary source: configured GL accounts API (/api/lib/acc).
         if SCRAPER_AVAILABLE:
-            scraper = get_company_scraper()
+            scraper = get_company_scraper(auth_context=auth_context)
             gl_accounts = scraper.fetch_general_ledger_accounts()
             if "error" not in gl_accounts:
                 return {
@@ -804,19 +1082,6 @@ def get_live_gl_data(force_refresh=False):
 
     except Exception as e:
         print(f"Error fetching live GL data: {e}")
-    
-    # Fallback to sample data
-    if os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'gl_sample_data.json')):
-        try:
-            with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'gl_sample_data.json'), 'r') as f:
-                sample_data = json.load(f)
-                return {
-                    'source': 'sample_data',
-                    'data': sample_data,
-                    'timestamp': datetime.now().isoformat()
-                }
-        except Exception as e:
-            print(f"Error loading sample GL data: {e}")
     
     return None
 
@@ -1009,6 +1274,13 @@ def handle_inventory_request(user_input, site_context=None, auth_token=None, aut
     # Let chart handler process chart/graph requests first
     if any(word in normalized_input for word in ["chart", "graph", "historical", "trend", "visual"]):
         return None
+    wants_motorcycles = "motorcycle" in normalized_input or "motorcycles" in normalized_input
+    asks_inventory_balance = (
+        bool(re.search(r"\bbalance\b.*\binventory\b", normalized_input))
+        or bool(re.search(r"\binventory\b.*\bbalance\b", normalized_input))
+        or "total inventory" in normalized_input
+        or "inventory total" in normalized_input
+    )
     inventory_triggers = [
         "inventory",
         "stock card",
@@ -1021,11 +1293,16 @@ def handle_inventory_request(user_input, site_context=None, auth_token=None, aut
 
     # Require at least one trigger and at least one intent/action word
     intent_words = ["what", "list", "show", "get", "current", "available", "find", "give"]
-    has_trigger = any(trigger in normalized_input for trigger in inventory_triggers)
+    text_for_trigger = f" {normalized_input} "
+    has_trigger = any(
+        (trigger == "sc" and re.search(r"\bsc\b", normalized_input) is not None)
+        or (trigger != "sc" and f" {trigger} " in text_for_trigger)
+        for trigger in inventory_triggers
+    )
     has_intent = any(word in normalized_input for word in intent_words)
 
     # Product-specific queries (even without explicit inventory trigger)
-    product_lookup_markers = ["product", "units", "balance", "stock", "click", "beat", "item"]
+    product_lookup_markers = ["product", "units", "stock", "click", "beat", "item"]
     has_product_lookup = any(marker in normalized_input for marker in product_lookup_markers)
 
     # Distinguish between broad list requests vs specific product lookup requests.
@@ -1056,9 +1333,25 @@ def handle_inventory_request(user_input, site_context=None, auth_token=None, aut
 
     if not ((has_trigger and has_intent) or should_handle_product_query):
         return None
+
+    cached_inventory_answer = get_recent_inventory_answer(
+        user_input,
+        allow_company_fallback=not asks_inventory_balance,
+    )
+    if cached_inventory_answer:
+        if wants_motorcycles:
+            return extract_motorcycle_only_response(cached_inventory_answer)
+        return cached_inventory_answer
     
     # Try web scraping first (primary data source)
     if not SCRAPER_AVAILABLE:
+        if asks_inventory_balance:
+            return (
+                "Live inventory balance was not accessed. "
+                "Web scraper dependencies are unavailable in the current runtime. "
+                "Please run with the configured server environment and reconnect account to fetch live balance data."
+            )
+
         # Fallback to company_data.json only if web scraping not available
         company_data = load_company_data()
         if company_data and 'inventory' in company_data:
@@ -1106,11 +1399,81 @@ def handle_inventory_request(user_input, site_context=None, auth_token=None, aut
     scraper = get_company_scraper(auth_context=resolved_auth_context)
 
     # 1) Preferred path: aggregate all products from /api/lib/prod
-    result_multi = scraper.fetch_all_products_with_stock()
+    result_multi = run_with_timeout(scraper.fetch_all_products_with_stock, timeout_seconds=12)
+    if result_multi is None:
+        if asks_inventory_balance:
+            return (
+                "Live inventory balance was not accessed. "
+                "The live inventory API timed out. Please reconnect account and try again."
+            )
+
+        company_data = load_company_data()
+        if company_data and 'inventory' in company_data:
+            inventory_items = company_data['inventory']
+            total = len(inventory_items)
+            company_name = company_data.get('company_name', 'Company Data')
+            last_updated = company_data.get('last_updated', 'N/A')
+
+            lines = []
+            for idx, item in enumerate(inventory_items[:20], 1):
+                product = item.get('product_name', 'Unknown')
+                qty = item.get('quantity', 0)
+                unit = item.get('unit', 'units')
+                location = item.get('location', 'N/A')
+                status = item.get('status', '')
+                lines.append(f"{idx}. {product}: {qty} {unit} @ {location} [{status}]")
+
+            more_note = f"\n...and {total - 20} more items." if total > 20 else ""
+            return (
+                f"Current inventory from {company_name} (Last updated: {last_updated}):\n"
+                f"Total products: {total}\n\n"
+                + "\n".join(lines) + more_note
+                + "\n\n⚠️ Live inventory lookup is taking too long right now, so I returned cached data instead."
+            )
+
+        return (
+            "I couldn't reach the live inventory source quickly enough. "
+            "Please try again or reconnect the data source."
+        )
+
     if "error" not in result_multi:
         products = result_multi.get("products", [])
         total = len(products)
         source_url = result_multi.get("source_url", "clone.ulap.biz")
+
+        if products and asks_inventory_balance:
+            normalized_products = []
+            for item in products:
+                qty = item.get("quantity", 0)
+                try:
+                    qty = float(qty)
+                except (TypeError, ValueError):
+                    qty = 0.0
+                normalized_products.append({**item, "quantity": qty})
+
+            total_units = round(sum(p["quantity"] for p in normalized_products), 2)
+            in_stock_count = sum(1 for p in normalized_products if p["quantity"] > 0)
+            out_of_stock_count = sum(1 for p in normalized_products if p["quantity"] <= 0)
+            top_items = sorted(
+                normalized_products,
+                key=lambda x: x.get("quantity", 0),
+                reverse=True,
+            )[:5]
+            top_lines = [
+                f"{idx + 1}. {p.get('product_name', 'Unknown')} ({p.get('product_code', '')}) - {p.get('quantity', 0)} units"
+                for idx, p in enumerate(top_items)
+            ]
+
+            return (
+                "Live inventory balance summary:\n"
+                f"- Data source: {source_url}\n"
+                f"- Total products: {len(normalized_products)}\n"
+                f"- Total units on hand: {total_units}\n"
+                f"- In stock products: {in_stock_count}\n"
+                f"- Out of stock products: {out_of_stock_count}\n\n"
+                "Top products by units:\n"
+                + ("\n".join(top_lines) if top_lines else "No products found.")
+            )
 
         # Inventory management analytics intents
         ask_low_stock = any(term in normalized_input for term in ["low stock", "critical stock", "reorder"])
@@ -1267,7 +1630,13 @@ def handle_inventory_request(user_input, site_context=None, auth_token=None, aut
         )
 
     # 2) Fallback: single-product stock-card endpoint
-    result = scraper.scrape_inventory("company_website")
+    result = run_with_timeout(lambda: scraper.scrape_inventory("company_website"), timeout_seconds=12)
+    if result is None:
+        return (
+            "I couldn't reach the live inventory source quickly enough. "
+            "Please try again or reconnect the data source."
+        )
+
     if "error" not in result:
         products = result.get("products", [])
         total = result.get("total_products", len(products))
@@ -1302,6 +1671,12 @@ def handle_inventory_request(user_input, site_context=None, auth_token=None, aut
 
     company_data = load_company_data()
     if company_data and 'inventory' in company_data:
+        if asks_inventory_balance:
+            return (
+                "Live inventory balance was not accessed due to upstream authentication/data access failure."
+                + (f"\n\nDiagnostics:{diagnostics}" if diagnostics else "")
+            )
+
         inventory_items = company_data['inventory']
         total = len(inventory_items)
         company_name = company_data.get('company_name', 'Company Data')
@@ -1896,49 +2271,62 @@ def handle_balance_request(user_input, auth_context=None):
     
     # Handle General Ledger balance queries
     if is_gl_query or (not is_stock_query and is_balance_query):
-        # Try web scraping first, then fallback to gl_sample_data.json, then company_data.json as last resort
-        if os.path.exists(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'gl_sample_data.json')):
-            try:
-                with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'gl_sample_data.json'), 'r') as f:
-                    gl_data = json.load(f)
-                
-                if 'samples' in gl_data and 'annual_trend' in gl_data['samples']:
-                    trend_data = gl_data['samples']['annual_trend']
-                    rep = trend_data.get('rep', [])
-                    
-                    if rep:
-                        # Get the latest balance
-                        latest_balance = rep[-1]['runBal']
-                        first_date = rep[0]['YrMo']
-                        last_date = rep[-1]['YrMo']
-                        num_periods = len(rep)
-                        
-                        # Format balance for readability
-                        if latest_balance >= 1_000_000:
-                            balance_str = f"{latest_balance / 1_000_000:.1f} million"
-                        else:
-                            balance_str = f"{latest_balance:,.2f}"
-                        
-                        # Generate dynamic response
-                        response = (
-                            f"The current General Ledger running balance is {balance_str}. "
-                            f"This is based on our sample data spanning {first_date} to {last_date} "
-                            f"across {num_periods} transaction periods. "
-                            f"Would you like me to generate a chart showing how this balance has evolved over time?"
-                        )
-                        
-                        # Set context for subsequent chart generation
-                        balance_context = {
-                            'data_source': 'general_ledger',
-                            'balance': latest_balance,
-                            'date_range': f"{first_date} to {last_date}",
-                            'periods': num_periods
-                        }
-                        
-                        return response
-            except Exception as e:
-                print(f"Error loading GL balance data: {e}")
-                return None
+        try:
+            live_gl = get_live_gl_data(force_refresh=False, auth_context=auth_context)
+            if not live_gl:
+                return (
+                    "Live General Ledger balance was not accessed. "
+                    "Please reconnect the logged-in business account and try again."
+                )
+
+            payload = live_gl.get('data', {})
+            if isinstance(payload, dict):
+                accounts = payload.get('accounts') or payload.get('items') or payload.get('data') or payload.get('rep') or []
+            elif isinstance(payload, list):
+                accounts = payload
+            else:
+                accounts = []
+
+            def _to_number(value):
+                try:
+                    if isinstance(value, str):
+                        value = value.replace(',', '').strip()
+                    return float(value)
+                except Exception:
+                    return None
+
+            totals = []
+            for row in accounts if isinstance(accounts, list) else []:
+                if not isinstance(row, dict):
+                    continue
+                for key in ['runBal', 'balance', 'bal', 'endingBalance', 'endBal', 'tBal']:
+                    if key in row:
+                        num = _to_number(row.get(key))
+                        if num is not None:
+                            totals.append(num)
+                            break
+
+            if totals:
+                latest_balance = totals[-1]
+                if abs(latest_balance) >= 1_000_000:
+                    balance_str = f"{latest_balance / 1_000_000:.1f} million"
+                else:
+                    balance_str = f"{latest_balance:,.2f}"
+
+                return (
+                    f"The current General Ledger balance from live business data is {balance_str}."
+                )
+
+            return (
+                "Live General Ledger data was accessed, but a balance field was not present in the current payload. "
+                "Please verify that the selected business/API endpoint returns running balances."
+            )
+        except Exception as e:
+            print(f"Error loading live GL balance data: {e}")
+            return (
+                "Live General Ledger balance could not be retrieved right now. "
+                "Please reconnect and try again."
+            )
     
     # Handle stock card balance queries
     if is_stock_query:
@@ -1952,8 +2340,7 @@ def handle_balance_request(user_input, auth_context=None):
     if is_balance_query and not is_gl_query and not is_stock_query:
         return (
             "I can help you with balance information! Please specify which data source you'd like "
-            "(e.g., General Ledger, Stock Card, or another data type). "
-            "Currently, I have General Ledger sample data available."
+            "(e.g., General Ledger, Stock Card, or another data type)."
         )
     
     return None
@@ -2382,11 +2769,20 @@ def respond(user_input, site_context=None, auth_context=None):
     load_conversation_store()
     extract_context_from_input(user_input)
 
+    learning_response = handle_self_learning(user_input, conversation_history)
+    if learning_response:
+        return learning_response
+
     normalized = normalize_text(user_input)
 
     connection_status = get_connection_status_response(user_input)
     if connection_status:
         return connection_status
+
+    # Handle greetings early so context tags don't trigger unrelated learned/LLM answers.
+    greeting_response = handle_greeting_request(strip_business_context_suffix(user_input))
+    if greeting_response:
+        return greeting_response
 
     # Charts/graphs always use the structured handler - frontend needs the data format
     is_chart_request = any(w in normalized for w in ["chart", "graph", "visual", "movement history"])
@@ -2402,7 +2798,7 @@ def respond(user_input, site_context=None, auth_context=None):
                 chart = handle_chart_from_balance_context()
                 if chart:
                     return chart
-        live_chart = handle_chart_request(user_input)
+        live_chart = handle_chart_request(user_input, auth_context=auth_context)
         if live_chart:
             return live_chart
         graph = handle_graph_request(user_input)
@@ -2413,6 +2809,31 @@ def respond(user_input, site_context=None, auth_context=None):
     branches = handle_branches_request(user_input)
     if branches:
         return branches
+
+    # Fast-path deterministic business queries before knowledge / Ollama.
+    inventory_response = handle_inventory_request(user_input, site_context=site_context, auth_context=auth_context)
+    if inventory_response:
+        return inventory_response
+
+    scrape_response = handle_scrape_request(user_input)
+    if scrape_response:
+        return scrape_response
+
+    balance_response = handle_balance_request(user_input, auth_context=auth_context)
+    if balance_response:
+        return balance_response
+
+    math_answer = try_math(user_input)
+    if math_answer:
+        return math_answer
+
+    live_site_response = answer_from_live_site(user_input, site_context=site_context)
+    if live_site_response:
+        return live_site_response
+
+    stored_response, context_matches = check_knowledge(user_input)
+    if stored_response:
+        return stored_response
 
     # --- Primary path: Ollama AI ---
     if OLLAMA_AVAILABLE:
@@ -2436,34 +2857,6 @@ def respond(user_input, site_context=None, auth_context=None):
             chart_response = handle_chart_from_balance_context()
             if chart_response:
                 return chart_response
-
-    greeting_response = handle_greeting_request(user_input)
-    if greeting_response:
-        return greeting_response
-
-    inventory_response = handle_inventory_request(user_input, site_context=site_context)
-    if inventory_response:
-        return inventory_response
-
-    scrape_response = handle_scrape_request(user_input)
-    if scrape_response:
-        return scrape_response
-
-    balance_response = handle_balance_request(user_input)
-    if balance_response:
-        return balance_response
-
-    math_answer = try_math(user_input)
-    if math_answer:
-        return math_answer
-
-    live_site_response = answer_from_live_site(user_input, site_context=site_context)
-    if live_site_response:
-        return live_site_response
-
-    stored_response, context_matches = check_knowledge(user_input)
-    if stored_response:
-        return stored_response
 
     relevant_articles = search_articles(user_input, max_results=3)
     if relevant_articles:

@@ -8,6 +8,7 @@ import sys
 import json
 import os
 from io import StringIO
+from contextlib import redirect_stdout
 
 # Suppress stdout during imports
 old_stdout = sys.stdout
@@ -22,7 +23,24 @@ finally:
     sys.stdout = old_stdout
 
 def main():
-    def generate_response(user_message):
+    def is_access_sensitive_message(user_message):
+        normalized = str(user_message or "").lower()
+        return any(
+            term in normalized
+            for term in [
+                "general ledger",
+                "gl balance",
+                "balance",
+                "stock card",
+                "inventory",
+                "current biz",
+                "selected biz",
+                "live data",
+                "access",
+            ]
+        )
+
+    def generate_response(user_message, auth_context=None):
         # Extract context from user input (optional - may not exist in main.py)
         try:
             extract_context_from_input(user_message)
@@ -30,12 +48,17 @@ def main():
             pass
 
         # Get response from the chatbot
-        response = respond(user_message)
+        response = respond(user_message, auth_context=auth_context)
 
         if response:
             result = response
+        elif is_access_sensitive_message(user_message):
+            result = (
+                "I can't access the live business data right now. "
+                "Please reconnect the logged-in business account and try again."
+            )
         else:
-            result = "I don't know how to answer that. Feel free to teach me!"
+            result = "Sorry, Something went wrong. Please try again"
 
         # Store conversation context (optional - may not exist in main.py)
         try:
@@ -59,12 +82,14 @@ def main():
                 continue
 
             message = str(payload.get("message", "")).strip()
+            auth_context = payload.get("auth_context")
             if not message:
                 print(json.dumps({"success": False, "error": "Message is required"}), flush=True)
                 continue
 
             try:
-                result = generate_response(message)
+                with redirect_stdout(sys.stderr):
+                    result = generate_response(message, auth_context=auth_context)
                 print(json.dumps({"success": True, "response": result}), flush=True)
             except Exception as e:
                 print(json.dumps({"success": False, "error": str(e)}), flush=True)
