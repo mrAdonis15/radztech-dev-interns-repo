@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { requestSubGroups } from "../api/subLists";
 
 const GROUPS_STORAGE_KEY = "dev-interns-star-rating-groups";
@@ -15,12 +15,14 @@ const defaultCategoryGroups = {
   [defaultGroupId]: {
     id: defaultGroupId,
     label: "Interns",
-    description: "Loaded from sub1.",
+    description: "",
     itemLabelSingular: "Intern",
     itemLabelPlural: "Interns",
     categories: [],
   },
 };
+
+const DESCRIPTION_PLACEHOLDERS = new Set(["loaded from sub1.", "loaded from sub_list."]);
 
 const createUniqueId = (prefix) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -137,6 +139,30 @@ const normalizeEvaluationResult = (evaluationResult, category) => {
         : Number(
             (ratings.reduce((sum, entry) => sum + entry.rating, 0) / ratings.length).toFixed(1)
           ),
+    evaluator:
+      evaluationResult.evaluator &&
+      typeof evaluationResult.evaluator === "object" &&
+      typeof evaluationResult.evaluator.id === "string"
+        ? {
+            id: evaluationResult.evaluator.id,
+            name:
+              typeof evaluationResult.evaluator.name === "string"
+                ? evaluationResult.evaluator.name
+                : "",
+            code:
+              typeof evaluationResult.evaluator.code === "string"
+                ? evaluationResult.evaluator.code
+                : "",
+            subtitle:
+              typeof evaluationResult.evaluator.subtitle === "string"
+                ? evaluationResult.evaluator.subtitle
+                : "",
+            location:
+              typeof evaluationResult.evaluator.location === "string"
+                ? evaluationResult.evaluator.location
+                : "",
+          }
+        : null,
     ratings,
     essayResponses,
   };
@@ -172,7 +198,11 @@ const normalizeCategory = (category) => ({
 const normalizeGroup = (group, fallbackId) => ({
   id: typeof group?.id === "string" ? group.id : fallbackId,
   label: typeof group?.label === "string" ? group.label : "",
-  description: typeof group?.description === "string" ? group.description : "",
+  description:
+    typeof group?.description === "string" &&
+    !DESCRIPTION_PLACEHOLDERS.has(group.description.trim().toLowerCase())
+      ? group.description
+      : "",
   itemLabelSingular:
     typeof group?.itemLabelSingular === "string" && group.itemLabelSingular.trim()
       ? group.itemLabelSingular
@@ -353,11 +383,16 @@ export default function useRatings() {
     return nextActiveGroupId;
   };
 
-  if (typeof window !== "undefined") {
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
     const authToken = window.localStorage.getItem("authToken");
+    let isActive = true;
 
     requestSubGroups(authToken).then((remoteGroups) => {
-      if (!remoteGroups || Object.keys(remoteGroups).length === 0) {
+      if (!isActive || !remoteGroups || Object.keys(remoteGroups).length === 0) {
         return;
       }
 
@@ -374,7 +409,11 @@ export default function useRatings() {
         return nextGroups;
       });
     });
-  }
+
+    return () => {
+      isActive = false;
+    };
+  }, [activeGroupId]);
 
   const handleSaveEvaluation = (categoryId, evaluationResult) => {
     const sanitizedEvaluationResult = normalizeEvaluationResult(evaluationResult);
