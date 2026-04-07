@@ -3,11 +3,6 @@
     {
       "user": "can you give me the current balance?\n[Current Business: Honda Ace City Corporation]",
       "ai": "The current General Ledger running balance is 336.1 million. This is based on our sample data spanning 2026-01 to 2026-04 across 12 transaction periods. Would you like me to generate a chart showing how this balance has evolved over time?",
-      "timestamp": 1775526464.264873
-    },
-    {
-      "user": "can you give me the current balance?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "The current General Ledger running balance is 336.1 million. This is based on our sample data spanning 2026-01 to 2026-04 across 12 transaction periods. Would you like me to generate a chart showing how this balance has evolved over time?",
       "timestamp": 1775526602.342554
     },
     {
@@ -99,6 +94,11 @@
       "user": "give me the balance of the general ledger\n[Current Business: Honda Ace City Corporation]",
       "ai": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
       "timestamp": 1775529630.1237388
+    },
+    {
+      "user": "warm up model",
+      "ai": "Sorry, Something went wrong. Please try again",
+      "timestamp": 1775534499.8260438
     }
   ],
   "context": {

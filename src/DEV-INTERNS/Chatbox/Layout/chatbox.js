@@ -51,7 +51,7 @@ import { useChatboxTheme } from "./useChatboxTheme.js";
 import ChatMessage from "./ChatMessage.js";
 import ChatInputArea from "./ChatInputArea.js";
 
-export default function Chatbox({ defaultOpen = false }) {
+export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
   const rootRef = useRef(null);
   const bodyRef = useRef(null);
   const inputRef = useRef(null);
@@ -122,16 +122,23 @@ export default function Chatbox({ defaultOpen = false }) {
     setViewingHistoryId(`session-${trimmedSid}`);
     const localHistory = loadHistory();
     const localItem = localHistory.find(
-      (h) => (h.sessionId && h.sessionId === trimmedSid) || h.id === trimmedSid || h.id === `session-${trimmedSid}`,
+      (h) =>
+        (h.sessionId && h.sessionId === trimmedSid) ||
+        h.id === trimmedSid ||
+        h.id === `session-${trimmedSid}`,
     );
     const localMessages =
-      localItem?.messages && Array.isArray(localItem.messages) && localItem.messages.length > 0
+      localItem?.messages &&
+      Array.isArray(localItem.messages) &&
+      localItem.messages.length > 0
         ? localItem.messages
         : null;
     if (localMessages && localMessages.length > 0) {
       setMessages(normalizeToDisplayMessages(localMessages));
       const hasChart = localMessages.some((m) => m.type === "chart");
-      const hasImg = localMessages.some((m) => m.type === "img" && m.data?.images?.length);
+      const hasImg = localMessages.some(
+        (m) => m.type === "img" && m.data?.images?.length,
+      );
       if (hasChart || hasImg) setIsExpanded(true);
       return;
     }
@@ -140,7 +147,9 @@ export default function Chatbox({ defaultOpen = false }) {
         if (apiMessages && apiMessages.length > 0) {
           setMessages(normalizeToDisplayMessages(apiMessages));
           const hasChart = apiMessages.some((m) => m.type === "chart");
-          const hasImg = apiMessages.some((m) => m.type === "img" && m.data?.images?.length);
+          const hasImg = apiMessages.some(
+            (m) => m.type === "img" && m.data?.images?.length,
+          );
           if (hasChart || hasImg) setIsExpanded(true);
         }
       })
@@ -155,7 +164,11 @@ export default function Chatbox({ defaultOpen = false }) {
     if (!hasUserMessage || viewingHistoryId != null) return;
     const title = getTitleFromMessages(messages);
     if (currentConversationId) {
-      updateHistoryItem(currentConversationId, messages, sessionId ?? undefined);
+      updateHistoryItem(
+        currentConversationId,
+        messages,
+        sessionId ?? undefined,
+      );
       setHistory(loadHistory());
       if (sessionId) {
         saveChatHistory(sessionId, { title, messages }).catch(() => {});
@@ -300,6 +313,7 @@ export default function Chatbox({ defaultOpen = false }) {
       messages,
       controller.signal,
       sessionId ?? undefined,
+      aiProvider,
     )
       .then((reply) => {
         const isChart = reply && reply.type === "chart";
@@ -386,22 +400,31 @@ export default function Chatbox({ defaultOpen = false }) {
     if (sid) {
       fetchChatHistoryBySessionId(sid)
         .then((apiMessages) => {
-          const toShow = apiMessages?.length > 0 ? apiMessages : item.messages || [];
+          const toShow =
+            apiMessages?.length > 0 ? apiMessages : item.messages || [];
           setMessages(normalizeToDisplayMessages(toShow));
           const hasChart = (toShow || []).some((m) => m.type === "chart");
-          const hasImg = (toShow || []).some((m) => m.type === "img" && m.data?.images?.length);
+          const hasImg = (toShow || []).some(
+            (m) => m.type === "img" && m.data?.images?.length,
+          );
           if (hasChart || hasImg) setIsExpanded(true);
         })
         .catch(() => {
           setMessages(normalizeToDisplayMessages(item.messages || []));
-          const hasChart = (item.messages || []).some((m) => m.type === "chart");
-          const hasImg = (item.messages || []).some((m) => m.type === "img" && m.data?.images?.length);
+          const hasChart = (item.messages || []).some(
+            (m) => m.type === "chart",
+          );
+          const hasImg = (item.messages || []).some(
+            (m) => m.type === "img" && m.data?.images?.length,
+          );
           if (hasChart || hasImg) setIsExpanded(true);
         });
     } else {
       setMessages(normalizeToDisplayMessages(item.messages || []));
       const hasChart = (item.messages || []).some((m) => m.type === "chart");
-      const hasImg = (item.messages || []).some((m) => m.type === "img" && m.data?.images?.length);
+      const hasImg = (item.messages || []).some(
+        (m) => m.type === "img" && m.data?.images?.length,
+      );
       if (hasChart || hasImg) setIsExpanded(true);
     }
   };
@@ -422,7 +445,9 @@ export default function Chatbox({ defaultOpen = false }) {
           .map((item, i) => mapServerHistoryItem(item, i))
           .filter(Boolean);
         if (serverItems.length === 0) return;
-        const bySession = new Map(serverItems.map((h) => [h.sessionId || h.id, h]));
+        const bySession = new Map(
+          serverItems.map((h) => [h.sessionId || h.id, h]),
+        );
         const merged = [...serverItems];
         local.forEach((item) => {
           const sid = item.sessionId || item.id;

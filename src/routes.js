@@ -39,6 +39,7 @@ import PFContactUs from "./BD-INTERNS/Product-Finder/ContactUs/ContactUs";
 import PaymentComplete from "./BD-INTERNS/Product-Finder/PaymentComplete/PaymentComplete";
 
 const ChatboxPage = () => <Chatbox defaultOpen />;
+const PythonPrototypePage = () => <Chatbox defaultOpen aiProvider="python" />;
 
 const routes = [
   {
@@ -57,6 +58,11 @@ const routes = [
     path: "/Chatbox",
     element: ChatboxLayout,
     children: [{ index: true, element: ChatboxPage }],
+  },
+  {
+    path: "/PythonPrototypeChatbot",
+    element: ChatboxLayout,
+    children: [{ index: true, element: PythonPrototypePage }],
   },
   {
     path: "/",
@@ -114,7 +120,7 @@ const routes = [
         path: "/sheet",
         element: Sheets,
       },
-    
+
       {
         path: "/docs",
         element: Docs,
