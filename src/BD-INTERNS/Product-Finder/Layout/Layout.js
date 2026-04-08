@@ -1,7 +1,7 @@
 import React from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { Box, makeStyles } from "@material-ui/core";
-import UniversalNavbar from "src/BD-INTERNS/UniversalNavbar/UniversalNavbar";
+import UniversalNavbar from "../../UniversalNavbar/UniversalNavbar";
 import "./Layout.css";
 
 const useStyles = makeStyles((theme) => ({

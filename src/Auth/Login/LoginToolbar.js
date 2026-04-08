@@ -121,7 +121,7 @@ class LoginToolbar extends Component {
       pathname.startsWith("/Chatbox") ||
       pathname.startsWith("/ChatboxGC") ||
       pathname.startsWith("/AGR") ||
-      pathname.startsWith("/StarRating");
+      pathname.startsWith("/Evaluation");
 
     return (
       <AppBar position="fixed" className="login-toolbar-appbar">

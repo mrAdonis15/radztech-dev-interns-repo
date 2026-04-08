@@ -1,8 +1,8 @@
 import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
-import Ulap from 'src/components/Ulap/Ulap';
-import Interns from 'src/components/Interns/Interns';
+import Ulap from '../../components/Ulap/Ulap';
+import Interns from '../../components/Interns/Interns';
 
 const DefaultLayout = () => {
   const location = useLocation();
