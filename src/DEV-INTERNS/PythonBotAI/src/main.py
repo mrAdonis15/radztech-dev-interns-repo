@@ -2585,12 +2585,38 @@ def handle_graph_request(user_input):
     }
 
 
-def build_system_prompt(live_context=""):
-    """Build the Ollama system prompt from the company knowledge base + optional live data."""
-    system = (
-        "You are a concise business assistant. "
-        "Answer briefly and directly."
-    )
+def build_system_prompt(live_context="", conversation_style="normal"):
+    """Build the Ollama system prompt based on conversation style.
+    
+    Args:
+        live_context: Optional live business data context
+        conversation_style: One of 'formal', 'normal', 'casual'
+    
+    Returns:
+        System prompt string tailored to the conversation style
+    """
+    # Define style-specific system prompts
+    STYLE_PROMPTS = {
+        "formal": (
+            "You are a professional business assistant with expertise in corporate operations. "
+            "Provide detailed, well-structured responses using formal language and professional terminology. "
+            "Address the user respectfully and maintain a sophisticated tone throughout the conversation."
+        ),
+        "normal": (
+            "You are a concise business assistant. "
+            "Answer briefly and directly with clear, professional language."
+        ),
+        "casual": (
+            "You are a friendly and approachable business assistant. "
+            "Use conversational language, feel free to use contractions, and keep a warm tone. "
+            "Explain things in an easy-to-understand way while still being helpful."
+        ),
+    }
+    
+    # Get the appropriate prompt, default to 'normal' if invalid style
+    style = conversation_style.lower() if conversation_style else "normal"
+    system = STYLE_PROMPTS.get(style, STYLE_PROMPTS["normal"])
+    
     if live_context:
         system += " Context: " + live_context[:min(400, OLLAMA_LIVE_CONTEXT_MAX_CHARS)]
     return system
@@ -2726,8 +2752,15 @@ def fetch_relevant_live_data(user_input, auth_context=None):
     return "\n\n".join(context_parts)
 
 
-def ollama_respond(user_input, live_context="", history=None):
-    """Send user input to the local Ollama model and return the response."""
+def ollama_respond(user_input, live_context="", history=None, conversation_style="normal"):
+    """Send user input to the local Ollama model and return the response.
+    
+    Args:
+        user_input: The user's message
+        live_context: Optional live business data context
+        history: Optional conversation history
+        conversation_style: One of 'formal', 'normal', 'casual'
+    """
     if not OLLAMA_AVAILABLE:
         print("[Ollama] OLLAMA_AVAILABLE is False, returning None", file=sys.stderr)
         return None
@@ -2735,7 +2768,7 @@ def ollama_respond(user_input, live_context="", history=None):
     import urllib.request
     import urllib.error
     
-    system_prompt = build_system_prompt(live_context)
+    system_prompt = build_system_prompt(live_context, conversation_style)
     
     # Build full prompt: system + context + user question
     # Format: "System...\n\nContext: ...\n\nQuestion: user input"
@@ -2831,7 +2864,7 @@ def ollama_respond(user_input, live_context="", history=None):
     return None
 
 
-def respond(user_input, site_context=None, auth_context=None):
+def respond(user_input, site_context=None, auth_context=None, conversation_style="normal"):
     global balance_context, conversation_history, extracted_context
 
     load_conversation_store()
@@ -2911,7 +2944,7 @@ def respond(user_input, site_context=None, auth_context=None):
         if should_fetch_live_context(user_input):
             live_context = fetch_relevant_live_data(user_input, auth_context=auth_context)
         print(f"[DEBUG] Calling ollama_respond() with input={user_input[:30]}...", file=sys.stderr)
-        ollama_answer = ollama_respond(user_input, live_context=live_context, history=conversation_history)
+        ollama_answer = ollama_respond(user_input, live_context=live_context, history=conversation_history, conversation_style=conversation_style)
         print(f"[DEBUG] ollama_respond returned: {str(ollama_answer)[:50] if ollama_answer else 'None'}", file=sys.stderr)
         if ollama_answer:
             return ollama_answer

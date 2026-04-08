@@ -5,6 +5,8 @@ import InputBase from "@material-ui/core/InputBase";
 import SendIcon from "@material-ui/icons/Send";
 import StopIcon from "@material-ui/icons/Stop";
 import EmojiEmotionsIcon from "@material-ui/icons/EmojiEmotions";
+import Select from "@material-ui/core/Select";
+import MenuItem from "@material-ui/core/MenuItem";
 import EmojiPicker from "emoji-picker-react";
 import ulapLogo from "../Assets/ulap-biz-logo.png";
 
@@ -23,6 +25,8 @@ export default function ChatInputArea({
   themeProps,
   isExpanded = false,
   placeholder = "Ask the chatbot",
+  conversationStyle = "normal",
+  onConversationStyleChange,
 }) {
   const {
     showThemePicker,
@@ -36,6 +40,7 @@ export default function ChatInputArea({
 
   // Added state for hover tracking on the theme toggle
   const [isHoveringTheme, setIsHoveringTheme] = useState(false);
+  const [isHoveringStyle, setIsHoveringStyle] = useState(false);
 
   return (
     <div className="chat-input-container">
@@ -83,6 +88,57 @@ export default function ChatInputArea({
               minRows={1}
               maxRows={8}
             />
+          </div>
+
+          {/* Theme Toggle */}
+          <div
+            className="chat-input-theme-wrap"
+            style={{ position: "relative" }}
+          >
+            <div
+              style={{ position: "relative", display: "inline-block" }}
+              onMouseEnter={() => setIsHoveringStyle(true)}
+              onMouseLeave={() => setIsHoveringStyle(false)}
+            >
+              <Select
+                value={conversationStyle}
+                onChange={(e) => {
+                  if (onConversationStyleChange) {
+                    onConversationStyleChange(e.target.value);
+                  }
+                }}
+                style={{
+                  fontSize: "12px",
+                  height: "40px",
+                  padding: "0 8px",
+                }}
+              >
+                <MenuItem value="formal">Formal</MenuItem>
+                <MenuItem value="normal">Normal</MenuItem>
+                <MenuItem value="casual">Casual</MenuItem>
+              </Select>
+              {isHoveringStyle && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "-25px",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    background: "rgba(0, 0, 0, 0.8)",
+                    color: "white",
+                    padding: "4px 8px",
+                    borderRadius: 9,
+                    fontSize: "12px",
+                    whiteSpace: "nowrap",
+                    zIndex: 10,
+                    pointerEvents: "none",
+                    fontFamily: "Poppins",
+                  }}
+                >
+                  conversation style
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Theme Toggle */}

@@ -3,16 +3,6 @@
     {
       "user": "can you give me the balance of the general ledger\n[Current Business: Honda Ace City Corporation]",
       "ai": "I recognized this as a General Ledger data request, but I could not fetch account rows right now. Please verify the site token/cookie and try again.",
-      "timestamp": 1775547925.3977118
-    },
-    {
-      "user": "can you give me the balance of the general ledger\n[Current Business: Honda Ace City Corporation]",
-      "ai": "I recognized this as a General Ledger data request, but I could not fetch account rows right now. Please verify the site token/cookie and try again.",
-      "timestamp": 1775548642.2789812
-    },
-    {
-      "user": "can you give me the balance of the general ledger\n[Current Business: Honda Ace City Corporation]",
-      "ai": "I recognized this as a General Ledger data request, but I could not fetch account rows right now. Please verify the site token/cookie and try again.",
       "timestamp": 1775548838.996373
     },
     {
@@ -99,6 +89,16 @@
       "user": "test",
       "ai": "Sorry, Something went wrong. Please try again",
       "timestamp": 1775615101.870173
+    },
+    {
+      "user": "can you give me the balance of the general ledger\n[Current Business: Honda Ace City Corporation]",
+      "ai": "General Ledger data retrieved from https://clone.ulap.biz/api/lib/acc.\nTotal accounts: 228\n\n1. Unknown Account\n2. Unknown Account\n3. Unknown Account\n4. Unknown Account\n5. Unknown Account\n6. Unknown Account\n7. Unknown Account\n8. Unknown Account\n9. Unknown Account\n10. Unknown Account\n11. Unknown Account\n12. Unknown Account\n...and 216 more accounts.",
+      "timestamp": 1775620478.033908
+    },
+    {
+      "user": "can you give me the balance of the general ledger\n[Current Business: Honda Ace City Corporation]",
+      "ai": "I recognized this as a General Ledger data request, but I could not fetch account rows right now. Please verify the site token/cookie and try again.",
+      "timestamp": 1775620547.138957
     }
   ],
   "context": {

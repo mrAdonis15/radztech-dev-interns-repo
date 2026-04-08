@@ -75,6 +75,7 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
   const [modalSearchQuery, setModalSearchQuery] = useState("");
   const [menuChatsCollapsed, setMenuChatsCollapsed] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [conversationStyle, setConversationStyle] = useState("normal");
 
   const theme = useChatboxTheme(rootRef);
   const chatBrandName =
@@ -333,6 +334,7 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
       controller.signal,
       sessionId ?? undefined,
       aiProvider,
+      conversationStyle,
     )
       .then((reply) => {
         const isChart = reply && reply.type === "chart";
@@ -615,6 +617,8 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
                 history={history}
                 onSelectChat={handleSelectHistoryChat}
                 onDeleteChat={handleDeleteHistoryChat}
+                conversationStyle={conversationStyle}
+                onConversationStyleChange={setConversationStyle}
               />
               <div className="chat-ulap-main">
                 <UlapAIMainHeader
@@ -690,6 +694,8 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
                       themeProps={theme}
                       isExpanded={true}
                       placeholder={chatInputPlaceholder}
+                      conversationStyle={conversationStyle}
+                      onConversationStyleChange={setConversationStyle}
                     />
                   </>
                 )}
@@ -799,6 +805,8 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
                   onDragStart={handleDragStart}
                   themeProps={theme}
                   isExpanded={false}
+                  conversationStyle={conversationStyle}
+                  onConversationStyleChange={setConversationStyle}
                 />
               </>
             )}

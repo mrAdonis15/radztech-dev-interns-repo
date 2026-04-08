@@ -58,12 +58,17 @@ function getBizContext() {
   };
 }
 
-export async function sendToPythonBot(userMessage, signal = undefined) {
+export async function sendToPythonBot(
+  userMessage,
+  signal = undefined,
+  conversationStyle = "normal",
+) {
   try {
     const bizContext = getBizContext();
     const authContext = getPythonBotAuthContext();
     const payload = {
       message: userMessage,
+      conversationStyle,
       ...(bizContext && { bizContext }),
       ...(authContext && { authContext }),
     };
@@ -105,7 +110,7 @@ export async function sendToPythonBot(userMessage, signal = undefined) {
 
 export async function streamFromPythonBot(
   userMessage,
-  { signal, onToken, onDone } = {},
+  { signal, onToken, onDone, conversationStyle = "normal" } = {},
 ) {
   const bizContext = getBizContext();
   const authContext = getPythonBotAuthContext();
@@ -116,6 +121,7 @@ export async function streamFromPythonBot(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: userMessage,
+        conversationStyle,
         ...(bizContext && { bizContext }),
         ...(authContext && { authContext }),
       }),

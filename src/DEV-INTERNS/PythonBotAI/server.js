@@ -553,7 +553,11 @@ function startPythonProcess() {
   });
 }
 
-function runPythonResponse(message, authContext = null) {
+function runPythonResponse(
+  message,
+  authContext = null,
+  conversationStyle = "normal",
+) {
   return new Promise((resolve, reject) => {
     if (!pythonProcess || !pythonReady) {
       startPythonProcess();
@@ -578,7 +582,7 @@ function runPythonResponse(message, authContext = null) {
 
     pendingRequests.push(request);
 
-    const payload = { message };
+    const payload = { message, conversation_style: conversationStyle };
     if (authContext && typeof authContext === "object") {
       payload.auth_context = authContext;
     }
@@ -643,11 +647,23 @@ function isCurrentBizPrompt(input) {
 // Chat endpoint
 app.post("/api/chat", async (req, res) => {
   try {
-    const { message, bizContext, authContext, auth_context } = req.body;
+    const {
+      message,
+      bizContext,
+      authContext,
+      auth_context,
+      conversationStyle,
+    } = req.body;
 
     if (!message || message.trim() === "") {
       return res.status(400).json({ error: "Message is required" });
     }
+
+    const normalizedStyle =
+      conversationStyle &&
+      ["formal", "normal", "casual"].includes(conversationStyle.toLowerCase())
+        ? conversationStyle.toLowerCase()
+        : "normal";
 
     const normalized = String(message).toLowerCase().trim();
 
@@ -709,6 +725,7 @@ app.post("/api/chat", async (req, res) => {
     const response = await runPythonResponse(
       messageWithContext,
       resolvedAuthContext,
+      normalizedStyle,
     );
     return res.json({
       response,
@@ -732,10 +749,22 @@ app.post("/api/chat", async (req, res) => {
 
 app.post("/api/chat/stream", async (req, res) => {
   try {
-    const { message, bizContext, authContext, auth_context } = req.body || {};
+    const {
+      message,
+      bizContext,
+      authContext,
+      auth_context,
+      conversationStyle,
+    } = req.body || {};
     if (!message || String(message).trim() === "") {
       return res.status(400).json({ error: "Message is required" });
     }
+
+    const normalizedStyle =
+      conversationStyle &&
+      ["formal", "normal", "casual"].includes(conversationStyle.toLowerCase())
+        ? conversationStyle.toLowerCase()
+        : "normal";
 
     const normalized = String(message).toLowerCase().trim();
     if (isCurrentBizPrompt(normalized)) {
@@ -781,7 +810,11 @@ app.post("/api/chat/stream", async (req, res) => {
     }
 
     const fullText = String(
-      await runPythonResponse(messageWithContext, resolvedAuthContext),
+      await runPythonResponse(
+        messageWithContext,
+        resolvedAuthContext,
+        normalizedStyle,
+      ),
     );
 
     res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");

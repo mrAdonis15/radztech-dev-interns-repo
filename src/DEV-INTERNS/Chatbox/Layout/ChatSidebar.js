@@ -6,6 +6,8 @@ import ListItemText from "@material-ui/core/ListItemText";
 import Typography from "@material-ui/core/Typography";
 import Dialog from "@material-ui/core/Dialog";
 import DialogContent from "@material-ui/core/DialogContent";
+import Menu from "@material-ui/core/Menu";
+import MenuItem from "@material-ui/core/MenuItem";
 import CreateIcon from "@material-ui/icons/Create";
 import SearchIcon from "@material-ui/icons/Search";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
@@ -37,18 +39,24 @@ export default function ChatSidebar({
   history = [],
   onSelectChat,
   onDeleteChat,
+  conversationStyle = "normal",
+  onConversationStyleChange,
 }) {
   const [chatsCollapsed, setChatsCollapsed] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [modalSearchQuery, setModalSearchQuery] = useState("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [logoHovered, setLogoHovered] = useState(false);
+  const [chatStyleAnchorEl, setChatStyleAnchorEl] = useState(null);
 
   const filteredHistory = history;
   const hasConversations = filteredHistory.length > 0;
   // Only show "New Chat" entry in the list when there is at least one saved conversation
   const listItems = hasConversations
-    ? [{ id: "__new_chat__", title: "New Chat", isNewChat: true }, ...filteredHistory]
+    ? [
+        { id: "__new_chat__", title: "New Chat", isNewChat: true },
+        ...filteredHistory,
+      ]
     : filteredHistory;
 
   const formatDate = (ts) => {
@@ -59,7 +67,11 @@ export default function ChatSidebar({
       d.getMonth() === now.getMonth() &&
       d.getFullYear() === now.getFullYear();
     if (isToday) {
-      return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
+      return d.toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
     }
     return d.toLocaleDateString(undefined, {
       month: "short",
@@ -71,7 +83,9 @@ export default function ChatSidebar({
   const filterByQuery = (list, q) => {
     if (!q || !q.trim()) return list;
     const lower = q.trim().toLowerCase();
-    return list.filter((item) => (item.title || "Chat").toLowerCase().includes(lower));
+    return list.filter((item) =>
+      (item.title || "Chat").toLowerCase().includes(lower),
+    );
   };
 
   const { last7Days, previous30Days } = groupHistoryByPeriod(history);
@@ -88,10 +102,26 @@ export default function ChatSidebar({
     handleCloseSearchModal();
   };
 
+  const handleOpenChatStyleMenu = (e) => {
+    setChatStyleAnchorEl(e.currentTarget);
+  };
+
+  const handleCloseChatStyleMenu = () => {
+    setChatStyleAnchorEl(null);
+  };
+
+  const styleLabel =
+    conversationStyle === "formal"
+      ? "Formal"
+      : conversationStyle === "casual"
+        ? "Casual"
+        : "Normal";
+
   return (
     <aside
       className={
-        "chat-ulap-sidebar" + (sidebarCollapsed ? " chat-ulap-sidebar--collapsed" : "")
+        "chat-ulap-sidebar" +
+        (sidebarCollapsed ? " chat-ulap-sidebar--collapsed" : "")
       }
     >
       <div className="chat-ulap-sidebar-top">
@@ -114,7 +144,11 @@ export default function ChatSidebar({
             {sidebarCollapsed && logoHovered ? (
               <MenuIcon className="chat-ulap-sidebar-menu-icon" />
             ) : (
-              <img src={radzLogo} alt="UlapBiz" className="chat-ulap-sidebar-logo-img" />
+              <img
+                src={radzLogo}
+                alt="UlapBiz"
+                className="chat-ulap-sidebar-logo-img"
+              />
             )}
           </div>
         </div>
@@ -148,7 +182,59 @@ export default function ChatSidebar({
           <SearchIcon className="chat-ulap-nav-icon" />
           <span className="chat-ulap-nav-btn-text">Search Chat</span>
         </button>
+        <button
+          type="button"
+          className="chat-ulap-nav-btn chat-ulap-chat-style-btn"
+          onClick={handleOpenChatStyleMenu}
+          aria-label="Chat Style"
+        >
+          <ChatBubbleOutlineIcon className="chat-ulap-nav-icon" />
+          <span className="chat-ulap-nav-btn-text">Chat Style</span>
+          <span
+            className="chat-ulap-nav-btn-text"
+            style={{ marginLeft: "auto", fontSize: 12, opacity: 0.8 }}
+          >
+            {styleLabel}
+          </span>
+          <ExpandMoreIcon style={{ fontSize: 18 }} />
+        </button>
       </nav>
+
+      <Menu
+        anchorEl={chatStyleAnchorEl}
+        keepMounted
+        open={Boolean(chatStyleAnchorEl)}
+        onClose={handleCloseChatStyleMenu}
+      >
+        <MenuItem
+          selected={conversationStyle === "formal"}
+          onClick={() => {
+            onConversationStyleChange?.("formal");
+            handleCloseChatStyleMenu();
+          }}
+        >
+          Formal
+        </MenuItem>
+        <MenuItem
+          selected={conversationStyle === "normal"}
+          onClick={() => {
+            onConversationStyleChange?.("normal");
+            handleCloseChatStyleMenu();
+          }}
+        >
+          Normal
+        </MenuItem>
+        <MenuItem
+          selected={conversationStyle === "casual"}
+          onClick={() => {
+            onConversationStyleChange?.("casual");
+            handleCloseChatStyleMenu();
+          }}
+        >
+          Casual
+        </MenuItem>
+      </Menu>
+
       <div className="chat-ulap-your-chats">
         <button
           type="button"
@@ -160,9 +246,15 @@ export default function ChatSidebar({
             Your chats
           </Typography>
           {chatsCollapsed ? (
-            <ExpandMoreIcon className="chat-ulap-chats-arrow" fontSize="small" />
+            <ExpandMoreIcon
+              className="chat-ulap-chats-arrow"
+              fontSize="small"
+            />
           ) : (
-            <ExpandLessIcon className="chat-ulap-chats-arrow" fontSize="small" />
+            <ExpandLessIcon
+              className="chat-ulap-chats-arrow"
+              fontSize="small"
+            />
           )}
         </button>
         {!chatsCollapsed && (
@@ -171,7 +263,10 @@ export default function ChatSidebar({
               <ListItem className="chat-ulap-chat-item">
                 <ListItemText
                   primary="No chats yet"
-                  primaryTypographyProps={{ variant: "body2", color: "textSecondary" }}
+                  primaryTypographyProps={{
+                    variant: "body2",
+                    color: "textSecondary",
+                  }}
                 />
               </ListItem>
             ) : (
@@ -179,8 +274,13 @@ export default function ChatSidebar({
                 <ListItem
                   key={item.id}
                   button
-                  className={"chat-ulap-chat-item" + (item.isNewChat ? " chat-ulap-chat-item-new" : "")}
-                  onClick={() => item.isNewChat ? onNewChat() : onSelectChat(item)}
+                  className={
+                    "chat-ulap-chat-item" +
+                    (item.isNewChat ? " chat-ulap-chat-item-new" : "")
+                  }
+                  onClick={() =>
+                    item.isNewChat ? onNewChat() : onSelectChat(item)
+                  }
                 >
                   <ListItemText
                     primary={item.title || "Chat"}
@@ -189,7 +289,9 @@ export default function ChatSidebar({
                       variant: "body2",
                       className: "chat-ulap-chat-title",
                     }}
-                    secondary={item.isNewChat ? null : formatDate(item.createdAt)}
+                    secondary={
+                      item.isNewChat ? null : formatDate(item.createdAt)
+                    }
                     secondaryTypographyProps={{ variant: "caption" }}
                   />
                   {!item.isNewChat && (
@@ -254,7 +356,10 @@ export default function ChatSidebar({
 
           {modal7.length > 0 && (
             <div className="chat-search-modal-section">
-              <Typography variant="body2" className="chat-search-modal-section-title">
+              <Typography
+                variant="body2"
+                className="chat-search-modal-section-title"
+              >
                 Previous 7 Days
               </Typography>
               <List disablePadding className="chat-search-modal-list">
@@ -268,7 +373,10 @@ export default function ChatSidebar({
                     <ChatBubbleOutlineIcon className="chat-search-modal-bubble-icon" />
                     <ListItemText
                       primary={item.title || "Chat"}
-                      primaryTypographyProps={{ noWrap: true, variant: "body2" }}
+                      primaryTypographyProps={{
+                        noWrap: true,
+                        variant: "body2",
+                      }}
                     />
                   </ListItem>
                 ))}
@@ -278,7 +386,10 @@ export default function ChatSidebar({
 
           {modal30.length > 0 && (
             <div className="chat-search-modal-section">
-              <Typography variant="body2" className="chat-search-modal-section-title">
+              <Typography
+                variant="body2"
+                className="chat-search-modal-section-title"
+              >
                 Previous 30 Days
               </Typography>
               <List disablePadding className="chat-search-modal-list">
@@ -292,7 +403,10 @@ export default function ChatSidebar({
                     <ChatBubbleOutlineIcon className="chat-search-modal-bubble-icon" />
                     <ListItemText
                       primary={item.title || "Chat"}
-                      primaryTypographyProps={{ noWrap: true, variant: "body2" }}
+                      primaryTypographyProps={{
+                        noWrap: true,
+                        variant: "body2",
+                      }}
                     />
                   </ListItem>
                 ))}
@@ -301,8 +415,14 @@ export default function ChatSidebar({
           )}
 
           {modal7.length === 0 && modal30.length === 0 && (
-            <Typography variant="body2" color="textSecondary" className="chat-search-modal-empty">
-              {modalSearchQuery.trim() ? "No chats match your search." : "No recent chats."}
+            <Typography
+              variant="body2"
+              color="textSecondary"
+              className="chat-search-modal-empty"
+            >
+              {modalSearchQuery.trim()
+                ? "No chats match your search."
+                : "No recent chats."}
             </Typography>
           )}
         </DialogContent>

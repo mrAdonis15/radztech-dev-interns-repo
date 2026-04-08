@@ -40,7 +40,7 @@ def main():
             ]
         )
 
-    def generate_response(user_message, auth_context=None):
+    def generate_response(user_message, auth_context=None, conversation_style="normal"):
         # Extract context from user input (optional - may not exist in main.py)
         try:
             extract_context_from_input(user_message)
@@ -49,7 +49,7 @@ def main():
 
         # Get response from the chatbot
         try:
-            response = respond(user_message, auth_context=auth_context)
+            response = respond(user_message, auth_context=auth_context, conversation_style=conversation_style)
         except Exception as e:
             print(f"[ERROR] respond() raised exception: {type(e).__name__}: {str(e)}", file=sys.stderr, flush=True)
             response = None
@@ -88,13 +88,14 @@ def main():
 
             message = str(payload.get("message", "")).strip()
             auth_context = payload.get("auth_context")
+            conversation_style = payload.get("conversation_style", "normal")
             if not message:
                 print(json.dumps({"success": False, "error": "Message is required"}), flush=True)
                 continue
 
             try:
                 with redirect_stdout(sys.stderr):
-                    result = generate_response(message, auth_context=auth_context)
+                    result = generate_response(message, auth_context=auth_context, conversation_style=conversation_style)
                 print(json.dumps({"success": True, "response": result}), flush=True)
             except Exception as e:
                 print(json.dumps({"success": False, "error": str(e)}), flush=True)
