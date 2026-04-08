@@ -32,25 +32,10 @@
 }
 
 .login-logo-icon {
-  width: 48px;
-  height: 48px;
+  width: 180px;
+  height: 180px;
   object-fit: contain;
 }
-
-.login-logo-text {
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.login-logo-ulap {
-  color: #333333;
-}
-
-.login-logo-biz {
-  color: #ff8c00;
-}
-
 /* Form */
 .login-form {
   display: flex;
