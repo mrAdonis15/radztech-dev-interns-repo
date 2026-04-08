@@ -30,9 +30,11 @@ import SearchIcon from "@material-ui/icons/Search";
 import LoginToolbar from "../../../Auth/Login/LoginToolbar";
 import { SUB_LIST_KEYS } from "../api/endpoints";
 import { requestSubListItems } from "../api/subLists";
+import { createEmptyTemplateSelection, requestTemplates } from "../api/templates";
 import SetupQuestions from "../components/SetupQuestions";
 import RatingDialog from "../components/RatingDialog";
 import ResultDialog from "../components/ResultDialog";
+import SelectTemplate from "../components/SelectTemplate";
 import useRatings from "../tools/useRatings";
 import useQuestions from "../tools/useQuestions";
 
@@ -248,6 +250,15 @@ const useStyles = makeStyles((theme) => ({
   },
   resetActionWrap: {
     marginLeft: "auto",
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(1.5),
+    [theme.breakpoints.down("sm")]: {
+      marginLeft: 0,
+      width: "100%",
+      justifyContent: "flex-start",
+      flexWrap: "wrap",
+    },
   },
   resetButton: {
     borderRadius: 3,
@@ -262,6 +273,14 @@ const useStyles = makeStyles((theme) => ({
     "&:hover": {
       borderColor: "#ea580c",
       backgroundColor: "#fff7ed",
+    },
+  },
+  newEvaluationButton: {
+    backgroundColor: "#ea580c",
+    color: "#ffffff",
+    "&:hover": {
+      backgroundColor: "#f97316",
+      boxShadow: "none",
     },
   },
   resetPrimaryButton: {
@@ -628,6 +647,11 @@ function RatePage() {
   const [evaluatorDraft, setEvaluatorDraft] = useState("");
   const [evaluators, setEvaluators] = useState([]);
   const [evaluatorsLoading, setEvaluatorsLoading] = useState(false);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [pendingTemplateCategory, setPendingTemplateCategory] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [templates, setTemplates] = useState([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const {
     activeGroupId,
@@ -688,6 +712,35 @@ function RatePage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    const authToken = window.localStorage.getItem("authToken");
+    let isActive = true;
+
+    setTemplatesLoading(true);
+
+    requestTemplates(authToken)
+      .then((items) => {
+        if (!isActive) {
+          return;
+        }
+
+        setTemplates(items);
+      })
+      .finally(() => {
+        if (isActive) {
+          setTemplatesLoading(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   const handleSaveSetupJson = () => {
     const groupPayload = categoryGroupList.reduce((accumulator, group) => {
       accumulator[group.id] = group;
@@ -732,6 +785,8 @@ function RatePage() {
   const handleSelectGroup = (event) => {
     handleSelectGroupState(event);
     setSelectedCategory(null);
+    setPendingTemplateCategory(null);
+    setSelectedTemplate(null);
     setJsonPreviewCategory(null);
     setSearchTerm("");
     setSearchDraft("");
@@ -739,11 +794,41 @@ function RatePage() {
   };
 
   const handleOpenEvaluation = (category) => {
-    setSelectedCategory(category);
+    if (selectedTemplate) {
+      setSelectedCategory(category);
+      return;
+    }
+
+    setPendingTemplateCategory(category);
+    setTemplateDialogOpen(true);
   };
 
   const handleCloseEvaluation = () => {
     setSelectedCategory(null);
+    setSelectedTemplate(null);
+  };
+
+  const handleCloseTemplateDialog = () => {
+    setTemplateDialogOpen(false);
+    setPendingTemplateCategory(null);
+    setSelectedTemplate(null);
+  };
+
+  const handleSelectTemplate = (template) => {
+    setSelectedTemplate(template);
+    setTemplateDialogOpen(false);
+
+    if (pendingTemplateCategory) {
+      setSelectedCategory(pendingTemplateCategory);
+      setPendingTemplateCategory(null);
+    }
+
+    setActiveTab("evaluation");
+  };
+
+  const handleOpenTemplateDialog = () => {
+    setPendingTemplateCategory(null);
+    setTemplateDialogOpen(true);
   };
 
   const handleOpenJsonPreview = (category) => {
@@ -760,6 +845,7 @@ function RatePage() {
       evaluator: serializeEvaluator(selectedEvaluator),
     });
     setSelectedCategory(null);
+    setSelectedTemplate(null);
     return savedEvaluation;
   };
 
@@ -859,7 +945,14 @@ function RatePage() {
       .filter(Boolean)
       .some((value) => value.toLowerCase().includes(searchValue));
   });
-  const evaluationDialogKey = `${activeGroupId}-${selectedCategory?.id || "none"}-${setupSaveVersion}-${JSON.stringify(questions)}`;
+  const templateOptions = [...templates, createEmptyTemplateSelection()];
+  const activeEvaluationQuestions =
+    selectedTemplate && selectedTemplate.questions.length > 0
+      ? selectedTemplate.questions
+      : questions;
+  const evaluationDialogKey = `${activeGroupId}-${selectedCategory?.id || "none"}-${
+    selectedTemplate?.id || "default"
+  }-${setupSaveVersion}-${JSON.stringify(activeEvaluationQuestions)}`;
 
   return (
     <>
@@ -1037,6 +1130,15 @@ function RatePage() {
                   </Tabs>
                 </Box>
                 <Box className={classes.resetActionWrap}>
+                  {activeTab === "evaluation" ? (
+                    <Button
+                      variant="contained"
+                      onClick={handleOpenTemplateDialog}
+                      className={`${classes.resetButton} ${classes.newEvaluationButton}`}
+                    >
+                      New Performance Evaluation
+                    </Button>
+                  ) : null}
                   <Button
                     variant="text"
                     startIcon={<ReplayIcon />}
@@ -1070,8 +1172,9 @@ function RatePage() {
                     {activeGroup?.label || "Ratings List"}
                   </Typography>
                   <Typography variant="body2" className={classes.tableSubtitle}>
-                    Review and evaluate each {summary.itemLabelSingular.toLowerCase()} from the
-                    current setup.
+                    {selectedTemplate
+                      ? `Using template: ${selectedTemplate.name}`
+                      : "Click New Performance Evaluation to choose a template first."}
                   </Typography>
                 </Box>
                 <Typography variant="body2" className={classes.tableSubtitle}>
@@ -1160,7 +1263,7 @@ function RatePage() {
                               variant="contained"
                               className={classes.evaluateButton}
                               onClick={() => handleOpenEvaluation(category)}
-                              disabled={hasRating}
+                              disabled={hasRating || !selectedTemplate}
                             >
                               {hasRating ? "Evaluated" : "Evaluate"}
                             </Button>
@@ -1193,9 +1296,17 @@ function RatePage() {
             key={evaluationDialogKey}
             open={Boolean(selectedCategory)}
             category={selectedCategory}
-            questions={questions}
+            questions={activeEvaluationQuestions}
             onClose={handleCloseEvaluation}
             onSave={handleSaveCategoryEvaluation}
+          />
+
+          <SelectTemplate
+            open={templateDialogOpen}
+            templates={templateOptions}
+            loading={templatesLoading}
+            onClose={handleCloseTemplateDialog}
+            onSelect={handleSelectTemplate}
           />
 
           <ResultDialog
