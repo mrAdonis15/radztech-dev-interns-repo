@@ -33,6 +33,7 @@
     "react-leaflet": "^4.2.1",
     "react-loader-spinner": "^6.1.6",
     "react-markdown": "^6.0.3",
+    "react-player": "^2.10.1",
     "react-quill": "^2.0.0",
     "react-router": "^6.4.3",
     "react-router-dom": "^6.4.3",

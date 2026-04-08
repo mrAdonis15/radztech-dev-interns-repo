@@ -71,15 +71,13 @@ export default function Login() {
           "";
         const isOtherDevice =
           /other device|another device|already logged in|log off|logout/i.test(
-            rawMsg
-          ) ||
-          status === 403;
+            rawMsg,
+          ) || status === 403;
         let msg;
         if (isOtherDevice) {
           msg = "Please log off from other device.";
         } else if (status === 401) {
-          msg =
-            "Invalid username or password. Please try again.";
+          msg = "Invalid username or password. Please try again.";
         } else if (rawMsg) {
           msg = rawMsg;
         } else {
@@ -100,9 +98,11 @@ export default function Login() {
         let from = location.state?.from;
         if (!from && typeof sessionStorage !== "undefined") {
           const saved = sessionStorage.getItem("chatboxReturnUrl");
-          if (saved && saved.startsWith("/Chatbox")) {
-            const search = saved.includes("?") ? saved.slice(saved.indexOf("?")) : "";
-            from = { pathname: "/Chatbox", search };
+          if (saved && saved.startsWith("/chatbot")) {
+            const search = saved.includes("?")
+              ? saved.slice(saved.indexOf("?"))
+              : "";
+            from = { pathname: "/chatbot", search };
           } else if (saved && saved.startsWith("/AGR")) {
             from = { pathname: "/AGR" };
           }
@@ -111,19 +111,28 @@ export default function Login() {
           } catch (_) {}
         }
         isMountedRef.current = false;
-        if (from && (from.pathname === "/Chatbox" || from.pathname === "/AGR" || (typeof from === "string" && (from.startsWith("/Chatbox") || from.startsWith("/AGR"))))) {
+        if (
+          from &&
+          (from.pathname === "/chatbot" ||
+            from.pathname === "/AGR" ||
+            (typeof from === "string" &&
+              (from.startsWith("/chatbot") || from.startsWith("/AGR"))))
+        ) {
           navigate("/select-biz", { replace: true, state: { from } });
         } else {
           navigate("/select-biz", { replace: true });
         }
       } else {
-        safeSetState(setError, data?.message || "Login successful. Redirecting...");
+        safeSetState(
+          setError,
+          data?.message || "Login successful. Redirecting...",
+        );
       }
     } catch (err) {
       safeSetState(
         setError,
         err.message ||
-          "Login failed. Please check your credentials and try again."
+          "Login failed. Please check your credentials and try again.",
       );
     } finally {
       safeSetState(setLoading, false);
@@ -140,7 +149,11 @@ export default function Login() {
       <Box className="login-body">
         <Box className="login-content">
           <Box className="login-logo">
-            <img src="./LoginLogo.png" alt="UlapBiz" className="login-logo-icon" />
+            <img
+              src="./LoginLogo.png"
+              alt="UlapBiz"
+              className="login-logo-icon"
+            />
           </Box>
 
           <form className="login-form" onSubmit={handleSubmit}>
@@ -170,7 +183,9 @@ export default function Login() {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                       onClick={() => setShowPassword(!showPassword)}
                       edge="end"
                       size="small"

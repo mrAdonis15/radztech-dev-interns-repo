@@ -15,12 +15,15 @@ export default function ChooseApp() {
   const location = useLocation();
   const token = localStorage.getItem("authToken");
   const from = location.state?.from;
-  const chatboxSearch = from?.pathname === "/Chatbox" || (typeof from?.pathname === "string" && from?.pathname?.startsWith?.("/Chatbox"))
-    ? (from?.search || "")
-    : "";
+  const chatboxSearch =
+    from?.pathname === "/chatbot" ||
+    (typeof from?.pathname === "string" &&
+      from?.pathname?.startsWith?.("/chatbot"))
+      ? from?.search || ""
+      : "";
 
   const goToChatbox = () => {
-    navigate("/Chatbox" + chatboxSearch, { replace: true });
+    navigate("/chatbot" + chatboxSearch, { replace: true });
   };
 
   const goToAGR = () => {
@@ -40,14 +43,21 @@ export default function ChooseApp() {
         <div className="choose-app-content-wrap">
           <Box className="choose-app-cards">
             <Card className="choose-app-card" elevation={0}>
-              <CardActionArea onClick={goToChatbox} className="choose-app-card-action">
+              <CardActionArea
+                onClick={goToChatbox}
+                className="choose-app-card-action"
+              >
                 <Box className="choose-app-card-icon-container">
                   <Box className="choose-app-card-icon-circle">
                     <ChatIcon className="choose-app-card-icon" />
                   </Box>
                 </Box>
                 <Box className="choose-app-card-details">
-                  <Typography variant="h6" component="h2" className="choose-app-card-label">
+                  <Typography
+                    variant="h6"
+                    component="h2"
+                    className="choose-app-card-label"
+                  >
                     UlapAI
                   </Typography>
                   <Typography variant="body2" className="choose-app-card-desc">
@@ -57,14 +67,21 @@ export default function ChooseApp() {
               </CardActionArea>
             </Card>
             <Card className="choose-app-card" elevation={0}>
-              <CardActionArea onClick={goToAGR} className="choose-app-card-action">
+              <CardActionArea
+                onClick={goToAGR}
+                className="choose-app-card-action"
+              >
                 <Box className="choose-app-card-icon-container">
                   <Box className="choose-app-card-icon-circle">
                     <AssessmentIcon className="choose-app-card-icon" />
                   </Box>
                 </Box>
                 <Box className="choose-app-card-details">
-                  <Typography variant="h6" component="h2" className="choose-app-card-label">
+                  <Typography
+                    variant="h6"
+                    component="h2"
+                    className="choose-app-card-label"
+                  >
                     AGR
                   </Typography>
                   <Typography variant="body2" className="choose-app-card-desc">
