@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import ChartRenderer from "src/components/Marth/chartRenderer";
+import ChartRenderer from "./chartRenderer";
 
 const CHART_TYPES = ["mixed", "line", "bar", "pie"];
 
