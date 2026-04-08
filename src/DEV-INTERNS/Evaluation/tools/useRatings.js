@@ -646,7 +646,7 @@ export default function useRatings() {
   };
 
   const activeGroup = categoryState[activeGroupId] || categoryState[Object.keys(categoryState)[0]];
-  const categories = activeGroup ? activeGroup.categories : [];
+  const categories = useMemo(() => (activeGroup ? activeGroup.categories : []), [activeGroup]);
   const categoryGroupList = Object.values(categoryState);
   const summary = useMemo(() => getSummary(categories, activeGroup), [categories, activeGroup]);
   const displayMode = getDisplayMode(activeGroup);
