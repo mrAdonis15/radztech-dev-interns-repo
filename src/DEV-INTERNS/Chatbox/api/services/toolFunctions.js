@@ -1,6 +1,6 @@
 import axios from "axios";
-import { getBizToken } from "../selectedBiz";
 import { getGraphConfig } from "./reportsGraph.js";
+import { getStandardAuthHeaders } from "./authContext";
 
 const BASE_URL = "http://localhost:3000/api";
 const REPORT_REQUEST_TIMEOUT_MS = 55000;
@@ -21,11 +21,7 @@ const yearFromDate = (value) => {
 };
 
 export function getHeaders() {
-  return {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-    "x-access-tokens": getBizToken(),
-  };
+  return getStandardAuthHeaders();
 }
 
 function errorResult(err, use504Message = false) {
@@ -92,11 +88,16 @@ function capDateRangeToMonths(dt1, dt2, maxMonths) {
   if (start <= d1) return [dt1, dt2];
 
   const newDt1 = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-01T00:00:00${DEFAULT_TZ}`;
-  const suffix = String(dt2).match(/T[\d:+-]+/)?.[0] || `T23:59:59${DEFAULT_TZ}`;
+  const suffix =
+    String(dt2).match(/T[\d:+-]+/)?.[0] || `T23:59:59${DEFAULT_TZ}`;
   return [newDt1, `${String(dt2).slice(0, 10)}${suffix}`];
 }
 
-async function request(method, path, { data, params, timeout, retries = 0 } = {}) {
+async function request(
+  method,
+  path,
+  { data, params, timeout, retries = 0 } = {},
+) {
   const options = {
     headers: getHeaders(),
     ...(timeout ? { timeout } : {}),
@@ -122,19 +123,32 @@ async function request(method, path, { data, params, timeout, retries = 0 } = {}
   throw lastError;
 }
 
-function normalizeDateRange(args, { defaultMode = "year", maxMonths = 12 } = {}) {
+function normalizeDateRange(
+  args,
+  { defaultMode = "year", maxMonths = 12 } = {},
+) {
   const now = new Date();
   const requestedYear =
     args.year != null ? parseInt(String(args.year), 10) : null;
-  const useYear = Number.isFinite(requestedYear) ? requestedYear : now.getFullYear();
+  const useYear = Number.isFinite(requestedYear)
+    ? requestedYear
+    : now.getFullYear();
 
   let { dt1, dt2 } = args;
   if (!dt1 || !dt2) {
     if (defaultMode === "month" && requestedYear == null) {
       const month = now.getMonth() + 1;
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-      dt1 = dt1 || `${now.getFullYear()}-${String(month).padStart(2, "0")}-01T00:00:00${DEFAULT_TZ}`;
-      dt2 = dt2 || `${now.getFullYear()}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}T23:59:59${DEFAULT_TZ}`;
+      const lastDay = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0,
+      ).getDate();
+      dt1 =
+        dt1 ||
+        `${now.getFullYear()}-${String(month).padStart(2, "0")}-01T00:00:00${DEFAULT_TZ}`;
+      dt2 =
+        dt2 ||
+        `${now.getFullYear()}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}T23:59:59${DEFAULT_TZ}`;
     } else {
       dt1 = dt1 || `${useYear}-01-01T00:00:00${DEFAULT_TZ}`;
       dt2 = dt2 || `${useYear}-12-31T23:59:59${DEFAULT_TZ}`;
@@ -210,7 +224,13 @@ function buildChartResult(config, fallbackTitle, message) {
   };
 }
 
-async function buildGraph(path, args, chartErrorMessage, fallbackTitle, extraData = {}) {
+async function buildGraph(
+  path,
+  args,
+  chartErrorMessage,
+  fallbackTitle,
+  extraData = {},
+) {
   const params = path.includes("/reports/gl/")
     ? normalizeGlArgs(args)
     : normalizeStockcardArgs(args);
@@ -238,7 +258,16 @@ export const functions = {
       return {
         ...data,
         items: (data.items || []).map(
-          ({ ixProd, ProdCd, cCost, sCat, sCatSub, sProd, sProdCat, unit }) => ({
+          ({
+            ixProd,
+            ProdCd,
+            cCost,
+            sCat,
+            sCatSub,
+            sProd,
+            sProdCat,
+            unit,
+          }) => ({
             ixProd,
             ProdCd,
             cCost,

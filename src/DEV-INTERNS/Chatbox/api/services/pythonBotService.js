@@ -1,11 +1,6 @@
 import axios from "axios";
-import {
-  getSelectedBiz,
-  getSelectedBizStorage,
-  getBizName,
-  getBizIxBiz,
-  getBizToken,
-} from "../selectedBiz";
+import { getSelectedBiz, getBizName, getBizIxBiz } from "../selectedBiz";
+import { getPythonBotAuthContext } from "./authContext";
 
 const PYTHON_BOT_CHAT_URL =
   (typeof process !== "undefined" &&
@@ -27,75 +22,46 @@ function getBizContext() {
   const biz = getSelectedBiz();
   if (!biz) return null;
 
+  const rawSelectedBiz = (() => {
+    try {
+      const raw = localStorage.getItem("selectedBiz");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const fallbackBizName =
+    biz?.bizName ||
+    biz?.business?.name ||
+    biz?.data?.name ||
+    rawSelectedBiz?.biz?.name ||
+    rawSelectedBiz?.business?.name ||
+    rawSelectedBiz?.data?.name;
+
+  const fallbackBizId =
+    biz?.businessId ||
+    biz?.bizId ||
+    biz?.id ||
+    biz?.iXBiz ||
+    biz?.business?.id ||
+    biz?.business?.ixBiz ||
+    biz?.data?.id ||
+    rawSelectedBiz?.biz?.ixBiz ||
+    rawSelectedBiz?.biz?.id;
+
   return {
-    bizName: getBizName() || biz?.name || biz?.sBiz || "Unknown",
-    bizId: getBizIxBiz() || biz?.ixBiz || biz?.id,
+    bizName:
+      getBizName() || biz?.name || biz?.sBiz || fallbackBizName || "Unknown",
+    bizId: getBizIxBiz() || biz?.ixBiz || biz?.id || fallbackBizId,
     bizInfo: biz,
   };
-}
-
-function parseStoredJson(value) {
-  if (!value) return null;
-  try {
-    return JSON.parse(value);
-  } catch {
-    return null;
-  }
-}
-
-function getAuthContext() {
-  const authContext = {};
-  const selectedBizToken = getBizToken();
-  if (selectedBizToken) {
-    authContext.user_auth_token = selectedBizToken;
-  }
-
-  const fallbackToken =
-    localStorage.getItem("siteUserAuthToken") ||
-    localStorage.getItem("user_auth_token") ||
-    localStorage.getItem("siteAuthToken") ||
-    localStorage.getItem("cloneUlapToken");
-  if (fallbackToken && !authContext.user_auth_token) {
-    authContext.user_auth_token = fallbackToken;
-  }
-
-  const selectedBiz = getSelectedBizStorage();
-  const cookie =
-    localStorage.getItem("siteUserCookie") ||
-    localStorage.getItem("user_cookie") ||
-    (selectedBiz?.cookie && String(selectedBiz.cookie)) ||
-    (selectedBiz?.biz?.cookie && String(selectedBiz.biz.cookie)) ||
-    (typeof document !== "undefined" ? document.cookie : "");
-  if (cookie) authContext.user_cookie = cookie;
-
-  const csrfToken =
-    localStorage.getItem("siteCsrfToken") || localStorage.getItem("csrf_token");
-  if (csrfToken) authContext.csrf_token = csrfToken;
-
-  const authHeaderName =
-    localStorage.getItem("siteAuthHeaderName") ||
-    localStorage.getItem("auth_header_name");
-  if (authHeaderName) authContext.auth_header_name = authHeaderName;
-
-  const csrfHeaderName =
-    localStorage.getItem("siteCsrfHeaderName") ||
-    localStorage.getItem("csrf_header_name");
-  if (csrfHeaderName) authContext.csrf_header_name = csrfHeaderName;
-
-  const extraHeaders =
-    parseStoredJson(localStorage.getItem("siteExtraHeaders")) ||
-    parseStoredJson(localStorage.getItem("extra_headers"));
-  if (extraHeaders && typeof extraHeaders === "object") {
-    authContext.extra_headers = extraHeaders;
-  }
-
-  return Object.keys(authContext).length ? authContext : null;
 }
 
 export async function sendToPythonBot(userMessage, signal = undefined) {
   try {
     const bizContext = getBizContext();
-    const authContext = getAuthContext();
+    const authContext = getPythonBotAuthContext();
     const payload = {
       message: userMessage,
       ...(bizContext && { bizContext }),
@@ -142,7 +108,7 @@ export async function streamFromPythonBot(
   { signal, onToken, onDone } = {},
 ) {
   const bizContext = getBizContext();
-  const authContext = getAuthContext();
+  const authContext = getPythonBotAuthContext();
   const response = await fetch(
     PYTHON_BOT_CHAT_URL.replace(/\/api\/chat$/, "/api/chat/stream"),
     {

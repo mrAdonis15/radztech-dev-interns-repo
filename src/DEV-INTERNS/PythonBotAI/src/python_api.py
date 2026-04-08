@@ -48,7 +48,11 @@ def main():
             pass
 
         # Get response from the chatbot
-        response = respond(user_message, auth_context=auth_context)
+        try:
+            response = respond(user_message, auth_context=auth_context)
+        except Exception as e:
+            print(f"[ERROR] respond() raised exception: {type(e).__name__}: {str(e)}", file=sys.stderr, flush=True)
+            response = None
 
         if response:
             result = response
@@ -58,6 +62,7 @@ def main():
                 "Please reconnect the logged-in business account and try again."
             )
         else:
+            print(f"[DEBUG] respond() returned None/falsy for message: {user_message[:50]}...", file=sys.stderr, flush=True)
             result = "Sorry, Something went wrong. Please try again"
 
         # Store conversation context (optional - may not exist in main.py)

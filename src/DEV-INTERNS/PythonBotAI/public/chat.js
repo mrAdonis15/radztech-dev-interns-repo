@@ -129,16 +129,18 @@ function getBizContext() {
 function getStoredAuthContext() {
   const authContext = {};
 
-  const selectedBizToken = getBizToken();
-  if (selectedBizToken) authContext.user_auth_token = selectedBizToken;
-
   const token =
+    localStorage.getItem("authToken") ||
     localStorage.getItem("siteUserAuthToken") ||
     localStorage.getItem("user_auth_token") ||
     localStorage.getItem("siteAuthToken") ||
     localStorage.getItem("cloneUlapToken");
-  if (token && !authContext.user_auth_token)
+  if (token) {
     authContext.user_auth_token = token;
+  }
+
+  const selectedBizToken = getBizToken();
+  if (selectedBizToken) authContext.data_access_token = selectedBizToken;
 
   const cookie =
     localStorage.getItem("siteUserCookie") ||
@@ -162,8 +164,15 @@ function getStoredAuthContext() {
   const extraHeaders =
     parseStoredJson(localStorage.getItem("siteExtraHeaders")) ||
     parseStoredJson(localStorage.getItem("extra_headers"));
-  if (extraHeaders && typeof extraHeaders === "object") {
-    authContext.extra_headers = extraHeaders;
+  const mergedExtraHeaders =
+    extraHeaders && typeof extraHeaders === "object" ? { ...extraHeaders } : {};
+
+  if (selectedBizToken) {
+    mergedExtraHeaders["x-data-access-token"] = selectedBizToken;
+  }
+
+  if (Object.keys(mergedExtraHeaders).length) {
+    authContext.extra_headers = mergedExtraHeaders;
   }
 
   return Object.keys(authContext).length ? authContext : null;

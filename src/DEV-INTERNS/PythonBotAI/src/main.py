@@ -8,24 +8,31 @@ import threading
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 
-# Import new modules for web scraping and graph generation
+# Import web scraping and graph generation independently so one failure
+# does not disable the other feature set.
+SCRAPER_AVAILABLE = False
+GRAPH_AVAILABLE = False
+_scraper_auto_login = None
+
 try:
     from .web_scraper import WebScraper, _perform_auto_login as _scraper_auto_login
-    from .graph_generator import GraphGenerator
     SCRAPER_AVAILABLE = True
-    GRAPH_AVAILABLE = True
 except ImportError:
-    # Fallback for direct script execution
     try:
         from web_scraper import WebScraper, _perform_auto_login as _scraper_auto_login
-        from graph_generator import GraphGenerator
         SCRAPER_AVAILABLE = True
+    except ImportError as e:
+        print(f"Warning: Web scraping unavailable - {e}")
+
+try:
+    from .graph_generator import GraphGenerator
+    GRAPH_AVAILABLE = True
+except ImportError:
+    try:
+        from graph_generator import GraphGenerator
         GRAPH_AVAILABLE = True
     except ImportError as e:
-        print(f"Warning: Some features unavailable - {e}")
-        SCRAPER_AVAILABLE = False
-        GRAPH_AVAILABLE = False
-        _scraper_auto_login = None
+        print(f"Warning: Graph generation unavailable - {e}")
 
 # Attempt a proactive token refresh on startup so we don't hit 401 on the first request
 if SCRAPER_AVAILABLE and _scraper_auto_login is not None:
@@ -43,20 +50,25 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", os.getenv("LLAMA_MODEL", "qwen2.5:0.5b"
 OLLAMA_FALLBACK_MODELS = [
     m.strip() for m in os.getenv("OLLAMA_FALLBACK_MODELS", f"{OLLAMA_MODEL},llama3:latest").split(",") if m.strip()
 ]
-OLLAMA_NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", "1024"))
-OLLAMA_NUM_PREDICT = int(os.getenv("OLLAMA_NUM_PREDICT", "100"))
+OLLAMA_NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", "512"))
+OLLAMA_NUM_PREDICT = int(os.getenv("OLLAMA_NUM_PREDICT", "32"))
 OLLAMA_TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.2"))
 OLLAMA_KEEP_ALIVE = os.getenv("OLLAMA_KEEP_ALIVE", "2m")
 OLLAMA_THINK = os.getenv("OLLAMA_THINK", "none")
 OLLAMA_LIVE_CONTEXT_MAX_CHARS = int(os.getenv("OLLAMA_LIVE_CONTEXT_MAX_CHARS", "1200"))
+OLLAMA_HISTORY_TURNS = int(os.getenv("OLLAMA_HISTORY_TURNS", "0"))
+OLLAMA_MAX_PROMPT_CHARS = int(os.getenv("OLLAMA_MAX_PROMPT_CHARS", "1000"))
 OLLAMA_AVAILABLE = False
 _ollama_lib = None
 try:
     import ollama as _ollama_lib
     OLLAMA_AVAILABLE = True
-    print("Ollama AI engine loaded successfully")
-except ImportError:
-    print("Ollama not installed — using rule-based fallback. Run: pip install ollama")
+    print("Ollama AI engine loaded successfully", file=sys.stderr)
+except ImportError as e:
+    print(f"Ollama ImportError: {e}", file=sys.stderr)
+    print("Ollama not installed — using rule-based fallback. Run: pip install ollama", file=sys.stderr)
+except Exception as e:
+    print(f"Ollama load error ({type(e).__name__}): {e}", file=sys.stderr)
 
 FILE_NAME = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "knowledge.json")
 ARTICLES_DB = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "articles_db.json")
@@ -902,10 +914,15 @@ def get_company_scraper(auth_context=None):
         return WebScraper(proxy=None, config=config)
 
     auth_token = auth_context.get("user_auth_token")
-    auth_header_name = auth_context.get("auth_header_name") or "Authorization"
+    auth_header_name = auth_context.get("auth_header_name") or "x-access-tokens"
     csrf_token = auth_context.get("csrf_token")
     csrf_header_name = auth_context.get("csrf_header_name") or "X-CSRF-Token"
     extra_headers = auth_context.get("extra_headers") if isinstance(auth_context.get("extra_headers"), dict) else None
+    data_access_token = auth_context.get("data_access_token")
+
+    if data_access_token:
+        extra_headers = dict(extra_headers or {})
+        extra_headers["x-data-access-token"] = data_access_token
 
     raw_cookie = auth_context.get("user_cookie")
     cookies = raw_cookie if isinstance(raw_cookie, dict) else parse_cookie_header(raw_cookie)
@@ -1030,6 +1047,10 @@ def get_live_gl_data(force_refresh=False, auth_context=None):
             csrf_token = auth_context.get("csrf_token")
             csrf_header_name = auth_context.get("csrf_header_name") or csrf_header_name
             extra_headers = auth_context.get("extra_headers") if isinstance(auth_context.get("extra_headers"), dict) else None
+            data_access_token = auth_context.get("data_access_token")
+            if data_access_token:
+                extra_headers = dict(extra_headers or {})
+                extra_headers["x-data-access-token"] = data_access_token
             raw_cookie = auth_context.get("user_cookie")
             cookies = parse_cookie_header(raw_cookie)
 
@@ -2566,29 +2587,12 @@ def handle_graph_request(user_input):
 
 def build_system_prompt(live_context=""):
     """Build the Ollama system prompt from the company knowledge base + optional live data."""
-    from datetime import datetime as _dt
-    today = _dt.now().strftime("%B %d, %Y")
-    knowledge_text = ""
-    try:
-        data = load_knowledge()
-        entries = data.get("knowledge", [])
-        lines = []
-        # Limit to 10 entries instead of 40 for faster response time
-        for item in entries[:10]:
-            lines.append("Q: " + item['pattern'] + "\nA: " + item['response'])
-        knowledge_text = "\n\n".join(lines)
-    except Exception:
-        pass
-    # Simplified system prompt for faster inference
     system = (
-        "You are a helpful AI assistant for a company's business system.\n"
-        "Be concise, fast, and accurate. Today: " + today + ".\n"
-        "Answer about inventory, financials, and system data using provided context.\n"
+        "You are a concise business assistant. "
+        "Answer briefly and directly."
     )
-    if knowledge_text:
-        system += "Knowledge base:\n" + knowledge_text
     if live_context:
-        system += "\n\nCurrent data:\n" + live_context[:OLLAMA_LIVE_CONTEXT_MAX_CHARS]
+        system += " Context: " + live_context[:min(400, OLLAMA_LIVE_CONTEXT_MAX_CHARS)]
     return system
 
 
@@ -2724,42 +2728,106 @@ def fetch_relevant_live_data(user_input, auth_context=None):
 
 def ollama_respond(user_input, live_context="", history=None):
     """Send user input to the local Ollama model and return the response."""
-    if not OLLAMA_AVAILABLE or _ollama_lib is None:
+    if not OLLAMA_AVAILABLE:
+        print("[Ollama] OLLAMA_AVAILABLE is False, returning None", file=sys.stderr)
         return None
+    
+    import urllib.request
+    import urllib.error
+    
     system_prompt = build_system_prompt(live_context)
-    messages = [{"role": "system", "content": system_prompt}]
-    if history:
-        for exchange in history[-3:]:
-            messages.append({"role": "user", "content": exchange.get("user", "")})
+    
+    # Build full prompt: system + context + user question
+    # Format: "System...\n\nContext: ...\n\nQuestion: user input"
+    prompt_parts = [system_prompt]
+    
+    if history and OLLAMA_HISTORY_TURNS > 0:
+        history_text = ""
+        for exchange in history[-OLLAMA_HISTORY_TURNS:]:
+            history_text += f"- User: {exchange.get('user', '')}\n"
             ai_resp = exchange.get("ai", "")
             if isinstance(ai_resp, dict) or (isinstance(ai_resp, str) and ai_resp.strip().startswith("{")):
-                ai_resp = "[A chart or structured data visualization was shown to the user]"
-            messages.append({"role": "assistant", "content": str(ai_resp)})
-    messages.append({"role": "user", "content": user_input})
-    options = {
-        "num_ctx": OLLAMA_NUM_CTX,
-        "num_predict": OLLAMA_NUM_PREDICT,
-        "temperature": OLLAMA_TEMPERATURE,
-    }
-    model_candidates = OLLAMA_FALLBACK_MODELS if OLLAMA_FALLBACK_MODELS else [OLLAMA_MODEL]
+                ai_resp = "[Structured data was shown]"
+            history_text += f"  AI: {str(ai_resp)}\n"
+        if history_text:
+            prompt_parts.append(f"Recent conversation:\n{history_text}")
+    
+    # Use simple question format (don't use Q:/A: which causes echo)
+    prompt_parts.append(f"Question: {user_input}")
+    full_prompt = "\n\n".join(prompt_parts)
+    if len(full_prompt) > OLLAMA_MAX_PROMPT_CHARS:
+        full_prompt = full_prompt[-OLLAMA_MAX_PROMPT_CHARS:]
+    
+    model_candidates = [OLLAMA_MODEL]
+    print(f"[Ollama] Attempting models: {model_candidates}", file=sys.stderr)
+    
     for model_name in model_candidates:
         try:
-            chat_kwargs = {
+            request_data = {
                 "model": model_name,
-                "messages": messages,
-                "options": options,
+                "prompt": full_prompt,
+                "stream": True,
+                "options": {
+                    "num_ctx": OLLAMA_NUM_CTX,
+                    "num_predict": OLLAMA_NUM_PREDICT,
+                    "temperature": 0.0,
+                },
                 "keep_alive": OLLAMA_KEEP_ALIVE,
             }
-            if str(OLLAMA_THINK).strip().lower() not in {"", "none", "off", "false", "0"}:
-                chat_kwargs["think"] = OLLAMA_THINK
 
-            response = _ollama_lib.chat(**chat_kwargs)
-            content = response.get("message", {}).get("content", "")
-            if content:
-                return content.strip()
-        except Exception as e:
-            print("[Ollama] model " + model_name + " error: " + str(e))
+            print(f"[Ollama] Calling {model_name}...", file=sys.stderr)
+
+            req = urllib.request.Request(
+                "http://localhost:11434/api/generate",
+                data=json.dumps(request_data).encode('utf-8'),
+                headers={"Content-Type": "application/json"},
+                method="POST"
+            )
+
+            with urllib.request.urlopen(req, timeout=14) as response:
+                started = time.time()
+                chunks = []
+                for raw_line in response:
+                    line = raw_line.decode("utf-8").strip()
+                    if not line:
+                        continue
+                    try:
+                        event = json.loads(line)
+                    except Exception:
+                        continue
+
+                    token = str(event.get("response", ""))
+                    if token:
+                        chunks.append(token)
+
+                    if event.get("done"):
+                        break
+
+                    if (time.time() - started) > 8 and chunks:
+                        break
+
+                content = "".join(chunks).strip()
+                print(f"[Ollama] Got response ({len(content)} chars)", file=sys.stderr)
+                if content:
+                    for skip_prefix in [
+                        f"User's question: {user_input}\n",
+                        user_input,
+                    ]:
+                        if content.startswith(skip_prefix):
+                            content = content[len(skip_prefix):].strip()
+                            break
+
+                    if content:
+                        print(f"[Ollama] Returning {len(content)} chars from {model_name}", file=sys.stderr)
+                        return content
+        except urllib.error.URLError as e:
+            print(f"[Ollama] {model_name} connection error: {e}", file=sys.stderr)
             continue
+        except Exception as e:
+            print(f"[Ollama] {model_name} error: {type(e).__name__}: {str(e)}", file=sys.stderr)
+            continue
+    
+    print("[Ollama] No model responded", file=sys.stderr)
     return None
 
 
@@ -2836,11 +2904,15 @@ def respond(user_input, site_context=None, auth_context=None):
         return stored_response
 
     # --- Primary path: Ollama AI ---
+    print(f"[DEBUG] Checking OLLAMA_AVAILABLE={OLLAMA_AVAILABLE}", file=sys.stderr)
     if OLLAMA_AVAILABLE:
+        print(f"[DEBUG] OLLAMA_AVAILABLE is True, attempting ollama_respond()", file=sys.stderr)
         live_context = ""
         if should_fetch_live_context(user_input):
             live_context = fetch_relevant_live_data(user_input, auth_context=auth_context)
+        print(f"[DEBUG] Calling ollama_respond() with input={user_input[:30]}...", file=sys.stderr)
         ollama_answer = ollama_respond(user_input, live_context=live_context, history=conversation_history)
+        print(f"[DEBUG] ollama_respond returned: {str(ollama_answer)[:50] if ollama_answer else 'None'}", file=sys.stderr)
         if ollama_answer:
             return ollama_answer
 

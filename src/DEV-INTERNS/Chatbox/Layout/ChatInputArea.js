@@ -22,7 +22,7 @@ export default function ChatInputArea({
   onDragStart,
   themeProps,
   isExpanded = false,
-  placeholder = "Ask UlapAI",
+  placeholder = "Ask the chatbot",
 }) {
   const {
     showThemePicker,
@@ -48,143 +48,148 @@ export default function ChatInputArea({
         aria-label={isExpanded ? "Message input" : "Drag to move chat window"}
       >
         <Paper className="chat-inputPaper" elevation={0}>
-        {/* Emoji Section: dropdown anchored to icon so it pops up on top of it */}
-        <div className="emoji-wrapper" style={{ position: "relative" }}>
-          {showEmoji && (
-            <div className="emoji-picker-dropdown">
-              <EmojiPicker
-                width={280}
-                height={320}
-                onEmojiClick={onEmojiClick}
-                className="chat-emoji-picker"
-              />
-            </div>
-          )}
-          <IconButton
-            size="small"
-            onClick={() => setShowEmoji((prev) => !prev)}
-          >
-            <EmojiEmotionsIcon className="chat-emoji-icon" />
-          </IconButton>
-        </div>
-
-        <div
-          className="slash-menu-wrapper"
-          style={{ position: "relative", flex: 1, minHeight: 24 }}
-        >
-          <InputBase
-            inputRef={inputRef}
-            className="chat-inputBase chat-inputBase-multiline"
-            placeholder={placeholder}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={onKeyDown}
-            multiline
-            minRows={1}
-            maxRows={8}
-          />
-        </div>
-
-        {/* Theme Toggle */}
-        <div className="chat-input-theme-wrap" style={{ position: "relative" }}>
-          <div
-            style={{ position: "relative", display: "inline-block" }}
-            onMouseEnter={() => setIsHoveringTheme(true)}
-            onMouseLeave={() => setIsHoveringTheme(false)}
-          >
+          {/* Emoji Section: dropdown anchored to icon so it pops up on top of it */}
+          <div className="emoji-wrapper" style={{ position: "relative" }}>
+            {showEmoji && (
+              <div className="emoji-picker-dropdown">
+                <EmojiPicker
+                  width={280}
+                  height={320}
+                  onEmojiClick={onEmojiClick}
+                  className="chat-emoji-picker"
+                />
+              </div>
+            )}
             <IconButton
               size="small"
-              onClick={toggleThemePicker}
-              aria-label="theme"
+              onClick={() => setShowEmoji((prev) => !prev)}
             >
-              <img
-                src={ulapLogo}
-                alt="ulapbiz logo"
-                className="theme-toggle-logo"
-              />
+              <EmojiEmotionsIcon className="chat-emoji-icon" />
             </IconButton>
-            {isHoveringTheme && (
+          </div>
+
+          <div
+            className="slash-menu-wrapper"
+            style={{ position: "relative", flex: 1, minHeight: 24 }}
+          >
+            <InputBase
+              inputRef={inputRef}
+              className="chat-inputBase chat-inputBase-multiline"
+              placeholder={placeholder}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={onKeyDown}
+              multiline
+              minRows={1}
+              maxRows={8}
+            />
+          </div>
+
+          {/* Theme Toggle */}
+          <div
+            className="chat-input-theme-wrap"
+            style={{ position: "relative" }}
+          >
+            <div
+              style={{ position: "relative", display: "inline-block" }}
+              onMouseEnter={() => setIsHoveringTheme(true)}
+              onMouseLeave={() => setIsHoveringTheme(false)}
+            >
+              <IconButton
+                size="small"
+                onClick={toggleThemePicker}
+                aria-label="theme"
+              >
+                <img
+                  src={ulapLogo}
+                  alt="ulapbiz logo"
+                  className="theme-toggle-logo"
+                />
+              </IconButton>
+              {isHoveringTheme && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "0%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    background: "rgba(0, 0, 0, 0.8)",
+                    color: "white",
+                    padding: "4px 8px",
+                    borderRadius: 9,
+                    fontSize: "12px",
+                    whiteSpace: "nowrap",
+                    zIndex: 10,
+                    pointerEvents: "none",
+                    fontFamily: "Poppins",
+                  }}
+                >
+                  choose theme
+                </div>
+              )}
+            </div>
+            {showThemePicker && (
               <div
+                className="theme-picker"
                 style={{
                   position: "absolute",
-                  top: "0%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  background: "rgba(0, 0, 0, 0.8)",
-                  color: "white",
-                  padding: "4px 8px",
-                  borderRadius: 9,
-                  fontSize: "12px",
-                  whiteSpace: "nowrap",
-                  zIndex: 10,
-                  pointerEvents: "none",
-                  fontFamily: "Poppins",
+                  right: 0,
+                  bottom: 44,
+                  zIndex: 2000,
                 }}
               >
-                choose theme
+                <div className="theme-picker-panel">
+                  <div
+                    style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}
+                  >
+                    Chat Theme
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 13, marginBottom: 8 }}>
+                      Choose theme
+                    </div>
+                    <div className="theme-swatches-grid">
+                      {PRESET_THEMES.map((t) => (
+                        <button
+                          key={t.key}
+                          className={
+                            "theme-swatch" +
+                            (selectedThemeKey === t.key ? " selected" : "")
+                          }
+                          onClick={() => selectPresetTheme(t.theme, t.key)}
+                          type="button"
+                        >
+                          <div
+                            className="swatch-box"
+                            style={{
+                              background: t.theme.bubbleLeft,
+                              borderColor: t.theme.borderColor,
+                            }}
+                          />
+                          <div className="swatch-label">{t.name}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <button onClick={resetTheme} className="theme-action reset">
+                      Reset
+                    </button>
+                    <button onClick={saveTheme} className="theme-action save">
+                      Save
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
-          {showThemePicker && (
-            <div
-              className="theme-picker"
-              style={{
-                position: "absolute",
-                right: 0,
-                bottom: 44,
-                zIndex: 2000,
-              }}
-            >
-              <div className="theme-picker-panel">
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
-                  Chat Theme
-                </div>
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 13, marginBottom: 8 }}>
-                    Choose theme
-                  </div>
-                  <div className="theme-swatches-grid">
-                    {PRESET_THEMES.map((t) => (
-                      <button
-                        key={t.key}
-                        className={
-                          "theme-swatch" +
-                          (selectedThemeKey === t.key ? " selected" : "")
-                        }
-                        onClick={() => selectPresetTheme(t.theme, t.key)}
-                        type="button"
-                      >
-                        <div
-                          className="swatch-box"
-                          style={{
-                            background: t.theme.bubbleLeft,
-                            borderColor: t.theme.borderColor,
-                          }}
-                        />
-                        <div className="swatch-label">{t.name}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  <button onClick={resetTheme} className="theme-action reset">
-                    Reset
-                  </button>
-                  <button onClick={saveTheme} className="theme-action save">
-                    Save
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
         </Paper>
 
         {isSending ? (

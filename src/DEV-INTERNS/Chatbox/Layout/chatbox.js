@@ -77,6 +77,10 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
   const [isSending, setIsSending] = useState(false);
 
   const theme = useChatboxTheme(rootRef);
+  const chatBrandName =
+    aiProvider === "python" ? "PythonPrototype AI" : "UlapAI";
+  const chatInputPlaceholder =
+    aiProvider === "python" ? "Ask PythonPrototype AI" : "Ask UlapAI";
 
   const syncSessionIdToUrl = (sid) => {
     if (typeof window === "undefined") return;
@@ -303,10 +307,25 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
     const placeholderId = crypto.randomUUID();
     const typingMsg = createMessage(placeholderId, "bot", "", {
       status: "thinking",
+      responseTimeMs: 0,
     });
     setMessages((prev) => [...prev, userMsg, typingMsg]);
 
     const messageForAi = text || "Hello";
+    const requestStartTime = performance.now();
+    const responseTimer = window.setInterval(() => {
+      const elapsed = performance.now() - requestStartTime;
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === placeholderId
+            ? {
+                ...msg,
+                responseTimeMs: elapsed,
+              }
+            : msg,
+        ),
+      );
+    }, 100);
 
     sendMessage(
       messageForAi,
@@ -324,7 +343,9 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
           syncSessionIdToUrl(reply.session_id);
         }
         if (isChart) setIsExpanded(true);
+        const elapsedMs = performance.now() - requestStartTime;
         const receivedTime = formatTime();
+        clearInterval(responseTimer);
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === placeholderId
@@ -335,6 +356,7 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
                     data: reply,
                     text,
                     time: receivedTime,
+                    responseTimeMs: elapsedMs,
                   }
                 : isImg
                   ? {
@@ -343,8 +365,15 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
                       data: { images: (reply.images || []).slice(0, 10) },
                       text: "",
                       time: receivedTime,
+                      responseTimeMs: elapsedMs,
                     }
-                  : { ...msg, text, time: receivedTime, status: undefined }
+                  : {
+                      ...msg,
+                      text,
+                      time: receivedTime,
+                      responseTimeMs: elapsedMs,
+                      status: undefined,
+                    }
               : msg,
           ),
         );
@@ -354,7 +383,9 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
           err?.name === "CanceledError" ||
           err?.code === "ERR_CANCELED" ||
           err?.message === "canceled";
+        const elapsedMs = performance.now() - requestStartTime;
         const receivedTime = formatTime();
+        clearInterval(responseTimer);
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === placeholderId
@@ -364,6 +395,7 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
                     ? "Request cancelled."
                     : "Sorry, something went wrong. Please try again.",
                   time: receivedTime,
+                  responseTimeMs: elapsedMs,
                   status: undefined,
                 }
               : msg,
@@ -371,6 +403,7 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
         );
       })
       .finally(() => {
+        clearInterval(responseTimer);
         abortControllerRef.current = null;
         isSendingRef.current = false;
         setIsSending(false);
@@ -585,6 +618,7 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
               />
               <div className="chat-ulap-main">
                 <UlapAIMainHeader
+                  title={chatBrandName}
                   onMinimize={() => {
                     // Go to minimized/popup version instead of closing the chat
                     setIsOpen(true);
@@ -655,7 +689,7 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
                       onDragStart={handleDragStart}
                       themeProps={theme}
                       isExpanded={true}
-                      placeholder="Ask UlapAI"
+                      placeholder={chatInputPlaceholder}
                     />
                   </>
                 )}
@@ -673,6 +707,7 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
             style={panelStyle}
           >
             <ChatHeader
+              title={chatBrandName}
               maintenanceOpen={maintenanceOpen}
               onMaintenanceChange={setMaintenanceOpen}
               onMinimize={() => {

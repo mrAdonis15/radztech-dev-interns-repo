@@ -44,24 +44,43 @@ class LoginToolbar extends Component {
               }
             })();
             const existingToken =
-              existing?.token ?? existing?.biz?.token ?? existing?.dataAccessToken ?? existing?.biz?.dataAccessToken;
+              existing?.token ??
+              existing?.biz?.token ??
+              existing?.dataAccessToken ??
+              existing?.biz?.dataAccessToken;
             const incoming = { ...data };
 
             // Preserve existing biz fields (like name) when API returns partial shape
             const existingBiz =
-              (existing?.biz && typeof existing.biz === "object" && !Array.isArray(existing.biz))
+              existing?.biz &&
+              typeof existing.biz === "object" &&
+              !Array.isArray(existing.biz)
                 ? existing.biz
-                : (existing && typeof existing === "object" && !Array.isArray(existing) ? existing : null);
+                : existing &&
+                    typeof existing === "object" &&
+                    !Array.isArray(existing)
+                  ? existing
+                  : null;
 
             const incomingBiz =
-              (incoming?.biz && typeof incoming.biz === "object" && !Array.isArray(incoming.biz))
+              incoming?.biz &&
+              typeof incoming.biz === "object" &&
+              !Array.isArray(incoming.biz)
                 ? incoming.biz
-                : (incoming && typeof incoming === "object" && !Array.isArray(incoming) ? incoming : null);
+                : incoming &&
+                    typeof incoming === "object" &&
+                    !Array.isArray(incoming)
+                  ? incoming
+                  : null;
 
-            const mergedBiz = { ...(existingBiz || {}), ...(incomingBiz || {}) };
+            const mergedBiz = {
+              ...(existingBiz || {}),
+              ...(incomingBiz || {}),
+            };
 
             // Ensure token survives refreshes
-            if (!mergedBiz.token && existingToken) mergedBiz.token = existingToken;
+            if (!mergedBiz.token && existingToken)
+              mergedBiz.token = existingToken;
 
             const toStore = { ...(existing || {}), ...(incoming || {}) };
             // Keep a consistent shape with `.biz` when possible
@@ -119,6 +138,7 @@ class LoginToolbar extends Component {
     const pathname = this.props.pathname || "";
     const isBizContext =
       pathname.startsWith("/Chatbox") ||
+      pathname.startsWith("/PythonPrototypeChatbot") ||
       pathname.startsWith("/ChatboxGC") ||
       pathname.startsWith("/AGR") ||
       pathname.startsWith("/Evaluation");
@@ -134,7 +154,11 @@ class LoginToolbar extends Component {
           >
             <div className="login-toolbar-logo">
               <div className="login-toolbar-icon-wrap">
-                <img src="/favicon.ico" alt="UlapBiz" className="login-toolbar-icon" />
+                <img
+                  src="/favicon.ico"
+                  alt="UlapBiz"
+                  className="login-toolbar-icon"
+                />
               </div>
               <span className="login-toolbar-text">
                 UlapBiz{isBizContext && bizName ? ` - ${bizName}` : ""}

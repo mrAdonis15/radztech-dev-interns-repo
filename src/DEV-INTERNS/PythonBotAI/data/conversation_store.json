@@ -1,104 +1,104 @@
 {
   "history": [
     {
-      "user": "can you give me the current balance?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "The current General Ledger running balance is 336.1 million. This is based on our sample data spanning 2026-01 to 2026-04 across 12 transaction periods. Would you like me to generate a chart showing how this balance has evolved over time?",
-      "timestamp": 1775526602.342554
+      "user": "can you give me the balance of the general ledger\n[Current Business: Honda Ace City Corporation]",
+      "ai": "I recognized this as a General Ledger data request, but I could not fetch account rows right now. Please verify the site token/cookie and try again.",
+      "timestamp": 1775547925.3977118
     },
     {
-      "user": "warm up model",
+      "user": "can you give me the balance of the general ledger\n[Current Business: Honda Ace City Corporation]",
+      "ai": "I recognized this as a General Ledger data request, but I could not fetch account rows right now. Please verify the site token/cookie and try again.",
+      "timestamp": 1775548642.2789812
+    },
+    {
+      "user": "can you give me the balance of the general ledger\n[Current Business: Honda Ace City Corporation]",
+      "ai": "I recognized this as a General Ledger data request, but I could not fetch account rows right now. Please verify the site token/cookie and try again.",
+      "timestamp": 1775548838.996373
+    },
+    {
+      "user": "what can you do then?\n[Current Business: Honda Ace City Corporation]",
       "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775526713.374462
+      "timestamp": 1775548906.167666
     },
     {
-      "user": "can you give me the current balance?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
-      "timestamp": 1775526735.306108
+      "user": "can you give me the balance of the general ledger\n[Current Business: Honda Ace City Corporation]",
+      "ai": "I recognized this as a General Ledger data request, but I could not fetch account rows right now. Please verify the site token/cookie and try again.",
+      "timestamp": 1775548943.4591942
     },
     {
-      "user": "can you give me the current balance?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
-      "timestamp": 1775526825.852684
-    },
-    {
-      "user": "can you give me the current balance?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
-      "timestamp": 1775526840.364332
-    },
-    {
-      "user": "warm up model",
+      "user": "what can you do then\n[Current Business: Honda Ace City Corporation]",
       "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775526985.267241
+      "timestamp": 1775549008.6381161
     },
     {
-      "user": "POST /api/login HTTP/1.1\nAccept: */*\nAccept-Encoding: gzip, deflate, br, zstd\nAccept-Language: en-US,en;q=0.9\nAuthorization: Basic bWVybHZpbmpha2UyMDA0QGdtYWlsLmNvbToxMjM0\nConnection: keep-alive\nContent-Length: 58\nContent-Type: application/json\nCookie: devID=1580\nHost: localhost:3000\nOrigin: http://localhost:3000\nReferer: http://localhost:3000/login\nSec-Fetch-Dest: empty\nSec-Fetch-Mode: cors\nSec-Fetch-Site: same-origin\nUser-Agent: Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36\nsec-ch-ua: \"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\"\nsec-ch-ua-mobile: ?1\nsec-ch-ua-platform: \"Android\"\nx-access-tokens:\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Web scraping is not available. Please install required packages: pip install requests beautifulsoup4",
-      "timestamp": 1775527080.5767071
+      "user": "tell me a short joke",
+      "ai": "Sure! Here's a short joke for you:\n\nWhy was the math book sad?\n\nBecause it had too many problems.",
+      "timestamp": 1775549222.239888
     },
     {
-      "user": "can you give me the current balance?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
-      "timestamp": 1775527104.690658
+      "user": "can you give me the balance of the general ledger",
+      "ai": "I recognized this as a General Ledger data request, but I could not fetch account rows right now. Please verify the site token/cookie and try again.",
+      "timestamp": 1775549238.325432
     },
     {
-      "user": "can you give me the current balance?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
-      "timestamp": 1775527112.939501
-    },
-    {
-      "user": "warm up model",
+      "user": "what can you do then\n[Current Business: Honda Ace City Corporation]",
       "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775527517.174575
+      "timestamp": 1775549391.4954948
     },
     {
-      "user": "can you give me the current balance?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
-      "timestamp": 1775527530.7615209
-    },
-    {
-      "user": "can you give me the current balance?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
-      "timestamp": 1775527622.481216
-    },
-    {
-      "user": "can you give me the current balance?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
-      "timestamp": 1775527636.884371
-    },
-    {
-      "user": "can you give me the current balance?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
-      "timestamp": 1775528254.024648
-    },
-    {
-      "user": "can you give me the current balance?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
-      "timestamp": 1775528716.490486
-    },
-    {
-      "user": "can you give me the current balance?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
-      "timestamp": 1775528935.8883011
-    },
-    {
-      "user": "can you give me the current balance?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
-      "timestamp": 1775529003.235012
-    },
-    {
-      "user": "merge_branches_bd_dev\n[Current Business: Honda Ace City Corporation]",
+      "user": "what can you do\n[Current Business: Honda Ace City Corporation]",
       "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775529342.1089568
+      "timestamp": 1775549489.048752
     },
     {
-      "user": "give me the balance of the general ledger\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
-      "timestamp": 1775529630.1237388
-    },
-    {
-      "user": "warm up model",
+      "user": "what can you do",
       "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775534499.8260438
+      "timestamp": 1775550088.5273962
+    },
+    {
+      "user": "what can you do",
+      "ai": "Sorry, Something went wrong. Please try again",
+      "timestamp": 1775550833.820958
+    },
+    {
+      "user": "what can you do",
+      "ai": "Sorry, Something went wrong. Please try again",
+      "timestamp": 1775608087.8589702
+    },
+    {
+      "user": "what can you do",
+      "ai": "What can I assist you with today?",
+      "timestamp": 1775608348.653228
+    },
+    {
+      "user": "what can you do",
+      "ai": "Sorry, Something went wrong. Please try again",
+      "timestamp": 1775608856.51733
+    },
+    {
+      "user": "what can you do",
+      "ai": "Sorry, Something went wrong. Please try again",
+      "timestamp": 1775609002.835986
+    },
+    {
+      "user": "what can you do",
+      "ai": "Sorry, Something went wrong. Please try again",
+      "timestamp": 1775609117.3159418
+    },
+    {
+      "user": "what can you do",
+      "ai": "Sorry, Something went wrong. Please try again",
+      "timestamp": 1775612329.55315
+    },
+    {
+      "user": "hello",
+      "ai": "Hello! I can help with balances, inventory, charts, and financial questions. What would you like to check?",
+      "timestamp": 1775615084.506976
+    },
+    {
+      "user": "test",
+      "ai": "Sorry, Something went wrong. Please try again",
+      "timestamp": 1775615101.870173
     }
   ],
   "context": {

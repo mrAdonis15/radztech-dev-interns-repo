@@ -587,6 +587,11 @@ function runPythonResponse(message, authContext = null) {
 }
 
 async function warmupModel() {
+  // Temporarily disabled - warmup hangs on some prompts
+  console.log("[Warmup] Skipped (disabled for debugging)");
+  return;
+
+  /* Original warmup code:
   try {
     console.log("[Warmup] Starting Python model warmup...");
     const warmupPromise = new Promise((resolve, reject) => {
@@ -611,6 +616,7 @@ async function warmupModel() {
   } catch (err) {
     console.warn("[Warmup] Failed:", err?.message || err);
   }
+  */
 }
 
 function isCurrentBizPrompt(input) {
@@ -653,9 +659,15 @@ app.post("/api/chat", async (req, res) => {
       });
     }
 
-    // Include biz context in the request sent to Python
+    // Include biz context note only for business-data queries.
+    const isBizDataPrompt =
+      /\b(biz|business|inventory|stock|general ledger|ledger|gl\b|balance|accounts receivable|receivable|payable|report)\b/.test(
+        normalized,
+      );
+
+    // Include biz context in the request sent to Python when relevant.
     let contextNote = "";
-    if (bizContext && bizContext.bizName) {
+    if (isBizDataPrompt && bizContext && bizContext.bizName) {
       contextNote = `\n[Current Business: ${bizContext.bizName}]`;
     }
 
@@ -681,14 +693,17 @@ app.post("/api/chat", async (req, res) => {
 
     const resolvedAuthContext = authContext || auth_context || null;
 
-    // Keep the rotating x-access token fresh using saved credentials.
-    try {
-      await ensureValidSiteToken();
-    } catch (authErr) {
-      console.warn(
-        "[Auth] Token refresh skipped/failed before /api/chat:",
-        authErr.message,
-      );
+    // If frontend provided authContext, prefer that session and avoid
+    // overriding with potentially stale server-side fallback credentials.
+    if (!resolvedAuthContext) {
+      try {
+        await ensureValidSiteToken();
+      } catch (authErr) {
+        console.warn(
+          "[Auth] Token refresh skipped/failed before /api/chat:",
+          authErr.message,
+        );
+      }
     }
 
     const response = await runPythonResponse(
@@ -737,8 +752,13 @@ app.post("/api/chat/stream", async (req, res) => {
       return res.end();
     }
 
+    const isBizDataPrompt =
+      /\b(biz|business|inventory|stock|general ledger|ledger|gl\b|balance|accounts receivable|receivable|payable|report)\b/.test(
+        normalized,
+      );
+
     let contextNote = "";
-    if (bizContext && bizContext.bizName) {
+    if (isBizDataPrompt && bizContext && bizContext.bizName) {
       contextNote = `\n[Current Business: ${bizContext.bizName}]`;
     }
 
@@ -749,13 +769,15 @@ app.post("/api/chat/stream", async (req, res) => {
 
     const resolvedAuthContext = authContext || auth_context || null;
 
-    try {
-      await ensureValidSiteToken();
-    } catch (authErr) {
-      console.warn(
-        "[Auth] Token refresh skipped/failed before /api/chat/stream:",
-        authErr.message,
-      );
+    if (!resolvedAuthContext) {
+      try {
+        await ensureValidSiteToken();
+      } catch (authErr) {
+        console.warn(
+          "[Auth] Token refresh skipped/failed before /api/chat/stream:",
+          authErr.message,
+        );
+      }
     }
 
     const fullText = String(
@@ -798,6 +820,72 @@ app.get("/api/health", (req, res) => {
     message: "AI chatbot is running",
     timestamp: new Date().toISOString(),
   });
+});
+
+// Auth diagnostics - reports which auth fields are present without exposing secrets.
+app.post("/api/auth/context-diagnostics", async (req, res) => {
+  const { authContext, auth_context, bizContext, biz_context } = req.body || {};
+  const resolvedAuthContext = authContext || auth_context || null;
+  const resolvedBizContext = bizContext || biz_context || null;
+
+  const summary = {
+    hasAuthContext: !!resolvedAuthContext,
+    hasBizContext: !!resolvedBizContext,
+    authFields: {},
+    bizName:
+      resolvedBizContext?.bizName ||
+      resolvedBizContext?.name ||
+      resolvedBizContext?.biz?.name ||
+      null,
+    upstreamValidation: null,
+  };
+
+  if (resolvedAuthContext && typeof resolvedAuthContext === "object") {
+    summary.authFields = {
+      user_auth_token: !!resolvedAuthContext.user_auth_token,
+      data_access_token: !!resolvedAuthContext.data_access_token,
+      user_cookie: !!resolvedAuthContext.user_cookie,
+      csrf_token: !!resolvedAuthContext.csrf_token,
+      auth_header_name: resolvedAuthContext.auth_header_name || null,
+      csrf_header_name: resolvedAuthContext.csrf_header_name || null,
+      extra_headers: !!resolvedAuthContext.extra_headers,
+      extra_headers_has_x_data_access_token: !!(
+        resolvedAuthContext.extra_headers &&
+        typeof resolvedAuthContext.extra_headers === "object" &&
+        resolvedAuthContext.extra_headers["x-data-access-token"]
+      ),
+    };
+  }
+
+  const tokenToValidate =
+    resolvedAuthContext?.user_auth_token ||
+    resolvedAuthContext?.data_access_token ||
+    null;
+
+  if (tokenToValidate) {
+    try {
+      const check = await validateSiteApiToken(
+        String(tokenToValidate).trim(),
+        process.env.SITE_DEV_ID || "",
+      );
+      summary.upstreamValidation = {
+        ok: !!check.ok,
+        statusCode: check.statusCode,
+        bodyPreview:
+          typeof check.body === "string"
+            ? check.body.slice(0, 200)
+            : check.body,
+      };
+    } catch (err) {
+      summary.upstreamValidation = {
+        ok: false,
+        statusCode: err?.statusCode || 0,
+        error: err?.message || "Validation failed",
+      };
+    }
+  }
+
+  return res.json(summary);
 });
 
 // Site login — accepts user credentials, logs into the target site, stores the token

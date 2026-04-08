@@ -32,6 +32,7 @@ function getProductStats() {
 function getProductById() {
   return null;
 }
+// Added title prop to ChatHeader
 function getProductByName() {
   return null;
 }
@@ -48,6 +49,15 @@ export function formatTime() {
     minute: "2-digit",
     hour12: true,
   });
+}
+
+/** Format elapsed response time for message display */
+export function formatResponseTime(ms) {
+  if (!Number.isFinite(ms) || ms < 0) {
+    return "Responded in --";
+  }
+
+  return `Responded in ${(ms / 1000).toFixed(2)}s`;
 }
 
 /** Create a message object */
@@ -187,7 +197,8 @@ export function addToHistory(messages, sessionId = undefined) {
     title: getTitleFromMessages(messages),
     messages: [...messages],
     createdAt: Date.now(),
-    ...(sessionId != null && sessionId !== "" && { sessionId: String(sessionId) }),
+    ...(sessionId != null &&
+      sessionId !== "" && { sessionId: String(sessionId) }),
   };
   const next = [item, ...history].slice(0, 50);
   saveHistory(next);
@@ -212,7 +223,8 @@ export function updateHistoryItem(id, messages, sessionId = undefined) {
     title: getTitleFromMessages(messages),
     messages: [...messages],
     updatedAt: Date.now(),
-    ...(sessionId != null && sessionId !== "" && { sessionId: String(sessionId) }),
+    ...(sessionId != null &&
+      sessionId !== "" && { sessionId: String(sessionId) }),
   };
   saveHistory(next);
   return next;
@@ -748,12 +760,12 @@ export function ChatHeader({
   );
 }
 
-// --- UlapAI Main Header (for two-panel expanded layout) ---
-export function UlapAIMainHeader({ onMinimize, onMore }) {
+// --- Main Header (for two-panel expanded layout) ---
+export function UlapAIMainHeader({ onMinimize, onMore, title = "UlapAI" }) {
   return (
     <header className="chat-ulap-main-header">
       <Typography variant="h6" className="chat-ulap-main-header-title">
-        UlapAI
+        {title}
       </Typography>
       <div className="chat-ulap-main-header-right">
         {onMore && (
