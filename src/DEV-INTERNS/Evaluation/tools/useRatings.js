@@ -508,10 +508,6 @@ export default function useRatings() {
     });
   };
 
-  const handleSelectGroup = (event) => {
-    setPersistedActiveGroupId(event.target.value);
-  };
-
   const addGroup = () => {
     const nextId = createUniqueId("rating-set");
 
@@ -658,7 +654,6 @@ export default function useRatings() {
     categories,
     handleSaveEvaluation,
     resetRatings,
-    handleSelectGroup,
     summary,
     displayMode,
     addGroup,

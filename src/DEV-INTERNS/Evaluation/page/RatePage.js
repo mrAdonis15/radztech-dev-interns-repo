@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -25,23 +25,24 @@ import {
 } from "@material-ui/core";
 import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
 import CloseIcon from "@material-ui/icons/Close";
+import DescriptionOutlinedIcon from "@material-ui/icons/DescriptionOutlined";
 import ReplayIcon from "@material-ui/icons/Replay";
 import SearchIcon from "@material-ui/icons/Search";
 import LoginToolbar from "../../../Auth/Login/LoginToolbar";
 import { SUB_LIST_KEYS } from "../api/endpoints";
 import { requestSubListItems } from "../api/subLists";
-import SetupQuestions from "../components/SetupQuestions";
+import { requestEvaluationTemplates } from "../api/templates";
 import RatingDialog from "../components/RatingDialog";
 import ResultDialog from "../components/ResultDialog";
+import TemplateQuestions from "../components/TemplateQuestions";
 import useRatings from "../tools/useRatings";
-import useQuestions from "../tools/useQuestions";
 
 const SHOW_JSON_BUTTON = false;
 const GROUPS_STORAGE_KEY = "dev-interns-star-rating-groups";
 const ACTIVE_GROUP_STORAGE_KEY = "dev-interns-star-rating-active-group";
-const QUESTIONS_STORAGE_KEY = "dev-interns-star-rating-questions";
 const SETUP_JSON_STORAGE_KEY = "dev-interns-star-rating-setup-json";
 const SELECTED_EVALUATOR_STORAGE_KEY = "dev-interns-star-rating-selected-evaluator";
+const SELECTED_TEMPLATE_STORAGE_KEY = "dev-interns-star-rating-selected-template";
 
 const useStyles = makeStyles((theme) => ({
   page: {
@@ -248,6 +249,23 @@ const useStyles = makeStyles((theme) => ({
   },
   resetActionWrap: {
     marginLeft: "auto",
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(1.25),
+  },
+  newEvaluationButton: {
+    borderRadius: 3,
+    padding: theme.spacing(0.9, 1.8),
+    textTransform: "none",
+    fontWeight: 700,
+    color: "#1f2937",
+    borderColor: "#d1d5db",
+    backgroundColor: "#ffffff",
+    "&:hover": {
+      borderColor: "#f97316",
+      color: "#ea580c",
+      backgroundColor: "#fff7ed",
+    },
   },
   resetButton: {
     borderRadius: 3,
@@ -576,6 +594,92 @@ const useStyles = makeStyles((theme) => ({
     lineHeight: 1.6,
     border: "1px solid #d7dce1",
   },
+  templateSelectionWrap: {
+    maxWidth: 1140,
+    margin: "0 auto",
+    paddingTop: theme.spacing(2),
+  },
+  templateSelectionHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: theme.spacing(2),
+    marginBottom: theme.spacing(3),
+    [theme.breakpoints.down("sm")]: {
+      flexDirection: "column",
+      alignItems: "stretch",
+    },
+  },
+  templateSelectionTitle: {
+    fontWeight: 500,
+    color: "#4b5563",
+    fontSize: 34,
+    letterSpacing: "-0.02em",
+  },
+  templateCancelButton: {
+    borderRadius: 999,
+    padding: theme.spacing(1.1, 2.25),
+    textTransform: "none",
+    fontWeight: 700,
+    backgroundColor: "#ff7a00",
+    color: "#ffffff",
+    alignSelf: "flex-start",
+    "&:hover": {
+      backgroundColor: "#f97316",
+    },
+  },
+  templateSelectionPanel: {
+    borderRadius: 0,
+    border: "1px solid #dfe4ea",
+    boxShadow: "none",
+    overflow: "hidden",
+    backgroundColor: "#ffffff",
+  },
+  templateSelectionRow: {
+    display: "grid",
+    gridTemplateColumns: "56px minmax(0, 1fr) auto",
+    alignItems: "center",
+    gap: theme.spacing(2),
+    minHeight: 106,
+    padding: theme.spacing(0, 4),
+    borderBottom: "1px solid #e5e7eb",
+    cursor: "pointer",
+    transition: "background-color 0.16s ease",
+    "&:hover": {
+      backgroundColor: "#fffaf5",
+    },
+    [theme.breakpoints.down("sm")]: {
+      gridTemplateColumns: "40px minmax(0, 1fr)",
+      padding: theme.spacing(0, 2),
+      gap: theme.spacing(1.5),
+    },
+  },
+  templateSelectionRowLast: {
+    borderBottom: "none",
+  },
+  templateSelectionIcon: {
+    color: "#2f343b",
+    fontSize: 30,
+  },
+  templateSelectionName: {
+    color: "#111827",
+    fontSize: 18,
+    fontWeight: 500,
+  },
+  templateSelectAction: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: theme.spacing(1),
+    color: "#ff7a00",
+    fontWeight: 700,
+    fontSize: 16,
+    textTransform: "uppercase",
+    [theme.breakpoints.down("sm")]: {
+      gridColumn: "2 / 3",
+      justifySelf: "start",
+      paddingBottom: theme.spacing(2),
+    },
+  },
 }));
 
 const getStoredSelectedEvaluator = () => {
@@ -614,7 +718,6 @@ const renderStarPreview = (value) => {
 
 function RatePage() {
   const classes = useStyles();
-  const hasRequestedEvaluators = useRef(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [jsonPreviewCategory, setJsonPreviewCategory] = useState(null);
   const [setupJsonOutput, setSetupJsonOutput] = useState("");
@@ -629,6 +732,10 @@ function RatePage() {
   const [evaluatorDraft, setEvaluatorDraft] = useState("");
   const [evaluators, setEvaluators] = useState([]);
   const [evaluatorsLoading, setEvaluatorsLoading] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [showTemplateSelectionPage, setShowTemplateSelectionPage] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const {
     activeGroupId,
@@ -637,29 +744,30 @@ function RatePage() {
     categories,
     handleSaveEvaluation,
     resetRatings,
-    handleSelectGroup: handleSelectGroupState,
     summary,
     displayMode,
   } = useRatings();
-  const {
-    questions,
-    addQuestion,
-    updateQuestion,
-    removeQuestion,
-    addSubQuestion,
-    updateSubQuestion,
-    removeSubQuestion,
-    resetQuestions,
-  } = useQuestions();
+  const selectedTemplate = useMemo(
+    () => templates.find((template) => template.id === selectedTemplateId) || null,
+    [templates, selectedTemplateId]
+  );
+  const questions = selectedTemplate?.questions || [];
 
-  if (typeof window !== "undefined" && !hasRequestedEvaluators.current) {
-    hasRequestedEvaluators.current = true;
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
     const authToken = window.localStorage.getItem("authToken");
+    let isMounted = true;
 
     setEvaluatorsLoading(true);
-
     requestSubListItems(authToken, SUB_LIST_KEYS.evaluators)
       .then((items) => {
+        if (!isMounted) {
+          return;
+        }
+
         setEvaluators(items);
         setSelectedEvaluator((currentEvaluator) => {
           if (!currentEvaluator?.id) {
@@ -671,9 +779,56 @@ function RatePage() {
         });
       })
       .finally(() => {
-        setEvaluatorsLoading(false);
+        if (isMounted) {
+          setEvaluatorsLoading(false);
+        }
       });
-  }
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    const authToken = window.localStorage.getItem("authToken");
+    let isMounted = true;
+
+    setTemplatesLoading(true);
+    requestEvaluationTemplates(authToken)
+      .then((items) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setTemplates(items);
+      })
+      .finally(() => {
+        if (isMounted) {
+          setTemplatesLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (selectedTemplateId) {
+      window.localStorage.setItem(SELECTED_TEMPLATE_STORAGE_KEY, selectedTemplateId);
+      return;
+    }
+
+    window.localStorage.removeItem(SELECTED_TEMPLATE_STORAGE_KEY);
+  }, [selectedTemplateId]);
 
   const handleSaveSetupJson = () => {
     const groupPayload = categoryGroupList.reduce((accumulator, group) => {
@@ -681,9 +836,6 @@ function RatePage() {
       return accumulator;
     }, {});
 
-    const questionPayload = {
-      questions,
-    };
     const payload = {
       setup: {
         id: activeGroup?.id || activeGroupId,
@@ -700,6 +852,12 @@ function RatePage() {
           evaluationResult: category.evaluationResult,
         })),
       },
+      template: selectedTemplate
+        ? {
+            id: selectedTemplate.id,
+            name: selectedTemplate.name,
+          }
+        : null,
       questions,
     };
     const formattedJson = JSON.stringify(payload, null, 2);
@@ -707,7 +865,6 @@ function RatePage() {
     if (typeof window !== "undefined") {
       window.localStorage.setItem(GROUPS_STORAGE_KEY, JSON.stringify(groupPayload));
       window.localStorage.setItem(ACTIVE_GROUP_STORAGE_KEY, activeGroupId);
-      window.localStorage.setItem(QUESTIONS_STORAGE_KEY, JSON.stringify(questionPayload));
       window.localStorage.setItem(SETUP_JSON_STORAGE_KEY, formattedJson);
     }
 
@@ -716,13 +873,23 @@ function RatePage() {
     setSetupSaveVersion((currentValue) => currentValue + 1);
   };
 
-  const handleSelectGroup = (event) => {
-    handleSelectGroupState(event);
+  const handleOpenTemplateSelectionPage = () => {
+    setSelectedTemplateId("");
+    setShowTemplateSelectionPage(true);
     setSelectedCategory(null);
     setJsonPreviewCategory(null);
-    setSearchTerm("");
-    setSearchDraft("");
-    setSearchDialogOpen(false);
+  };
+
+  const handleCloseTemplateSelectionPage = () => {
+    setShowTemplateSelectionPage(false);
+  };
+
+  const handleSelectTemplateFromPage = (templateId) => {
+    setSelectedTemplateId(templateId);
+    setSelectedCategory(null);
+    setJsonPreviewCategory(null);
+    setShowTemplateSelectionPage(false);
+    setActiveTab("manage");
   };
 
   const handleOpenEvaluation = (category) => {
@@ -744,6 +911,8 @@ function RatePage() {
   const handleSaveCategoryEvaluation = (categoryId, evaluationResult) => {
     const savedEvaluation = handleSaveEvaluation(categoryId, {
       ...evaluationResult,
+      templateId: selectedTemplate?.id || "",
+      templateName: selectedTemplate?.name || "",
       evaluator: serializeEvaluator(selectedEvaluator),
     });
     setSelectedCategory(null);
@@ -831,6 +1000,19 @@ function RatePage() {
 
     return matchesSearch && matchesStatus;
   });
+  const canStartEvaluation = Boolean(selectedTemplate);
+  const templateSelectionItems = [
+    ...templates
+      .filter((template) => template.active)
+      .map((template) => ({
+        id: template.id,
+        name: template.name,
+      })),
+    {
+      id: "",
+      name: "I don't want to use template",
+    },
+  ];
 
   const searchResults = categories.filter((category) =>
     category.name.toLowerCase().includes(searchDraft.trim().toLowerCase())
@@ -853,6 +1035,56 @@ function RatePage() {
       <LoginToolbar />
       <Box className={classes.page}>
         <Container maxWidth="lg">
+          {showTemplateSelectionPage ? (
+            <Box className={classes.templateSelectionWrap}>
+              <Box className={classes.templateSelectionHeader}>
+                <Typography className={classes.templateSelectionTitle}>
+                  Performance Evaluation
+                </Typography>
+                <Button
+                  variant="contained"
+                  endIcon={<CloseIcon />}
+                  onClick={handleCloseTemplateSelectionPage}
+                  className={classes.templateCancelButton}
+                >
+                  CANCEL
+                </Button>
+              </Box>
+
+              <Paper elevation={0} className={classes.templateSelectionPanel}>
+                {templatesLoading ? (
+                  <Box className={`${classes.templateSelectionRow} ${classes.templateSelectionRowLast}`}>
+                    <DescriptionOutlinedIcon className={classes.templateSelectionIcon} />
+                    <Typography className={classes.templateSelectionName}>
+                      Loading templates...
+                    </Typography>
+                    <Box />
+                  </Box>
+                ) : (
+                  templateSelectionItems.map((template, index) => (
+                    <Box
+                      key={template.id || "no-template"}
+                      className={`${classes.templateSelectionRow} ${
+                        index === templateSelectionItems.length - 1
+                          ? classes.templateSelectionRowLast
+                          : ""
+                      }`}
+                      onClick={() => handleSelectTemplateFromPage(template.id)}
+                    >
+                      <DescriptionOutlinedIcon className={classes.templateSelectionIcon} />
+                      <Typography className={classes.templateSelectionName}>
+                        {template.name}
+                      </Typography>
+                      <Box className={classes.templateSelectAction}>
+                        <span>SELECT</span>
+                        <ArrowForwardIcon />
+                      </Box>
+                    </Box>
+                  ))
+                )}
+              </Paper>
+            </Box>
+          ) : (
           <Paper elevation={0} className={classes.hero}>
             <Typography className={classes.sectionLabel}>Evaluation</Typography>
             <Typography variant="h3" className={classes.heroTitle}>
@@ -868,7 +1100,7 @@ function RatePage() {
               <Box className={classes.filterBody}>
                 <Box className={classes.filtersGrid}>
                   <Box className={classes.searchFieldBlock}>
-                    <Typography className={classes.fieldLabel}>Search Interns</Typography>
+                    <Typography className={classes.fieldLabel}>Interns</Typography>
                     <Box className={classes.evaluatorSelector}>
                       <IconButton
                         className={classes.evaluatorSelectorButton}
@@ -932,26 +1164,6 @@ function RatePage() {
                         <CloseIcon />
                       </IconButton>
                     </Box>
-                  </Box>
-                  <Box className={classes.fieldBlock}>
-                    <Typography className={classes.fieldLabel}>Rating Setup</Typography>
-                    <FormControl
-                      variant="outlined"
-                      size="small"
-                      className={classes.selectControl}
-                    >
-                      <Select
-                        value={activeGroupId}
-                        onChange={handleSelectGroup}
-                        className={classes.selectInput}
-                      >
-                        {categoryGroupList.map((group) => (
-                          <MenuItem key={group.id} value={group.id}>
-                            {group.label || "Untitled setup"}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
                   </Box>
                   <Box className={classes.fieldBlock}>
                     <Typography className={classes.fieldLabel}>Status</Typography>
@@ -1025,6 +1237,13 @@ function RatePage() {
                 </Box>
                 <Box className={classes.resetActionWrap}>
                   <Button
+                    variant="outlined"
+                    onClick={handleOpenTemplateSelectionPage}
+                    className={classes.newEvaluationButton}
+                  >
+                    NEW PERFORMANCE EVALUATION
+                  </Button>
+                  <Button
                     variant="text"
                     startIcon={<ReplayIcon />}
                     onClick={activeTab === "manage" ? handleSaveSetupJson : resetRatings}
@@ -1036,20 +1255,15 @@ function RatePage() {
               </Box>
             </Paper>
           </Paper>
+          )}
 
-          {activeTab === "manage" ? (
-            <SetupQuestions
+          {!showTemplateSelectionPage && activeTab === "manage" && canStartEvaluation ? (
+            <TemplateQuestions
               questions={questions}
-              onSaveJson={handleSaveSetupJson}
-              onAddQuestion={addQuestion}
-              onUpdateQuestion={updateQuestion}
-              onRemoveQuestion={removeQuestion}
-              onAddSubQuestion={addSubQuestion}
-              onUpdateSubQuestion={updateSubQuestion}
-              onRemoveSubQuestion={removeSubQuestion}
-              onResetQuestions={resetQuestions}
+              selectedTemplateName={selectedTemplate?.name || ""}
             />
-          ) : categories.length > 0 ? (
+          ) : !showTemplateSelectionPage && !canStartEvaluation ? null : !showTemplateSelectionPage &&
+            canStartEvaluation && categories.length > 0 ? (
             <TableContainer component={Paper} elevation={0} className={classes.tableShell}>
               <Box className={classes.tableTitleBar}>
                 <Box>
@@ -1147,7 +1361,7 @@ function RatePage() {
                               variant="contained"
                               className={classes.evaluateButton}
                               onClick={() => handleOpenEvaluation(category)}
-                              disabled={hasRating}
+                              disabled={hasRating || !canStartEvaluation}
                             >
                               {hasRating ? "Evaluated" : "Evaluate"}
                             </Button>
@@ -1166,7 +1380,7 @@ function RatePage() {
                 </TableBody>
               </Table>
             </TableContainer>
-          ) : (
+          ) : !showTemplateSelectionPage && canStartEvaluation ? (
             <Paper elevation={0} className={classes.emptyState}>
               <Typography variant="h6">No items in this setup yet</Typography>
               <Typography variant="body2">
@@ -1174,13 +1388,14 @@ function RatePage() {
                 to rate.
               </Typography>
             </Paper>
-          )}
+          ) : null}
 
           <RatingDialog
             key={evaluationDialogKey}
             open={Boolean(selectedCategory)}
             category={selectedCategory}
             questions={questions}
+            templateName={selectedTemplate?.name || ""}
             onClose={handleCloseEvaluation}
             onSave={handleSaveCategoryEvaluation}
           />

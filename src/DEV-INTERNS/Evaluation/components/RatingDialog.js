@@ -73,7 +73,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function RatingDialog({ open, category, questions, onClose, onSave }) {
+function RatingDialog({ open, category, questions, templateName, onClose, onSave }) {
   const classes = useStyles();
   const getDraftRatingsFromEvaluation = (evaluationResult) => {
     if (!evaluationResult || !Array.isArray(evaluationResult.ratings)) {
@@ -222,11 +222,15 @@ function RatingDialog({ open, category, questions, onClose, onSave }) {
           Answer each question using the configured type. Rate questions use stars,
           while paragraph questions use a text box.
         </Typography>
+        {templateName ? (
+          <Typography variant="body2" className={classes.intro}>
+            Template: {templateName}
+          </Typography>
+        ) : null}
 
         {questions.length === 0 ? (
           <Typography variant="body2" className={classes.emptyState}>
-            No evaluation questions are configured. Use the question admin panel to add
-            at least one question.
+            No evaluation questions are available for the selected template.
           </Typography>
         ) : (
           questions.map((questionCategory, index) => (
