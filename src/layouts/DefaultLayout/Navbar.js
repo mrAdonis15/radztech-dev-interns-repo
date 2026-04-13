@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import MenuIcon from "@material-ui/icons/Menu";
 import CloseIcon from "@material-ui/icons/Close";
-import { useAuth } from "src/contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 import { Link as RouterLink } from "react-router-dom";
 import {

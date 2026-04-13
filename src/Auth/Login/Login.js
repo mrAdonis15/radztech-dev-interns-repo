@@ -140,15 +140,7 @@ export default function Login() {
       <Box className="login-body">
         <Box className="login-content">
           <Box className="login-logo">
-            <img src="/favicon.ico" alt="UlapBiz" className="login-logo-icon" />
-            <Typography variant="h6" className="login-logo-text" component="span">
-              <Typography component="span" className="login-logo-ulap">
-                Ulap
-              </Typography>
-              <Typography component="span" className="login-logo-biz">
-                .Biz
-              </Typography>
-            </Typography>
+            <img src="./LoginLogo.png" alt="UlapBiz" className="login-logo-icon" />
           </Box>
 
           <form className="login-form" onSubmit={handleSubmit}>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { requestSubGroups } from "../api/subLists";
 
 const GROUPS_STORAGE_KEY = "dev-interns-star-rating-groups";
@@ -15,12 +15,14 @@ const defaultCategoryGroups = {
   [defaultGroupId]: {
     id: defaultGroupId,
     label: "Interns",
-    description: "Loaded from sub1.",
+    description: "",
     itemLabelSingular: "Intern",
     itemLabelPlural: "Interns",
     categories: [],
   },
 };
+
+const DESCRIPTION_PLACEHOLDERS = new Set(["loaded from sub1.", "loaded from sub_list."]);
 
 const createUniqueId = (prefix) =>
   `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -137,6 +139,30 @@ const normalizeEvaluationResult = (evaluationResult, category) => {
         : Number(
             (ratings.reduce((sum, entry) => sum + entry.rating, 0) / ratings.length).toFixed(1)
           ),
+    evaluator:
+      evaluationResult.evaluator &&
+      typeof evaluationResult.evaluator === "object" &&
+      typeof evaluationResult.evaluator.id === "string"
+        ? {
+            id: evaluationResult.evaluator.id,
+            name:
+              typeof evaluationResult.evaluator.name === "string"
+                ? evaluationResult.evaluator.name
+                : "",
+            code:
+              typeof evaluationResult.evaluator.code === "string"
+                ? evaluationResult.evaluator.code
+                : "",
+            subtitle:
+              typeof evaluationResult.evaluator.subtitle === "string"
+                ? evaluationResult.evaluator.subtitle
+                : "",
+            location:
+              typeof evaluationResult.evaluator.location === "string"
+                ? evaluationResult.evaluator.location
+                : "",
+          }
+        : null,
     ratings,
     essayResponses,
   };
@@ -172,7 +198,11 @@ const normalizeCategory = (category) => ({
 const normalizeGroup = (group, fallbackId) => ({
   id: typeof group?.id === "string" ? group.id : fallbackId,
   label: typeof group?.label === "string" ? group.label : "",
-  description: typeof group?.description === "string" ? group.description : "",
+  description:
+    typeof group?.description === "string" &&
+    !DESCRIPTION_PLACEHOLDERS.has(group.description.trim().toLowerCase())
+      ? group.description
+      : "",
   itemLabelSingular:
     typeof group?.itemLabelSingular === "string" && group.itemLabelSingular.trim()
       ? group.itemLabelSingular
@@ -326,6 +356,7 @@ const clampRating = (rating) => Math.min(5, Math.max(1, rating));
 
 export default function useRatings() {
   const [categoryState, setCategoryState] = useState(getStoredCategoryGroups);
+  const hasRequestedRemoteGroups = useRef(false);
   const getInitialActiveGroupId = () => {
     const storedActiveGroupId = getStoredActiveGroupId();
     return categoryState[storedActiveGroupId]
@@ -353,7 +384,8 @@ export default function useRatings() {
     return nextActiveGroupId;
   };
 
-  if (typeof window !== "undefined") {
+  if (typeof window !== "undefined" && !hasRequestedRemoteGroups.current) {
+    hasRequestedRemoteGroups.current = true;
     const authToken = window.localStorage.getItem("authToken");
 
     requestSubGroups(authToken).then((remoteGroups) => {
@@ -367,9 +399,18 @@ export default function useRatings() {
 
         persistCategoryState(nextGroups);
 
-        if (nextGroupIds.length > 0 && !nextGroups[activeGroupId]) {
-          setPersistedActiveGroupId(nextGroupIds[0]);
-        }
+        setActiveGroupIdState((currentActiveGroupId) => {
+          const nextActiveGroupId =
+            nextGroupIds.length > 0 && !nextGroups[currentActiveGroupId]
+              ? nextGroupIds[0]
+              : currentActiveGroupId;
+
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem(ACTIVE_GROUP_STORAGE_KEY, nextActiveGroupId);
+          }
+
+          return nextActiveGroupId;
+        });
 
         return nextGroups;
       });
@@ -465,10 +506,6 @@ export default function useRatings() {
       persistCategoryState(nextGroups);
       return nextGroups;
     });
-  };
-
-  const handleSelectGroup = (event) => {
-    setPersistedActiveGroupId(event.target.value);
   };
 
   const addGroup = () => {
@@ -605,7 +642,7 @@ export default function useRatings() {
   };
 
   const activeGroup = categoryState[activeGroupId] || categoryState[Object.keys(categoryState)[0]];
-  const categories = activeGroup ? activeGroup.categories : [];
+  const categories = useMemo(() => (activeGroup ? activeGroup.categories : []), [activeGroup]);
   const categoryGroupList = Object.values(categoryState);
   const summary = useMemo(() => getSummary(categories, activeGroup), [categories, activeGroup]);
   const displayMode = getDisplayMode(activeGroup);
@@ -617,7 +654,6 @@ export default function useRatings() {
     categories,
     handleSaveEvaluation,
     resetRatings,
-    handleSelectGroup,
     summary,
     displayMode,
     addGroup,

@@ -73,7 +73,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function RatingDialog({ open, category, questions, onClose, onSave }) {
+function RatingDialog({ open, category, questions, templateName, onClose, onSave }) {
   const classes = useStyles();
   const getDraftRatingsFromEvaluation = (evaluationResult) => {
     if (!evaluationResult || !Array.isArray(evaluationResult.ratings)) {
@@ -122,6 +122,9 @@ function RatingDialog({ open, category, questions, onClose, onSave }) {
     () => Object.values(draftEssays).filter((value) => typeof value === "string" && value.trim()),
     [draftEssays]
   );
+  const answeredQuestionCount = answeredRatings.length + answeredEssays.length;
+  const hasAnsweredAllQuestions =
+    totalQuestionCount > 0 && answeredQuestionCount === totalQuestionCount;
   const draftAverage = answeredRatings.length
     ? (answeredRatings.reduce((sum, value) => sum + value, 0) / answeredRatings.length).toFixed(1)
     : null;
@@ -141,7 +144,7 @@ function RatingDialog({ open, category, questions, onClose, onSave }) {
   };
 
   const handleSave = () => {
-    if (!category) {
+    if (!category || !hasAnsweredAllQuestions) {
       return;
     }
 
@@ -191,7 +194,7 @@ function RatingDialog({ open, category, questions, onClose, onSave }) {
       categoryId: category.id,
       categoryName: category.name,
       submittedAt: new Date().toISOString(),
-      answeredQuestions: ratings.length + essayResponses.length,
+      answeredQuestions: answeredQuestionCount,
       totalQuestions: totalQuestionCount,
       overallRating: ratings.length
         ? Number(
@@ -219,11 +222,15 @@ function RatingDialog({ open, category, questions, onClose, onSave }) {
           Answer each question using the configured type. Rate questions use stars,
           while paragraph questions use a text box.
         </Typography>
+        {templateName ? (
+          <Typography variant="body2" className={classes.intro}>
+            Template: {templateName}
+          </Typography>
+        ) : null}
 
         {questions.length === 0 ? (
           <Typography variant="body2" className={classes.emptyState}>
-            No evaluation questions are configured. Use the question admin panel to add
-            at least one question.
+            No evaluation questions are available for the selected template.
           </Typography>
         ) : (
           questions.map((questionCategory, index) => (
@@ -277,10 +284,14 @@ function RatingDialog({ open, category, questions, onClose, onSave }) {
 
         <Box className={classes.summary}>
           <Typography variant="body2" color="textSecondary">
-            Answered questions: {answeredRatings.length + answeredEssays.length}/{totalQuestionCount}
+            Answered questions: {answeredQuestionCount}/{totalQuestionCount}
           </Typography>
           <Typography variant="body1" className={classes.summaryValue}>
-            {draftAverage ? `Current weighted average: ${draftAverage}/5` : "No answers yet"}
+            {hasAnsweredAllQuestions
+              ? draftAverage
+                ? `Current weighted average: ${draftAverage}/5`
+                : "Ready to save"
+              : "Answer all questions to save"}
           </Typography>
         </Box>
       </DialogContent>
@@ -293,7 +304,7 @@ function RatingDialog({ open, category, questions, onClose, onSave }) {
           variant="contained"
           color="primary"
           className={classes.saveButton}
-          disabled={questions.length === 0}
+          disabled={questions.length === 0 || !hasAnsweredAllQuestions}
         >
           Save evaluation
         </Button>
