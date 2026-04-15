@@ -51,7 +51,7 @@ OLLAMA_FALLBACK_MODELS = [
     m.strip() for m in os.getenv("OLLAMA_FALLBACK_MODELS", f"{OLLAMA_MODEL},llama3:latest").split(",") if m.strip()
 ]
 OLLAMA_NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", "512"))
-OLLAMA_NUM_PREDICT = int(os.getenv("OLLAMA_NUM_PREDICT", "32"))
+OLLAMA_NUM_PREDICT = int(os.getenv("OLLAMA_NUM_PREDICT", "96"))
 OLLAMA_TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.2"))
 OLLAMA_KEEP_ALIVE = os.getenv("OLLAMA_KEEP_ALIVE", "2m")
 OLLAMA_THINK = os.getenv("OLLAMA_THINK", "none")
@@ -72,16 +72,27 @@ except Exception as e:
 
 FILE_NAME = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "knowledge.json")
 ARTICLES_DB = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "articles_db.json")
+SCRAPER_CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config", "scraper_config.json")
 
 # Global cache for articles database
 articles_cache = None
 knowledge_cache = None
 knowledge_cache_mtime = 0.0
+conversation_store_mtime = 0.0
+scraper_config_cache = None
+scraper_config_mtime = 0.0
 last_chart_context = None
 balance_context = None  # Track the last balance query for chart generation
 live_site_cache = None
 live_site_cache_timestamp = 0
 LIVE_SITE_CACHE_SECONDS = 90
+
+CONNECTION_STATUS_PATTERNS = (
+    re.compile(r"are\s+there\s+any\s+accounts?\s+logged\s+in"),
+    re.compile(r"are\s+there\s+any\s+accounts?\s+currently\s+logged\s+in"),
+    re.compile(r"accounts?\s+logged\s+in"),
+    re.compile(r"who\s+is\s+logged\s+in"),
+)
 
 # Conversation context storage
 conversation_history = []  # List of dicts with user input and AI response
@@ -100,21 +111,31 @@ print("AI Assistant - Retrieval-Augmented Generation System")
 # Persistent conversation storage
 def load_conversation_store():
     """Load conversation history from persistent JSON file."""
-    global conversation_history, extracted_context
+    global conversation_history, extracted_context, conversation_store_mtime
     
     try:
-        if os.path.exists(CONVERSATION_STORE):
-            with open(CONVERSATION_STORE, 'r') as f:
-                store = json.load(f)
-                conversation_history = store.get('history', [])
-                extracted_context = store.get('context', extracted_context)
+        current_mtime = os.path.getmtime(CONVERSATION_STORE)
+    except Exception as e:
+        return
+
+    if conversation_store_mtime and current_mtime == conversation_store_mtime:
+        return
+
+    try:
+        with open(CONVERSATION_STORE, 'r') as f:
+            store = json.load(f)
     except Exception as e:
         print(f"Error loading conversation store: {e}")
+        return
+
+    conversation_history = store.get('history', [])
+    extracted_context = store.get('context', extracted_context)
+    conversation_store_mtime = current_mtime
 
 
 def save_conversation_store():
     """Save conversation history to persistent JSON file."""
-    global conversation_history, extracted_context
+    global conversation_history, extracted_context, conversation_store_mtime
     
     try:
         store = {
@@ -123,8 +144,32 @@ def save_conversation_store():
         }
         with open(CONVERSATION_STORE, 'w') as f:
             json.dump(store, f, indent=2)
+        conversation_store_mtime = os.path.getmtime(CONVERSATION_STORE)
     except Exception as e:
         print(f"Error saving conversation store: {e}")
+
+
+def load_scraper_config():
+    """Load the scraper configuration with mtime-based caching."""
+    global scraper_config_cache, scraper_config_mtime
+
+    try:
+        current_mtime = os.path.getmtime(SCRAPER_CONFIG_PATH)
+    except OSError:
+        return None
+
+    if scraper_config_cache is not None and scraper_config_mtime == current_mtime:
+        return scraper_config_cache
+
+    try:
+        with open(SCRAPER_CONFIG_PATH, "r") as f:
+            scraper_config_cache = json.load(f)
+        scraper_config_mtime = current_mtime
+        return scraper_config_cache
+    except Exception as e:
+        print(f"Error loading scraper config: {e}")
+        scraper_config_cache = None
+        return None
 
 
 # Context Management Functions
@@ -781,7 +826,7 @@ def check_knowledge(user_input):
     return None, context_matches
 
 
-def handle_greeting_request(user_input):
+def handle_greeting_request(user_input, conversation_style="normal"):
     normalized_input = normalize_text(user_input)
     if not normalized_input:
         return None
@@ -793,9 +838,49 @@ def handle_greeting_request(user_input):
     ]
 
     if any(re.search(pattern, normalized_input) for pattern in greeting_patterns):
-        return "Hello! I can help with balances, inventory, charts, and financial questions. What would you like to check?"
+        style = (conversation_style or "normal").lower()
+        if style == "formal":
+            return (
+                "Good day. I can assist with balances, inventory, charts, and financial analysis. "
+                "Please let me know which area you would like to review."
+            )
+        if style == "casual":
+            return (
+                "Hey! I can help with balances, inventory, charts, and finance questions. "
+                "What do you want to check first?"
+            )
+        return (
+            "Hello! I can help with balances, inventory, charts, and financial questions. "
+            "What would you like to check?"
+        )
 
     return None
+
+
+def is_permission_denied_error(status_code=None, error_text=""):
+    """Detect account-authenticated but unauthorized access failures."""
+    if status_code == 403:
+        return True
+
+    lowered = str(error_text or "").lower()
+    markers = [
+        "forbidden",
+        "permission",
+        "access denied",
+        "not allowed",
+        "unauthorized access",
+        "insufficient",
+        "role",
+    ]
+    return any(marker in lowered for marker in markers)
+
+
+def build_access_failure_message(data_label="data"):
+    """Friendly message when user is logged in but account lacks required permissions."""
+    return (
+        f"Live {data_label} could not be accessed because this logged-in account does not have permission for that data. "
+        "Please use an account with the required access rights or ask your admin to grant permission."
+    )
 
 def try_math(user_input):
     match = re.search(r'(\d+\s*[\+\-\*\/]\s*\d+)', user_input)
@@ -1233,18 +1318,6 @@ def handle_scrape_request(user_input):
     return None
 
 
-def load_company_data():
-    """Load data from company_data.json file (alternative to web scraping)"""
-    company_data_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config', 'company_data.json')
-    if os.path.exists(company_data_file):
-        try:
-            with open(company_data_file, 'r') as f:
-                return json.load(f)
-        except Exception as e:
-            print(f"Error loading company_data.json: {e}")
-    return None
-
-
 def handle_branches_request(user_input):
     """
     Handle branch/warehouse/location inquiry requests.
@@ -1357,7 +1430,7 @@ def handle_inventory_request(user_input, site_context=None, auth_token=None, aut
 
     cached_inventory_answer = get_recent_inventory_answer(
         user_input,
-        allow_company_fallback=not asks_inventory_balance,
+        allow_company_fallback=False,
     )
     if cached_inventory_answer:
         if wants_motorcycles:
@@ -1366,40 +1439,10 @@ def handle_inventory_request(user_input, site_context=None, auth_token=None, aut
     
     # Try web scraping first (primary data source)
     if not SCRAPER_AVAILABLE:
-        if asks_inventory_balance:
-            return (
-                "Live inventory balance was not accessed. "
-                "Web scraper dependencies are unavailable in the current runtime. "
-                "Please run with the configured server environment and reconnect account to fetch live balance data."
-            )
-
-        # Fallback to company_data.json only if web scraping not available
-        company_data = load_company_data()
-        if company_data and 'inventory' in company_data:
-            inventory_items = company_data['inventory']
-            total = len(inventory_items)
-            company_name = company_data.get('company_name', 'Company Data')
-            last_updated = company_data.get('last_updated', 'N/A')
-            
-            # Format inventory items
-            lines = []
-            for idx, item in enumerate(inventory_items[:20], 1):
-                product = item.get('product_name', 'Unknown')
-                qty = item.get('quantity', 0)
-                unit = item.get('unit', 'units')
-                location = item.get('location', 'N/A')
-                status = item.get('status', '')
-                lines.append(f"{idx}. {product}: {qty} {unit} @ {location} [{status}]")
-            
-            more_note = f"\n...and {total - 20} more items." if total > 20 else ""
-            
-            return (
-                f"Current inventory from {company_name} (Last updated: {last_updated}):\n"
-                f"Total products: {total}\n\n"
-                + "\n".join(lines) + more_note +
-                "\n\n💡 Using fallback data from company_data.json. Install web scraping packages to fetch live data."
-            )
-        return "Inventory lookup is not available. Please install: pip install requests beautifulsoup4"
+        return (
+            "Live inventory data is unavailable in this runtime because scraper dependencies are missing. "
+            "Please run the configured server environment and reconnect the logged-in business account."
+        )
 
     normalized_site_context = normalize_site_context(site_context)
     if normalized_site_context and normalized_site_context.get("products"):
@@ -1422,36 +1465,6 @@ def handle_inventory_request(user_input, site_context=None, auth_token=None, aut
     # 1) Preferred path: aggregate all products from /api/lib/prod
     result_multi = run_with_timeout(scraper.fetch_all_products_with_stock, timeout_seconds=12)
     if result_multi is None:
-        if asks_inventory_balance:
-            return (
-                "Live inventory balance was not accessed. "
-                "The live inventory API timed out. Please reconnect account and try again."
-            )
-
-        company_data = load_company_data()
-        if company_data and 'inventory' in company_data:
-            inventory_items = company_data['inventory']
-            total = len(inventory_items)
-            company_name = company_data.get('company_name', 'Company Data')
-            last_updated = company_data.get('last_updated', 'N/A')
-
-            lines = []
-            for idx, item in enumerate(inventory_items[:20], 1):
-                product = item.get('product_name', 'Unknown')
-                qty = item.get('quantity', 0)
-                unit = item.get('unit', 'units')
-                location = item.get('location', 'N/A')
-                status = item.get('status', '')
-                lines.append(f"{idx}. {product}: {qty} {unit} @ {location} [{status}]")
-
-            more_note = f"\n...and {total - 20} more items." if total > 20 else ""
-            return (
-                f"Current inventory from {company_name} (Last updated: {last_updated}):\n"
-                f"Total products: {total}\n\n"
-                + "\n".join(lines) + more_note
-                + "\n\n⚠️ Live inventory lookup is taking too long right now, so I returned cached data instead."
-            )
-
         return (
             "I couldn't reach the live inventory source quickly enough. "
             "Please try again or reconnect the data source."
@@ -1650,6 +1663,13 @@ def handle_inventory_request(user_input, site_context=None, auth_token=None, aut
             + "\n".join(lines) + more_note
         )
 
+    # Permission-aware fallback: valid login but no access to inventory endpoint.
+    if is_permission_denied_error(
+        result_multi.get("status_code"),
+        f"{result_multi.get('error', '')} {result_multi.get('response_text', '')}",
+    ):
+        return build_access_failure_message("inventory data")
+
     # 2) Fallback: single-product stock-card endpoint
     result = run_with_timeout(lambda: scraper.scrape_inventory("company_website"), timeout_seconds=12)
     if result is None:
@@ -1671,7 +1691,7 @@ def handle_inventory_request(user_input, site_context=None, auth_token=None, aut
             f"{lines}{more_note}"
         )
 
-    # 3) Final fallback with diagnostics + local sample data
+    # 3) Final fallback with diagnostics only (no local sample-data fallback)
     upstream_error = result.get("error", "Unknown scraping error")
     upstream_status = result.get("status_code")
     upstream_method = result.get("method")
@@ -1690,43 +1710,22 @@ def handle_inventory_request(user_input, site_context=None, auth_token=None, aut
     if upstream_text:
         diagnostics += f"\nResponse: {upstream_text[:220]}"
 
-    company_data = load_company_data()
-    if company_data and 'inventory' in company_data:
-        if asks_inventory_balance:
-            return (
-                "Live inventory balance was not accessed due to upstream authentication/data access failure."
-                + (f"\n\nDiagnostics:{diagnostics}" if diagnostics else "")
-            )
+    combined_error_text = f"{upstream_error} {upstream_text}"
+    if is_permission_denied_error(upstream_status, combined_error_text):
+        return build_access_failure_message("inventory data")
 
-        inventory_items = company_data['inventory']
-        total = len(inventory_items)
-        company_name = company_data.get('company_name', 'Company Data')
-        last_updated = company_data.get('last_updated', 'N/A')
-
-        lines = []
-        for idx, item in enumerate(inventory_items[:20], 1):
-            product = item.get('product_name', 'Unknown')
-            qty = item.get('quantity', 0)
-            unit = item.get('unit', 'units')
-            location = item.get('location', 'N/A')
-            status = item.get('status', '')
-            lines.append(f"{idx}. {product}: {qty} {unit} @ {location} [{status}]")
-
-        more_note = f"\n...and {total - 20} more items." if total > 20 else ""
+    if upstream_status == 401 or any(term in combined_error_text.lower() for term in ["invalid token", "unauthorized", "token expired"]):
         return (
-            f"Current inventory from {company_name} (Last updated: {last_updated}):\n"
-            f"Total products: {total}\n\n"
-            + "\n".join(lines) + more_note
-            + "\n\n⚠️ Web scraping failed. Using fallback data from company_data.json."
-            + "\nIf diagnostics show 401 Invalid token, reconnect account and ensure browser session token/cookie is provided."
+            "Live inventory data could not be accessed because authentication failed (invalid or expired token). "
+            "Please reconnect the logged-in business account and try again."
             + (f"\n\nDiagnostics:{diagnostics}" if diagnostics else "")
         )
 
     attempted = result.get("attempted_urls", [])
     attempted_preview = "\n".join([f"- {url}" for url in attempted[:5]]) if attempted else "- (no URLs attempted)"
     return (
-        "I couldn't find inventory products from the configured Stock Card/SC pages. "
-        "Please update `config/scraper_config.json` with your real company base URL and SC/inventory paths.\n\n"
+        "I can't access the required live inventory data for a reliable reply right now. "
+        "Please reconnect account auth and verify Stock Card/SC endpoint configuration.\n\n"
         f"Attempted URLs:\n{attempted_preview}"
         + (f"\n\nDiagnostics:{diagnostics}" if diagnostics else "")
     )
@@ -2214,6 +2213,8 @@ def handle_balance_request(user_input, auth_context=None):
         r"(give|show|list|provide|fetch).*(data|details|entries|accounts).*(general ledger|gl|ledger)",
         r"(general ledger|gl|ledger).*(data|details|entries|accounts)",
         r"can you give me.*general ledger",
+        r"can you access.*general ledger",
+        r"(can you|could you|are you able to|do you).*(access|reach|get).*(general ledger|gl|ledger)",
         r"what.*in.*general ledger",
     ]
 
@@ -2275,7 +2276,7 @@ def handle_balance_request(user_input, auth_context=None):
                     )
 
             # Fallback path for GL intent when live API call fails
-            live_gl = get_live_gl_data(force_refresh=False)
+            live_gl = get_live_gl_data(force_refresh=False, auth_context=auth_context)
             if live_gl:
                 source = live_gl.get("source", "live source")
                 return (
@@ -2295,6 +2296,30 @@ def handle_balance_request(user_input, auth_context=None):
         try:
             live_gl = get_live_gl_data(force_refresh=False, auth_context=auth_context)
             if not live_gl:
+                if isinstance(auth_context, dict) and auth_context.get("user_auth_token") and not auth_context.get("data_access_token"):
+                    return (
+                        "You are logged in, but I do not have a business data token for the selected account yet. "
+                        "Please select the business again so I can refresh the data-access token."
+                    )
+
+                # If auth works but this account lacks GL permission, return a clearer message.
+                resolved_auth_context = auth_context if isinstance(auth_context, (dict, str)) else None
+                gl_probe = get_company_scraper(auth_context=resolved_auth_context).fetch_general_ledger_accounts()
+                if is_permission_denied_error(
+                    gl_probe.get("status_code") if isinstance(gl_probe, dict) else None,
+                    f"{gl_probe.get('error', '')} {gl_probe.get('response_text', '')}" if isinstance(gl_probe, dict) else "",
+                ):
+                    return build_access_failure_message("General Ledger data")
+
+                combined_gl_error = ""
+                if isinstance(gl_probe, dict):
+                    combined_gl_error = f"{gl_probe.get('error', '')} {gl_probe.get('response_text', '')}".lower()
+                if "invalid token" in combined_gl_error or "expired" in combined_gl_error or "401" in combined_gl_error:
+                    return (
+                        "You are logged in, but the General Ledger data token was rejected or expired. "
+                        "Please reconnect the business account and reselect the business."
+                    )
+
                 return (
                     "Live General Ledger balance was not accessed. "
                     "Please reconnect the logged-in business account and try again."
@@ -2639,33 +2664,24 @@ def should_fetch_live_context(user_input):
 def get_connection_status_response(user_input):
     """Provide a fast direct answer for account/session status questions."""
     normalized = normalize_text(user_input)
-    patterns = [
-        r"are\s+there\s+any\s+accounts?\s+logged\s+in",
-        r"are\s+there\s+any\s+accounts?\s+currently\s+logged\s+in",
-        r"accounts?\s+logged\s+in",
-        r"who\s+is\s+logged\s+in",
-    ]
-    if not any(re.search(p, normalized) for p in patterns):
+    if not any(pattern.search(normalized) for pattern in CONNECTION_STATUS_PATTERNS):
         return None
 
     has_saved_creds = bool((os.getenv("SITE_USERNAME") or "").strip() and (os.getenv("SITE_PASSWORD") or "").strip())
     has_token = False
     try:
-        cfg_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config", "scraper_config.json")
-        if os.path.exists(cfg_path):
-            with open(cfg_path, "r") as f:
-                cfg = json.load(f)
-            for section in cfg.values():
-                if isinstance(section, dict) and str(section.get("api_fixed_auth_token", "")).strip():
-                    has_token = True
-                    break
+        cfg = load_scraper_config() or {}
+        has_token = any(
+            isinstance(section, dict) and str(section.get("api_fixed_auth_token", "")).strip()
+            for section in cfg.values()
+        )
     except Exception:
         has_token = False
 
     if has_saved_creds and has_token:
         user = (os.getenv("SITE_USERNAME") or "saved credentials").strip()
         return (
-            f"A company account is connected ({user}), but I cannot list active website user sessions from this endpoint."
+            f"An account is connected ({user}), but I cannot list active website user sessions from this endpoint."
         )
     return "No connected company account is currently stored."
 
@@ -2836,9 +2852,6 @@ def ollama_respond(user_input, live_context="", history=None, conversation_style
                     if event.get("done"):
                         break
 
-                    if (time.time() - started) > 8 and chunks:
-                        break
-
                 content = "".join(chunks).strip()
                 print(f"[Ollama] Got response ({len(content)} chars)", file=sys.stderr)
                 if content:
@@ -2864,8 +2877,12 @@ def ollama_respond(user_input, live_context="", history=None, conversation_style
     return None
 
 
-def respond(user_input, site_context=None, auth_context=None, conversation_style="normal"):
+def respond(user_input, site_context=None, auth_context=None, conversation_style="normal", conversation_history_input=None):
     global balance_context, conversation_history, extracted_context
+
+    # Use passed conversation history from frontend if available, otherwise use global
+    if conversation_history_input is not None and isinstance(conversation_history_input, list):
+        conversation_history = conversation_history_input
 
     load_conversation_store()
     extract_context_from_input(user_input)
@@ -2881,7 +2898,10 @@ def respond(user_input, site_context=None, auth_context=None, conversation_style
         return connection_status
 
     # Handle greetings early so context tags don't trigger unrelated learned/LLM answers.
-    greeting_response = handle_greeting_request(strip_business_context_suffix(user_input))
+    greeting_response = handle_greeting_request(
+        strip_business_context_suffix(user_input),
+        conversation_style=conversation_style,
+    )
     if greeting_response:
         return greeting_response
 

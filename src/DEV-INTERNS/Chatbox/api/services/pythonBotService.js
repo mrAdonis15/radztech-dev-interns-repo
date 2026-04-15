@@ -1,6 +1,7 @@
 import axios from "axios";
 import { getSelectedBiz, getBizName, getBizIxBiz } from "../selectedBiz";
 import { getPythonBotAuthContext } from "./authContext";
+import { setBiz } from "./businessService";
 
 const PYTHON_BOT_CHAT_URL =
   (typeof process !== "undefined" &&
@@ -58,22 +59,174 @@ function getBizContext() {
   };
 }
 
+function extractDataAccessToken(payload) {
+  if (!payload || typeof payload !== "object") return null;
+  return (
+    payload.token ||
+    payload.dataAccessToken ||
+    payload.accessToken ||
+    payload.access_token ||
+    payload.bizToken ||
+    payload?.data?.token ||
+    payload?.data?.dataAccessToken ||
+    payload?.biz?.token ||
+    payload?.biz?.dataAccessToken ||
+    null
+  );
+}
+
+function parseSelectedBizStorage() {
+  try {
+    const raw = localStorage.getItem("selectedBiz");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistRefreshedSelectedBiz(payload) {
+  if (typeof localStorage === "undefined") return false;
+
+  const existing = parseSelectedBizStorage();
+  const next =
+    existing && typeof existing === "object" && !Array.isArray(existing)
+      ? { ...existing }
+      : {};
+
+  const incoming =
+    payload && typeof payload === "object" && !Array.isArray(payload)
+      ? payload
+      : null;
+  if (!incoming) return false;
+
+  const incomingBiz =
+    incoming.biz &&
+    typeof incoming.biz === "object" &&
+    !Array.isArray(incoming.biz)
+      ? incoming.biz
+      : incoming;
+
+  const existingBiz =
+    next.biz && typeof next.biz === "object" && !Array.isArray(next.biz)
+      ? next.biz
+      : {};
+
+  const token =
+    extractDataAccessToken(incoming) || extractDataAccessToken(incomingBiz);
+
+  next.biz = {
+    ...existingBiz,
+    ...incomingBiz,
+  };
+
+  if (token) {
+    next.token = token;
+    next.dataAccessToken = token;
+    next.biz.token = token;
+    next.biz.dataAccessToken = token;
+  }
+
+  localStorage.setItem("selectedBiz", JSON.stringify(next));
+  return Boolean(token);
+}
+
+function resolveBizCode() {
+  const selected = getSelectedBiz();
+  return (
+    getBizIxBiz() ||
+    selected?.ixBiz ||
+    selected?.iXBiz ||
+    selected?.bizId ||
+    selected?.businessId ||
+    selected?.id ||
+    selected?.business?.ixBiz ||
+    selected?.business?.id ||
+    selected?.data?.ixBiz ||
+    selected?.data?.id ||
+    null
+  );
+}
+
+async function refreshSelectedBizToken() {
+  if (typeof localStorage === "undefined") return false;
+
+  const authToken = localStorage.getItem("authToken");
+  const bizCode = resolveBizCode();
+  if (!authToken || bizCode == null) return false;
+
+  try {
+    const response = await setBiz(authToken, bizCode);
+    if (!response || response.status < 200 || response.status >= 300) {
+      return false;
+    }
+
+    let payload = response.data;
+    if (
+      (payload == null || typeof payload !== "object") &&
+      response.text &&
+      response.text.trim()
+    ) {
+      try {
+        payload = JSON.parse(response.text);
+      } catch {
+        payload = null;
+      }
+    }
+
+    return persistRefreshedSelectedBiz(payload);
+  } catch {
+    return false;
+  }
+}
+
+function buildPythonPayload(userMessage, conversationStyle, messageHistory) {
+  const bizContext = getBizContext();
+  const authContext = getPythonBotAuthContext();
+  return {
+    message: userMessage,
+    conversationStyle,
+    ...(messageHistory &&
+      Array.isArray(messageHistory) &&
+      messageHistory.length > 0 && { conversationHistory: messageHistory }),
+    ...(bizContext && { bizContext }),
+    ...(authContext && { authContext }),
+  };
+}
+
 export async function sendToPythonBot(
   userMessage,
   signal = undefined,
   conversationStyle = "normal",
+  messageHistory = [],
 ) {
   try {
-    const bizContext = getBizContext();
-    const authContext = getPythonBotAuthContext();
-    const payload = {
-      message: userMessage,
+    let payload = buildPythonPayload(
+      userMessage,
       conversationStyle,
-      ...(bizContext && { bizContext }),
-      ...(authContext && { authContext }),
-    };
+      messageHistory,
+    );
+    let response;
 
-    const response = await axios.post(PYTHON_BOT_CHAT_URL, payload, { signal });
+    try {
+      response = await axios.post(PYTHON_BOT_CHAT_URL, payload, { signal });
+    } catch (err) {
+      const unauthorized = Number(err?.response?.status) === 401;
+      if (!unauthorized) {
+        throw err;
+      }
+
+      const refreshed = await refreshSelectedBizToken();
+      if (!refreshed) {
+        throw err;
+      }
+
+      payload = buildPythonPayload(
+        userMessage,
+        conversationStyle,
+        messageHistory,
+      );
+      response = await axios.post(PYTHON_BOT_CHAT_URL, payload, { signal });
+    }
 
     const data = response?.data || {};
     const text =
@@ -110,24 +263,40 @@ export async function sendToPythonBot(
 
 export async function streamFromPythonBot(
   userMessage,
-  { signal, onToken, onDone, conversationStyle = "normal" } = {},
+  {
+    signal,
+    onToken,
+    onDone,
+    conversationStyle = "normal",
+    messageHistory = [],
+  } = {},
 ) {
-  const bizContext = getBizContext();
-  const authContext = getPythonBotAuthContext();
-  const response = await fetch(
-    PYTHON_BOT_CHAT_URL.replace(/\/api\/chat$/, "/api/chat/stream"),
-    {
+  const streamUrl = PYTHON_BOT_CHAT_URL.replace(
+    /\/api\/chat$/,
+    "/api/chat/stream",
+  );
+
+  const requestStream = async () => {
+    const payload = buildPythonPayload(
+      userMessage,
+      conversationStyle,
+      messageHistory,
+    );
+    return fetch(streamUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: userMessage,
-        conversationStyle,
-        ...(bizContext && { bizContext }),
-        ...(authContext && { authContext }),
-      }),
+      body: JSON.stringify(payload),
       signal,
-    },
-  );
+    });
+  };
+
+  let response = await requestStream();
+  if (response.status === 401) {
+    const refreshed = await refreshSelectedBizToken();
+    if (refreshed) {
+      response = await requestStream();
+    }
+  }
 
   if (!response.ok || !response.body) {
     throw new Error("Streaming endpoint unavailable");

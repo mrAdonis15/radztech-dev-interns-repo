@@ -1,108 +1,107 @@
 {
   "history": [
     {
-      "user": "can you give me the balance of the general ledger\n[Current Business: Honda Ace City Corporation]",
-      "ai": "I recognized this as a General Ledger data request, but I could not fetch account rows right now. Please verify the site token/cookie and try again.",
-      "timestamp": 1775548838.996373
+      "id": "84a5f882-e247-4328-8289-a6613af2ca30",
+      "sender": "me",
+      "text": "can you access the general ledger ?",
+      "time": "8:13 AM"
     },
     {
-      "user": "what can you do then?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775548906.167666
+      "id": "16a4da77-9dc3-4cad-9580-d81546ff1e00",
+      "sender": "bot",
+      "text": "Yes, I can access the general ledger for Honda Ace City Corporation. Please provide me with",
+      "time": "8:13 AM",
+      "responseTimeMs": 16228
     },
     {
-      "user": "can you give me the balance of the general ledger\n[Current Business: Honda Ace City Corporation]",
-      "ai": "I recognized this as a General Ledger data request, but I could not fetch account rows right now. Please verify the site token/cookie and try again.",
-      "timestamp": 1775548943.4591942
+      "id": "da187ab0-b77f-41fb-ad6e-354d8174bba4",
+      "sender": "me",
+      "text": "give me the balance of the general ledger",
+      "time": "8:18 AM"
     },
     {
-      "user": "what can you do then\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775549008.6381161
+      "id": "a3beaca1-d461-4d67-86c7-7b760c73584b",
+      "sender": "bot",
+      "text": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
+      "time": "8:18 AM",
+      "responseTimeMs": 1605.8999999985099
     },
     {
-      "user": "tell me a short joke",
-      "ai": "Sure! Here's a short joke for you:\n\nWhy was the math book sad?\n\nBecause it had too many problems.",
-      "timestamp": 1775549222.239888
+      "id": "8dabc6d6-8486-4641-98f2-3d833663ce28",
+      "sender": "me",
+      "text": "can you access the general ledger",
+      "time": "8:20 AM"
     },
     {
-      "user": "can you give me the balance of the general ledger",
-      "ai": "I recognized this as a General Ledger data request, but I could not fetch account rows right now. Please verify the site token/cookie and try again.",
-      "timestamp": 1775549238.325432
+      "id": "128b1c66-b192-4e87-b9c1-4cd48c836bed",
+      "sender": "bot",
+      "text": "I can't access the live business data right now. Please reconnect the logged-in business account and try again.",
+      "time": "8:20 AM",
+      "responseTimeMs": 16006.80000000447
     },
     {
-      "user": "what can you do then\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775549391.4954948
+      "id": "2a8481ed-4d73-46db-9d29-1028494275a6",
+      "sender": "me",
+      "text": "hi",
+      "time": "8:20 AM"
     },
     {
-      "user": "what can you do\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775549489.048752
+      "id": "dcfc9105-7387-42fc-a786-306b978f3885",
+      "sender": "bot",
+      "text": "Hello! I can help with balances, inventory, charts, and financial questions. What would you like to check?",
+      "time": "8:20 AM",
+      "responseTimeMs": 1234.5
     },
     {
-      "user": "what can you do",
-      "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775550088.5273962
+      "id": "129f70e2-6009-4506-a654-a7da1f152ad5",
+      "sender": "me",
+      "text": "product beat white",
+      "time": "8:21 AM"
     },
     {
-      "user": "what can you do",
-      "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775550833.820958
+      "id": "13d002d0-abf9-468e-b4aa-e839a01d8db9",
+      "sender": "bot",
+      "text": "Product beat white refers to a product that is superior in quality, performance, or design to a",
+      "time": "8:21 AM",
+      "responseTimeMs": 13911.20000000298
     },
     {
-      "user": "what can you do",
-      "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775608087.8589702
+      "id": "d0f3a2e5-4cbf-496c-a447-69d4bbfa0705",
+      "sender": "me",
+      "text": "show it",
+      "time": "8:21 AM"
     },
     {
-      "user": "what can you do",
-      "ai": "What can I assist you with today?",
-      "timestamp": 1775608348.653228
+      "id": "096e8a63-57f0-4bcf-a977-11d9bd32014b",
+      "sender": "bot",
+      "text": "Show it.",
+      "time": "8:21 AM",
+      "responseTimeMs": 4897.0999999940395
     },
     {
-      "user": "what can you do",
-      "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775608856.51733
+      "id": "183e91cf-48b9-4a17-bae8-74dc4b06f5f0",
+      "sender": "me",
+      "text": "provide me beat products'",
+      "time": "8:22 AM"
     },
     {
-      "user": "what can you do",
-      "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775609002.835986
+      "id": "9d05164b-1a3e-4f91-9009-887ee9ddaf88",
+      "sender": "bot",
+      "text": "I'm sorry, but I can't assist with that.",
+      "time": "8:22 AM",
+      "responseTimeMs": 12036
     },
     {
-      "user": "what can you do",
-      "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775609117.3159418
-    },
-    {
-      "user": "what can you do",
-      "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775612329.55315
-    },
-    {
-      "user": "hello",
-      "ai": "Hello! I can help with balances, inventory, charts, and financial questions. What would you like to check?",
-      "timestamp": 1775615084.506976
-    },
-    {
-      "user": "test",
-      "ai": "Sorry, Something went wrong. Please try again",
-      "timestamp": 1775615101.870173
-    },
-    {
-      "user": "can you give me the balance of the general ledger\n[Current Business: Honda Ace City Corporation]",
-      "ai": "General Ledger data retrieved from https://clone.ulap.biz/api/lib/acc.\nTotal accounts: 228\n\n1. Unknown Account\n2. Unknown Account\n3. Unknown Account\n4. Unknown Account\n5. Unknown Account\n6. Unknown Account\n7. Unknown Account\n8. Unknown Account\n9. Unknown Account\n10. Unknown Account\n11. Unknown Account\n12. Unknown Account\n...and 216 more accounts.",
-      "timestamp": 1775620478.033908
-    },
-    {
-      "user": "can you give me the balance of the general ledger\n[Current Business: Honda Ace City Corporation]",
-      "ai": "I recognized this as a General Ledger data request, but I could not fetch account rows right now. Please verify the site token/cookie and try again.",
-      "timestamp": 1775620547.138957
+      "user": "can you access the general ledger?\n[Current Business: Honda Ace City Corporation]",
+      "ai": "Yes, I can access the general ledger for Honda Ace City Corporation. Please provide me with the necessary information or access details",
+      "timestamp": 1776126897.7080379
     }
   ],
   "context": {
-    "mentioned_data_sources": [],
+    "mentioned_data_sources": [
+      "stock_card",
+      "general_ledger"
+    ],
     "data_values": {},
     "user_preferences": {},
     "facts": []

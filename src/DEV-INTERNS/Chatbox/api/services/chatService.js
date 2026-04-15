@@ -24,7 +24,12 @@ export async function sendMessage(
     const normalizedProvider = String(aiProvider || "ulap").toLowerCase();
     const result =
       normalizedProvider === "python"
-        ? await sendToPythonBot(userMessage, signal, conversationStyle)
+        ? await sendToPythonBot(
+            userMessage,
+            signal,
+            conversationStyle,
+            messageHistory,
+          )
         : await sendToGemini(userMessage, messageHistory, signal, sessionId);
 
     console.log("chat-service", result);

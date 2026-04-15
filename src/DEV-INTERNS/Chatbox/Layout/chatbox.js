@@ -18,6 +18,7 @@ import ExpandLessIcon from "@material-ui/icons/ExpandLess";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 
 import { sendMessage } from "../api/services/chatService.js";
+import { streamFromPythonBot } from "../api/services/pythonBotService.js";
 import {
   saveChatHistory,
   fetchChatHistoryBySessionId,
@@ -328,14 +329,38 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
       );
     }, 100);
 
-    sendMessage(
-      messageForAi,
-      messages,
-      controller.signal,
-      sessionId ?? undefined,
-      aiProvider,
-      conversationStyle,
-    )
+    const normalizedProvider = String(aiProvider || "ulap").toLowerCase();
+
+    const requestPromise =
+      normalizedProvider === "python"
+        ? streamFromPythonBot(messageForAi, {
+            signal: controller.signal,
+            conversationStyle,
+            messageHistory: messages,
+            onToken: (token) => {
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === placeholderId
+                    ? {
+                        ...msg,
+                        text: `${msg.text || ""}${token}`,
+                        status: undefined,
+                      }
+                    : msg,
+                ),
+              );
+            },
+          })
+        : sendMessage(
+            messageForAi,
+            messages,
+            controller.signal,
+            sessionId ?? undefined,
+            aiProvider,
+            conversationStyle,
+          );
+
+    requestPromise
       .then((reply) => {
         const isChart = reply && reply.type === "chart";
         const isImg = reply && reply.type === "img";
@@ -359,6 +384,7 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
                     text,
                     time: receivedTime,
                     responseTimeMs: elapsedMs,
+                    status: undefined,
                   }
                 : isImg
                   ? {
@@ -368,10 +394,15 @@ export default function Chatbox({ defaultOpen = false, aiProvider = "ulap" }) {
                       text: "",
                       time: receivedTime,
                       responseTimeMs: elapsedMs,
+                      status: undefined,
                     }
                   : {
                       ...msg,
-                      text,
+                      text:
+                        normalizedProvider === "python" &&
+                        (msg.text || "").trim()
+                          ? msg.text
+                          : text,
                       time: receivedTime,
                       responseTimeMs: elapsedMs,
                       status: undefined,

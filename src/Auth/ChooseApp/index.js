@@ -141,7 +141,11 @@ export default function ChooseApp() {
                   </Box>
                 </Box>
                 <Box className="choose-app-card-details">
-                  <Typography variant="h6" component="h2" className="choose-app-card-label">
+                  <Typography
+                    variant="h6"
+                    component="h2"
+                    className="choose-app-card-label"
+                  >
                     Evaluation
                   </Typography>
                   <Typography variant="body2" className="choose-app-card-desc">

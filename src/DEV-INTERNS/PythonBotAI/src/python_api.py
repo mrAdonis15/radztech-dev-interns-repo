@@ -16,9 +16,9 @@ sys.stdout = StringIO()
 
 try:
     try:
-        from .main import respond, store_conversation, extract_context_from_input, build_context_reminder
+        from .main import respond, store_conversation
     except ImportError:
-        from main import respond, store_conversation, extract_context_from_input, build_context_reminder
+        from main import respond, store_conversation
 finally:
     sys.stdout = old_stdout
 
@@ -40,16 +40,10 @@ def main():
             ]
         )
 
-    def generate_response(user_message, auth_context=None, conversation_style="normal"):
-        # Extract context from user input (optional - may not exist in main.py)
-        try:
-            extract_context_from_input(user_message)
-        except (NameError, AttributeError):
-            pass
-
+    def generate_response(user_message, auth_context=None, conversation_style="normal", conversation_history=None):
         # Get response from the chatbot
         try:
-            response = respond(user_message, auth_context=auth_context, conversation_style=conversation_style)
+            response = respond(user_message, auth_context=auth_context, conversation_style=conversation_style, conversation_history_input=conversation_history)
         except Exception as e:
             print(f"[ERROR] respond() raised exception: {type(e).__name__}: {str(e)}", file=sys.stderr, flush=True)
             response = None
@@ -89,13 +83,14 @@ def main():
             message = str(payload.get("message", "")).strip()
             auth_context = payload.get("auth_context")
             conversation_style = payload.get("conversation_style", "normal")
+            conversation_history = payload.get("conversation_history")
             if not message:
                 print(json.dumps({"success": False, "error": "Message is required"}), flush=True)
                 continue
 
             try:
                 with redirect_stdout(sys.stderr):
-                    result = generate_response(message, auth_context=auth_context, conversation_style=conversation_style)
+                    result = generate_response(message, auth_context=auth_context, conversation_style=conversation_style, conversation_history=conversation_history)
                 print(json.dumps({"success": True, "response": result}), flush=True)
             except Exception as e:
                 print(json.dumps({"success": False, "error": str(e)}), flush=True)

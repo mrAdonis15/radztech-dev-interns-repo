@@ -557,6 +557,7 @@ function runPythonResponse(
   message,
   authContext = null,
   conversationStyle = "normal",
+  conversationHistory = [],
 ) {
   return new Promise((resolve, reject) => {
     if (!pythonProcess || !pythonReady) {
@@ -585,6 +586,13 @@ function runPythonResponse(
     const payload = { message, conversation_style: conversationStyle };
     if (authContext && typeof authContext === "object") {
       payload.auth_context = authContext;
+    }
+    if (
+      conversationHistory &&
+      Array.isArray(conversationHistory) &&
+      conversationHistory.length > 0
+    ) {
+      payload.conversation_history = conversationHistory;
     }
     pythonProcess.stdin.write(`${JSON.stringify(payload)}\n`);
   });
@@ -633,15 +641,33 @@ function isCurrentBizPrompt(input) {
   const directPrompts = new Set([
     "what is the current biz",
     "what's the current biz",
+    "what biz are we currently using",
+    "what biz are we using",
+    "which biz are we using",
+    "which business are we using",
+    "what business are we currently using",
+    "what is the current business",
+    "what's the current business",
     "current biz",
+    "current business",
     "which biz",
     "which is the current biz",
     "what is the selected biz",
+    "what is the selected business",
     "selected biz",
+    "selected business",
     "active biz",
+    "active business",
   ]);
 
-  return directPrompts.has(normalized);
+  if (directPrompts.has(normalized)) {
+    return true;
+  }
+
+  // Handle natural variations like "what biz are we currently using?"
+  return /\b(current|selected|active)\s+(biz|business)\b|\bwhich\s+(biz|business)\b|\bwhat\s+(biz|business)\b.*\b(using|used|selected|active|current)\b/.test(
+    normalized,
+  );
 }
 
 // Chat endpoint
@@ -653,6 +679,7 @@ app.post("/api/chat", async (req, res) => {
       authContext,
       auth_context,
       conversationStyle,
+      conversationHistory,
     } = req.body;
 
     if (!message || message.trim() === "") {
@@ -666,14 +693,8 @@ app.post("/api/chat", async (req, res) => {
         : "normal";
 
     const normalized = String(message).toLowerCase().trim();
-
-    if (isCurrentBizPrompt(normalized)) {
-      const bizName = bizContext?.bizName || "No business selected";
-      return res.json({
-        response: `Current business is: ${bizName}`,
-        type: "text",
-      });
-    }
+    const isCurrentBiz = isCurrentBizPrompt(normalized);
+    const currentBizText = `Current business is: ${bizContext?.bizName || "No business selected"}`;
 
     // Include biz context note only for business-data queries.
     const isBizDataPrompt =
@@ -722,11 +743,38 @@ app.post("/api/chat", async (req, res) => {
       }
     }
 
-    const response = await runPythonResponse(
-      messageWithContext,
-      resolvedAuthContext,
-      normalizedStyle,
-    );
+    let response;
+    try {
+      response = await runPythonResponse(
+        messageWithContext,
+        resolvedAuthContext,
+        normalizedStyle,
+        conversationHistory,
+      );
+    } catch (err) {
+      if (isCurrentBiz) {
+        return res.json({
+          response: currentBizText,
+          type: "text",
+        });
+      }
+      throw err;
+    }
+
+    const normalizedResponse = String(response || "")
+      .trim()
+      .toLowerCase();
+    if (
+      isCurrentBiz &&
+      (!normalizedResponse ||
+        normalizedResponse === "sorry, something went wrong. please try again")
+    ) {
+      return res.json({
+        response: currentBizText,
+        type: "text",
+      });
+    }
+
     return res.json({
       response,
       type: "text",
@@ -755,6 +803,7 @@ app.post("/api/chat/stream", async (req, res) => {
       authContext,
       auth_context,
       conversationStyle,
+      conversationHistory,
     } = req.body || {};
     if (!message || String(message).trim() === "") {
       return res.status(400).json({ error: "Message is required" });
@@ -767,19 +816,8 @@ app.post("/api/chat/stream", async (req, res) => {
         : "normal";
 
     const normalized = String(message).toLowerCase().trim();
-    if (isCurrentBizPrompt(normalized)) {
-      const bizName = bizContext?.bizName || "No business selected";
-      const text = `Current business is: ${bizName}`;
-
-      res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
-      res.setHeader("Cache-Control", "no-cache");
-      res.setHeader("Connection", "keep-alive");
-      res.write(`${JSON.stringify({ type: "token", token: text })}\n`);
-      res.write(
-        `${JSON.stringify({ type: "final", messageType: "text", text, elapsed_ms: 0 })}\n`,
-      );
-      return res.end();
-    }
+    const isCurrentBiz = isCurrentBizPrompt(normalized);
+    const currentBizText = `Current business is: ${bizContext?.bizName || "No business selected"}`;
 
     const isBizDataPrompt =
       /\b(biz|business|inventory|stock|general ledger|ledger|gl\b|balance|accounts receivable|receivable|payable|report)\b/.test(
@@ -809,13 +847,34 @@ app.post("/api/chat/stream", async (req, res) => {
       }
     }
 
-    const fullText = String(
-      await runPythonResponse(
-        messageWithContext,
-        resolvedAuthContext,
-        normalizedStyle,
-      ),
-    );
+    let fullText = "";
+    try {
+      fullText = String(
+        await runPythonResponse(
+          messageWithContext,
+          resolvedAuthContext,
+          normalizedStyle,
+          conversationHistory,
+        ),
+      );
+    } catch (err) {
+      if (isCurrentBiz) {
+        fullText = currentBizText;
+      } else {
+        throw err;
+      }
+    }
+
+    const normalizedResponse = String(fullText || "")
+      .trim()
+      .toLowerCase();
+    if (
+      isCurrentBiz &&
+      (!normalizedResponse ||
+        normalizedResponse === "sorry, something went wrong. please try again")
+    ) {
+      fullText = currentBizText;
+    }
 
     res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
     res.setHeader("Cache-Control", "no-cache");
