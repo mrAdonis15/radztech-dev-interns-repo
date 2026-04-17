@@ -1,21 +1,20 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import "./docs.css";
 import {
   Document,
+  ImageRun,
   Packer,
   Paragraph,
   Table,
   TableCell,
   TableRow,
+  TextRun,
   WidthType,
 } from "docx";
 
-import {
-  makeStyles,
-  createMuiTheme,
-  ThemeProvider,
-} from "@material-ui/core/styles";
+import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles";
 import {
   Box,
   Typography,
@@ -29,6 +28,7 @@ import {
 import GetAppIcon from "@material-ui/icons/GetApp";
 import EditOutlinedIcon from "@material-ui/icons/EditOutlined";
 import TableChartOutlinedIcon from "@material-ui/icons/TableChartOutlined";
+import ImageOutlinedIcon from "@material-ui/icons/ImageOutlined";
 
 const Quill = ReactQuill.Quill;
 const BlockEmbed = Quill.import("blots/block/embed");
@@ -168,8 +168,8 @@ class DocTableBlot extends BlockEmbed {
       );
     });
     node.addEventListener("click", (event) => {
-      const actionButton = event.target.closest(".doc-table-action");
-      if (!actionButton) {
+      const actionTarget = event.target.closest("[data-action]");
+      if (!actionTarget) {
         return;
       }
 
@@ -177,7 +177,7 @@ class DocTableBlot extends BlockEmbed {
       event.stopPropagation();
 
       const currentTableData = readTableDataFromNode(node);
-      const action = actionButton.getAttribute("data-action");
+      const action = actionTarget.getAttribute("data-action");
       let nextTableData = currentTableData;
 
       if (action === "add-row") {
@@ -238,338 +238,122 @@ const theme = createMuiTheme({
   },
 });
 
-const useStyles = makeStyles((t) => ({
-  root: {
-    minHeight: "100vh",
-    backgroundColor: "#FFFFFF",
-    backgroundImage: "none",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "flex-start",
-    padding: t.spacing(5, 2, 8),
-  },
+const extractDocumentText = (html) => {
+  if (!html) {
+    return "";
+  }
 
-  container: {
-    width: "100%",
-    maxWidth: 880,
-  },
+  const parser = new DOMParser();
+  const parsed = parser.parseFromString(html, "text/html");
+  const blocks = [];
 
-  // ── Header ──
-  header: {
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: t.spacing(4),
-    gap: t.spacing(2),
-  },
-  headerLeft: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 6,
-  },
-  eyebrow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    fontFamily: "'Poppins', sans-serif",
-    fontSize: "0.72rem",
-    fontWeight: 700,
-    letterSpacing: "1.8px",
-    textTransform: "uppercase",
-    color: ORANGE,
-  },
-  eyebrowDot: {
-    width: 6,
-    height: 6,
-    borderRadius: "50%",
-    backgroundColor: ORANGE,
-    animation: "$blink 2s ease-in-out infinite",
-  },
-  title: {
-    fontFamily: "'Fraunces', Georgia, serif",
-    fontWeight: 900,
-    fontSize: "2rem",
-    color: "#1A1108",
-    lineHeight: 1.15,
-    letterSpacing: "-1px",
-  },
-  titleAccent: {
-    color: ORANGE,
-  },
-  subtitle: {
-    fontFamily: "'Poppins', sans-serif",
-    fontSize: "0.85rem",
-    color: "#7A6A55",
-    marginTop: 2,
-  },
+  parsed.body.childNodes.forEach((node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent?.trim();
+      if (text) {
+        blocks.push(text);
+      }
+      return;
+    }
 
-  exportBtn: {
-    flexShrink: 0,
-    marginTop: 30,
-    background: ORANGE,
-    color: "#fff",
-    fontFamily: "'Poppins', sans-serif",
-    fontWeight: 600,
-    fontSize: "0.85rem",
-    padding: "10px 24px",
-    borderRadius: 8,
-    boxShadow: `0 4px 20px rgba(255,119,4,0.30)`,
-    transition: "all 0.2s ease",
-    "&:hover": {
-      background: ORANGE_DARK,
-      boxShadow: `0 6px 28px rgba(255,119,4,0.45)`,
-      transform: "translateY(-1px)",
-    },
-    "&:active": { transform: "translateY(0)" },
-    "&.Mui-disabled": {
-      background: "#EDE8E1",
-      color: "#B8AA99",
-      boxShadow: "none",
-    },
-  },
-  statsBar: {
-    display: "flex",
-    alignItems: "center",
-    gap: t.spacing(3),
-    marginBottom: t.spacing(2),
-    padding: t.spacing(1.5, 2.5),
-    backgroundColor: ORANGE_LIGHT,
-    borderRadius: 8,
-    border: `1px solid ${ORANGE_MID}`,
-  },
-  statItem: {
-    display: "flex",
-    alignItems: "baseline",
-    gap: 5,
-  },
-  statNumber: {
-    fontFamily: "'Fraunces', Georgia, serif",
-    fontWeight: 700,
-    fontSize: "1.15rem",
-    color: ORANGE_DARK,
-  },
-  statLabel: {
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: "0.72rem",
-    fontWeight: 500,
-    color: "#7A6A55",
-    textTransform: "uppercase",
-    letterSpacing: "0.8px",
-  },
-  statDivider: {
-    width: 1,
-    height: 22,
-    backgroundColor: ORANGE_MID,
-  },
-  statusChip: {
-    marginLeft: "auto",
-    backgroundColor: "#fff",
-    border: `1px solid ${ORANGE_MID}`,
-    color: "#7A6A55",
-    fontFamily: "'Poppins', sans-serif",
-    fontSize: "0.72rem",
-    height: 26,
-    "& .MuiChip-icon": { color: ORANGE, fontSize: 14 },
-  },
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return;
+    }
 
-  editorCard: {
-    borderRadius: 12,
-    border: "1px solid #EDE8E1",
-    overflow: "hidden",
-    boxShadow: "0 2px 24px rgba(26,17,8,0.06), 0 1px 4px rgba(26,17,8,0.04)",
+    if (
+      node.nodeName === "TABLE" ||
+      node.classList?.contains("doc-table-wrapper")
+    ) {
+      const tableNode =
+        node.nodeName === "TABLE" ? node : node.querySelector("table");
 
-    // Quill overrides — light theme with orange accents
-    "& .ql-toolbar.ql-snow": {
-      border: "none !important",
-      borderBottom: "1px solid #EDE8E1 !important",
-      backgroundColor: "#FDFCFA",
-      padding: "10px 16px",
-    },
-    "& .ql-toolbar .ql-stroke": { stroke: "#7A6A55" },
-    "& .ql-toolbar .ql-fill": { fill: "#7A6A55" },
-    "& .ql-toolbar .ql-picker-label": { color: "#7A6A55" },
-    "& .ql-toolbar button:hover .ql-stroke": { stroke: `${ORANGE} !important` },
-    "& .ql-toolbar button:hover .ql-fill": { fill: `${ORANGE} !important` },
-    "& .ql-toolbar button.ql-active .ql-stroke": {
-      stroke: `${ORANGE} !important`,
-    },
-    "& .ql-toolbar button.ql-active .ql-fill": { fill: `${ORANGE} !important` },
-    "& .ql-toolbar .ql-picker-label:hover": { color: `${ORANGE} !important` },
-    "& .ql-toolbar .ql-picker-options": {
-      border: "1px solid #EDE8E1",
-      borderRadius: 6,
-      boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-    },
-    "& .ql-toolbar .ql-insertTable": {
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    "& .ql-container.ql-snow": {
-      border: "none !important",
-    },
-    "& .ql-editor": {
-      minHeight: 400,
-      padding: "28px 32px",
-      fontSize: "1rem",
-      lineHeight: 1.85,
-      color: "#1A1108",
-      caretColor: ORANGE,
-      fontFamily: "'Poppins', sans-serif",
-    },
-    "& .ql-editor.ql-blank::before": {
-      color: "#C5BAB0",
-      fontStyle: "normal",
-      fontFamily: "'Fraunces', Georgia, serif",
-      fontSize: "1rem",
-    },
-    "& .ql-editor h1": {
-      fontFamily: "'Fraunces', Georgia, serif",
-      fontWeight: 900,
-      color: "#1A1108",
-      borderBottom: `3px solid ${ORANGE}`,
-      paddingBottom: 6,
-    },
-    "& .ql-editor h2, & .ql-editor h3": {
-      fontFamily: "'Fraunces', Georgia, serif",
-      fontWeight: 700,
-      color: "#1A1108",
-    },
-    "& .ql-editor a": { color: ORANGE },
-    "& .ql-editor .doc-table-wrapper": {
-      margin: "16px 0",
-      overflowX: "auto",
-    },
-    "& .ql-editor .doc-table-actions": {
-      display: "flex",
-      gap: 8,
-      marginBottom: 8,
-    },
-    "& .ql-editor .doc-table-action": {
-      border: `1px solid ${ORANGE_MID}`,
-      backgroundColor: "#FFFFFF",
-      color: ORANGE,
-      borderRadius: 999,
-      padding: "4px 10px",
-      fontSize: "0.75rem",
-      fontWeight: 600,
-      cursor: "pointer",
-    },
-    "& .ql-editor .doc-table-wrapper.doc-table-dragging": {
-      opacity: 0.6,
-    },
-    "& .ql-editor .doc-table-action:hover": {
-      backgroundColor: ORANGE_LIGHT,
-    },
-    "& .ql-editor .doc-table-action-danger": {
-      color: "#B54708",
-      borderColor: "#F3C79E",
-    },
-    "& .ql-editor .doc-table-action-danger:hover": {
-      backgroundColor: "#FFF1E7",
-    },
-    "& .ql-editor .doc-table": {
-      width: "100%",
-      borderCollapse: "collapse",
-      tableLayout: "fixed",
-      backgroundColor: "#FFFFFF",
-    },
-    "& .ql-editor .doc-table th, & .ql-editor .doc-table td": {
-      border: "1px solid #DCCFC1",
-      padding: "10px 12px",
-      textAlign: "left",
-      verticalAlign: "top",
-    },
-    "& .ql-editor .doc-table-cell": {
-      outline: "none",
-      cursor: "text",
-    },
-    "& .ql-editor .doc-table-cell:focus": {
-      boxShadow: "inset 0 0 0 2px rgba(255,119,4,0.18)",
-    },
-    "& .ql-editor .doc-table th": {
-      backgroundColor: "#FFF4EC",
-      color: "#1A1108",
-      fontWeight: 700,
-    },
-  },
+      Array.from(tableNode?.querySelectorAll("tr") || []).forEach((row) => {
+        const rowText = Array.from(row.children)
+          .map((cell) => cell.textContent?.trim() || "")
+          .filter(Boolean)
+          .join(" ");
 
-  progressBar: {
-    height: 3,
-    backgroundColor: ORANGE_MID,
-    "& .MuiLinearProgress-bar": { backgroundColor: ORANGE },
-  },
-  tableSetupBar: {
-    display: "flex",
-    alignItems: "flex-end",
-    gap: t.spacing(1.5),
-    padding: t.spacing(1.5, 2),
-    backgroundColor: "#FDFCFA",
-    borderBottom: "1px solid #EDE8E1",
-    flexWrap: "wrap",
-  },
-  tableField: {
-    minWidth: 110,
-    "& .MuiInputLabel-root.Mui-focused": {
-      color: ORANGE,
-    },
-    "& .MuiOutlinedInput-root": {
-      backgroundColor: "#FFFFFF",
-      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-        borderColor: ORANGE,
-      },
-    },
-  },
-  tableInsertBtn: {
-    height: 40,
-    backgroundColor: ORANGE,
-    color: "#fff",
-    fontWeight: 600,
-    "&:hover": {
-      backgroundColor: ORANGE_DARK,
-    },
-  },
-  tableCancelBtn: {
-    height: 40,
-    color: "#7A6A55",
-    borderColor: ORANGE_MID,
-  },
+        if (rowText) {
+          blocks.push(rowText);
+        }
+      });
 
-  footer: {
-    marginTop: t.spacing(2),
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  footerNote: {
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    fontFamily: "'Poppins', sans-serif",
-    fontSize: "0.75rem",
-    color: "#B8AA99",
-  },
-  footerDot: {
-    width: 3,
-    height: 3,
-    borderRadius: "50%",
-    backgroundColor: "#C5BAB0",
-  },
+      return;
+    }
 
-  "@keyframes blink": {
-    "0%, 100%": { opacity: 1 },
-    "50%": { opacity: 0.2 },
-  },
-}));
+    const text = node.textContent?.trim();
+    if (text) {
+      blocks.push(text);
+    }
+  });
 
-const stripHtml = (html) => html.replace(/<[^>]+>/g, "").trim();
-const hasMeaningfulContent = (html) => stripHtml(html).length > 0;
+  return blocks.join(" ").replace(/\s+/g, " ").trim();
+};
+
+const hasMeaningfulContent = (html) => {
+  if (!html) {
+    return false;
+  }
+
+  const parser = new DOMParser();
+  const parsed = parser.parseFromString(html, "text/html");
+  if (parsed.body.querySelector("img")) {
+    return true;
+  }
+
+  return extractDocumentText(html).length > 0;
+};
+
 const wordCount = (html) => {
-  const t = stripHtml(html);
+  const t = extractDocumentText(html);
   return t ? t.split(/\s+/).filter(Boolean).length : 0;
 };
-const charCount = (html) => stripHtml(html).length;
-const readingTime = (wc) => Math.max(1, Math.ceil(wc / 200));
+
+const parseDataUrl = (dataUrl) => {
+  const match = dataUrl.match(/^data:(image\/[^;]+)(?:;[^,]+)*;base64,(.*)$/);
+  if (!match) {
+    return null;
+  }
+
+  const base64 = match[2];
+  const binary = atob(base64);
+  const buffer = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    buffer[i] = binary.charCodeAt(i);
+  }
+  return buffer;
+};
+
+const buildInlineContent = (node) => {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = node.textContent || "";
+    return text ? [new TextRun(text)] : [];
+  }
+
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return [];
+  }
+
+  if (node.nodeName === "IMG") {
+    const src = node.getAttribute("src") || "";
+    const imageData = parseDataUrl(src);
+    if (!imageData) {
+      return [];
+    }
+
+    const width = parseInt(node.getAttribute("width") || "320", 10);
+    const height = parseInt(node.getAttribute("height") || "240", 10);
+
+    return [
+      new ImageRun({
+        data: imageData,
+        transformation: { width, height },
+      }),
+    ];
+  }
+
+  return Array.from(node.childNodes).flatMap(buildInlineContent);
+};
 
 const buildDocChildren = (html) => {
   const parser = new DOMParser();
@@ -615,16 +399,16 @@ const buildDocChildren = (html) => {
       return;
     }
 
-    const text = node.textContent?.trim();
-    if (text) {
-      children.push(new Paragraph(text));
+    const inlineContent = buildInlineContent(node);
+    if (inlineContent.length > 0) {
+      children.push(new Paragraph({ children: inlineContent }));
     }
   });
 
   return children.length > 0 ? children : [new Paragraph("")];
 };
 
-function EditorToolbar() {
+function EditorToolbar({ onInsertImage }) {
   return (
     <div id="docs-toolbar">
       <span className="ql-formats">
@@ -651,6 +435,17 @@ function EditorToolbar() {
       <span className="ql-formats">
         <button className="ql-link" type="button" />
         <button
+          className="ql-insertImage"
+          type="button"
+          title="Insert image"
+          onMouseDown={(event) => {
+            event.preventDefault();
+            onInsertImage?.();
+          }}
+        >
+          <ImageOutlinedIcon fontSize="small" />
+        </button>
+        <button
           className="ql-insertTable"
           type="button"
           title="Insert table"
@@ -665,7 +460,6 @@ function EditorToolbar() {
 }
 
 export default function Docs() {
-  const classes = useStyles();
   const [text, setText] = useState("");
   const [exporting, setExporting] = useState(false);
   const [tableRows, setTableRows] = useState("3");
@@ -674,10 +468,9 @@ export default function Docs() {
   const quillRef = useRef(null);
   const selectionRef = useRef(null);
   const draggedTableRef = useRef(null);
+  const imageInputRef = useRef(null);
 
   const wc = wordCount(text);
-  const cc = charCount(text);
-  const rt = readingTime(wc);
   const hasContent = hasMeaningfulContent(text);
 
   useEffect(() => {
@@ -849,11 +642,42 @@ export default function Docs() {
     setShowTableSetup(false);
   };
 
+  const openImagePicker = () => {
+    imageInputRef.current?.click();
+  };
+
+  const handleImageFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = reader.result;
+      const editor = quillRef.current?.getEditor();
+      if (!editor || !url) {
+        return;
+      }
+
+      const range = editor.getSelection(true);
+      const insertAt = range ? range.index : editor.getLength();
+      editor.insertEmbed(insertAt, "image", url, "user");
+      editor.setSelection(insertAt + 1, 0, "silent");
+      setText(editor.root.innerHTML);
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
+
   const modules = useMemo(
     () => ({
       toolbar: {
         container: "#docs-toolbar",
         handlers: {
+          insertImage() {
+            openImagePicker();
+          },
           insertTable() {
             setShowTableSetup((prev) => !prev);
           },
@@ -865,19 +689,19 @@ export default function Docs() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box className={classes.root}>
-        <Box className={classes.container}>
+      <Box className="docs-root">
+        <Box className="docs-container">
           {/* ── Header ── */}
-          <Box className={classes.header}>
-            <Box className={classes.headerLeft}>
-              <Typography className={classes.eyebrow}>
-                <span className={classes.eyebrowDot} />
+          <Box className="docs-header">
+            <Box className="docs-header-left">
+              <Typography className="docs-eyebrow">
+                <span className="docs-eyebrow-dot" />
                 Word Editor
               </Typography>
-              <Typography className={classes.title}>
-                Write with <span className={classes.titleAccent}>purpose.</span>
+              <Typography className="docs-title">
+                Write with <span className="docs-title-accent">purpose.</span>
               </Typography>
-              <Typography className={classes.subtitle}>
+              <Typography className="docs-subtitle">
                 Craft, format, and export your document in one click.
               </Typography>
             </Box>
@@ -888,7 +712,7 @@ export default function Docs() {
             >
               <span>
                 <Button
-                  className={classes.exportBtn}
+                  className="docs-export-btn"
                   onClick={handleExport}
                   disabled={!hasContent || exporting}
                   startIcon={<GetAppIcon />}
@@ -901,36 +725,26 @@ export default function Docs() {
           </Box>
 
           {/* ── Stats bar ── */}
-          <Box className={classes.statsBar}>
-            <Box className={classes.statItem}>
-              <Typography className={classes.statNumber}>{wc}</Typography>
-              <Typography className={classes.statLabel}>Words</Typography>
-            </Box>
-            <Box className={classes.statDivider} />
-            <Box className={classes.statItem}>
-              <Typography className={classes.statNumber}>{cc}</Typography>
-              <Typography className={classes.statLabel}>Characters</Typography>
-            </Box>
-            <Box className={classes.statDivider} />
-            <Box className={classes.statItem}>
-              <Typography className={classes.statNumber}>{rt}</Typography>
-              <Typography className={classes.statLabel}>Min read</Typography>
+          <Box className="docs-stats-bar">
+            <Box className="docs-stat-item">
+              <Typography className="docs-stat-number">{wc}</Typography>
+              <Typography className="docs-stat-label">Words</Typography>
             </Box>
 
             <Chip
               icon={<EditOutlinedIcon />}
               label={hasContent ? "Editing" : "Ready"}
               size="small"
-              className={classes.statusChip}
+              className="docs-status-chip"
             />
           </Box>
 
           {/* ── Editor ── */}
-          <Paper className={classes.editorCard} elevation={0}>
-            {exporting && <LinearProgress className={classes.progressBar} />}
-            <EditorToolbar />
+          <Paper className="docs-editor-card" elevation={0}>
+            {exporting && <LinearProgress className="docs-progress-bar" />}
+            <EditorToolbar onInsertImage={openImagePicker} />
             {showTableSetup && (
-              <Box className={classes.tableSetupBar}>
+              <Box className="docs-table-setup-bar">
                 <TextField
                   label="Rows"
                   variant="outlined"
@@ -938,7 +752,7 @@ export default function Docs() {
                   type="number"
                   value={tableRows}
                   onChange={(event) => setTableRows(event.target.value)}
-                  className={classes.tableField}
+                  className="docs-table-field"
                   inputProps={{ min: 1, max: 20 }}
                 />
                 <TextField
@@ -948,11 +762,11 @@ export default function Docs() {
                   type="number"
                   value={tableCols}
                   onChange={(event) => setTableCols(event.target.value)}
-                  className={classes.tableField}
+                  className="docs-table-field"
                   inputProps={{ min: 1, max: 20 }}
                 />
                 <Button
-                  className={classes.tableInsertBtn}
+                  className="docs-table-insert-btn"
                   variant="contained"
                   disableElevation
                   onClick={insertTable}
@@ -960,7 +774,7 @@ export default function Docs() {
                   Insert Table
                 </Button>
                 <Button
-                  className={classes.tableCancelBtn}
+                  className="docs-table-cancel-btn"
                   variant="outlined"
                   onClick={() => setShowTableSetup(false)}
                 >
@@ -968,6 +782,13 @@ export default function Docs() {
                 </Button>
               </Box>
             )}
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={handleImageFileChange}
+            />
             <ReactQuill
               ref={quillRef}
               theme="snow"
