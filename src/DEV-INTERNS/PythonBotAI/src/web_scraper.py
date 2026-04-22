@@ -21,7 +21,7 @@ def _load_env_credentials() -> Dict[str, str]:
         "username": os.environ.get("SITE_USERNAME", ""),
         "password": os.environ.get("SITE_PASSWORD", ""),
         "dev_id": os.environ.get("SITE_DEV_ID", ""),
-        "login_url": os.environ.get("SITE_LOGIN_URL", "https://clone.ulap.biz/api/login"),
+        "login_url": os.environ.get("SITE_LOGIN_URL", "https://app.clone.ulap.biz/app/login"),
         "token_field": os.environ.get("SITE_TOKEN_FIELD", "token"),
     }
     # If any key is missing, also try reading .env directly

@@ -1,5 +1,3 @@
-
-
 const defaultHeaders = {
   "Content-Type": "application/json",
 };
@@ -7,15 +5,18 @@ const defaultHeaders = {
 /**
  * Build full URL from path template and params.
  * Template uses :paramName (e.g. "/api/set-biz/:ccode" with { ccode: "x" } -> "/api/set-biz/x").
- * @param {string} pathTemplate 
- * @param {Record<string, string|number>} [params] 
+ * @param {string} pathTemplate
+ * @param {Record<string, string|number>} [params]
  * @returns {string}
  */
 export function buildUrl(pathTemplate, params = {}) {
   const base = getApiBase();
   let path = pathTemplate.startsWith("/") ? pathTemplate : `/${pathTemplate}`;
   Object.entries(params).forEach(([key, value]) => {
-    path = path.replace(new RegExp(`:${key}(?=/|$)`, "g"), encodeURIComponent(String(value)));
+    path = path.replace(
+      new RegExp(`:${key}(?=/|$)`, "g"),
+      encodeURIComponent(String(value)),
+    );
   });
   return `${base}${path}`;
 }
@@ -33,18 +34,31 @@ const DEFAULT_REQUEST_TIMEOUT_MS = 55000;
  * @returns {Promise<{ status: number, data?: any, text: string }>}
  */
 export async function request(url, options = {}) {
-  const { method = "GET", headers = {}, body, parseJson = true, timeout = DEFAULT_REQUEST_TIMEOUT_MS, ...rest } = options;
+  const {
+    method = "GET",
+    headers = {},
+    body,
+    parseJson = true,
+    timeout = DEFAULT_REQUEST_TIMEOUT_MS,
+    ...rest
+  } = options;
   const mergedHeaders = { ...defaultHeaders, ...headers };
 
   const controller = new AbortController();
-  const timeoutId = timeout > 0 ? setTimeout(() => controller.abort(), timeout) : null;
+  const timeoutId =
+    timeout > 0 ? setTimeout(() => controller.abort(), timeout) : null;
 
   let response;
   try {
     response = await fetch(url, {
       method,
       headers: mergedHeaders,
-      body: body != null ? (typeof body === "string" ? body : JSON.stringify(body)) : undefined,
+      body:
+        body != null
+          ? typeof body === "string"
+            ? body
+            : JSON.stringify(body)
+          : undefined,
       credentials: "include",
       signal: controller.signal,
       ...rest,
@@ -64,12 +78,14 @@ export async function request(url, options = {}) {
 
   const text = await response.text();
   let data = text;
-  if (parseJson && text && (response.headers.get("content-type") || "").includes("application/json")) {
+  if (
+    parseJson &&
+    text &&
+    (response.headers.get("content-type") || "").includes("application/json")
+  ) {
     try {
       data = text.trim() ? JSON.parse(text) : null;
-    } catch (_) {
-      
-    }
+    } catch (_) {}
   }
 
   return {

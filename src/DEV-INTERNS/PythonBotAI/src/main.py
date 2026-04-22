@@ -1473,7 +1473,7 @@ def handle_inventory_request(user_input, site_context=None, auth_token=None, aut
     if "error" not in result_multi:
         products = result_multi.get("products", [])
         total = len(products)
-        source_url = result_multi.get("source_url", "clone.ulap.biz")
+        source_url = result_multi.get("source_url", "app.clone.ulap.biz")
 
         if products and asks_inventory_balance:
             normalized_products = []
@@ -1745,7 +1745,7 @@ def is_affirmation(user_input):
 
 
 def handle_chart_request(user_input, auth_context=None):
-    """Fetch live chart/graph data from clone.ulap.biz stock card movement history."""
+    """Fetch live chart/graph data from app.clone.ulap.biz stock card movement history."""
     normalized_input = normalize_text(user_input)
     chart_triggers = [
         "chart",
@@ -2236,7 +2236,7 @@ def handle_balance_request(user_input, auth_context=None):
             if "error" not in gl_result:
                 accounts = gl_result.get("accounts", [])
                 total_accounts = gl_result.get("total_accounts", len(accounts))
-                source_url = gl_result.get("source_url", "https://clone.ulap.biz/api/lib/acc")
+                source_url = gl_result.get("source_url", "https://app.clone.ulap.biz/api/lib/acc")
 
                 if isinstance(accounts, list) and total_accounts > 0:
                     preview = accounts[:12]
@@ -2760,7 +2760,7 @@ def fetch_relevant_live_data(user_input, auth_context=None):
                     context_parts.append(
                         "ACCOUNTS RECEIVABLE: Could not fetch live data - " +
                         str(result.get('error', 'unknown error')) +
-                        ". The AR endpoint may need configuration at clone.ulap.biz."
+                        ". The AR endpoint may need configuration at app.clone.ulap.biz."
                     )
         except Exception as e:
             print("[live data] AR fetch error: " + str(e))
@@ -2839,13 +2839,13 @@ def ollama_respond(user_input, live_context="", history=None, conversation_style
                 for raw_line in response:
                     line = raw_line.decode("utf-8").strip()
                     if not line:
-                        continue
+                        continue  
                     try:
                         event = json.loads(line)
                     except Exception:
                         continue
 
-                    token = str(event.get("response", ""))
+                    token = str(event.get("response", ""))   
                     if token:
                         chunks.append(token)
 

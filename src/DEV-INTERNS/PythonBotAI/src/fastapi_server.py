@@ -511,13 +511,13 @@ def _update_scraper_config_token(token: str):
 
 def perform_site_login() -> str:
     """
-    Log in to clone.ulap.biz using credentials from .env,
+    Log in to app.clone.ulap.biz using credentials from .env,
     return the access token, and persist it to scraper_config.json.
     """
     username = os.getenv("SITE_USERNAME", "")
     password = os.getenv("SITE_PASSWORD", "")
     dev_id = os.getenv("SITE_DEV_ID", "")
-    login_url = os.getenv("SITE_LOGIN_URL", "https://clone.ulap.biz/api/login")
+    login_url = os.getenv("SITE_LOGIN_URL", "https://app.clone.ulap.biz/app/login")
     token_field = os.getenv("SITE_TOKEN_FIELD", "token")
 
     if not username or not password:
@@ -724,10 +724,10 @@ async def chat(
                                 "Accept": "application/json",
                                 "Content-Type": "application/json",
                                 "Cookie": f"devID={os.getenv('SITE_DEV_ID', '')}",
-                                "Referer": "https://clone.ulap.biz/app/reports/sc",
+                                "Referer": "https://app.clone.ulap.biz/app/reports/sc",
                             }
                             resp = http_requests.get(
-                                "https://clone.ulap.biz/api/lib/brch",
+                                "https://app.clone.ulap.biz/api/lib/brch",
                                 headers=headers,
                                 timeout=10
                             )
@@ -914,7 +914,7 @@ async def get_general_ledger_accounts(
     api_key: str = Depends(verify_token)
 ):
     """
-    Fetch General Ledger account library from clone.ulap.biz `/api/lib/acc`.
+    Fetch General Ledger account library from app.clone.ulap.biz `/api/lib/acc`.
 
     Body:
     - user_auth_token: Optional token override; stored site token is used if omitted
@@ -1082,11 +1082,11 @@ async def get_branches(
             "Accept": "application/json",
             "Content-Type": "application/json",
             "Cookie": f"devID={os.getenv('SITE_DEV_ID', '')}",
-            "Referer": "https://clone.ulap.biz/app/reports/sc",
+            "Referer": "https://app.clone.ulap.biz/app/reports/sc",
         }
         
         resp = http_requests.get(
-            "https://clone.ulap.biz/api/lib/brch",
+            "https://app.clone.ulap.biz/api/lib/brch",
             headers=headers,
             timeout=10
         )

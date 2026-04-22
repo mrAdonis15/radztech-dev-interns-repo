@@ -288,12 +288,13 @@ function loginAttempt({ loginUrl, headers, method, tokenField, body }) {
 // Login to the target site using basic auth; returns a Promise<string> token
 async function loginToSite(username, password, devId) {
   const loginUrl =
-    process.env.SITE_LOGIN_URL || "https://clone.ulap.biz/api/login";
+    process.env.SITE_LOGIN_URL || "https://app.clone.ulap.biz/app/login";
   const tokenField = process.env.SITE_TOKEN_FIELD || "token";
   const effectiveDevId = devId || process.env.SITE_DEV_ID || "";
-  const loginOrigin = process.env.SITE_LOGIN_ORIGIN || "https://clone.ulap.biz";
+  const loginOrigin =
+    process.env.SITE_LOGIN_ORIGIN || "https://app.clone.ulap.biz";
   const loginReferer =
-    process.env.SITE_LOGIN_REFERER || "https://clone.ulap.biz/app/login";
+    process.env.SITE_LOGIN_REFERER || "https://app.clone.ulap.biz/app/login";
   const credentials = Buffer.from(`${username}:${password}`).toString("base64");
 
   let bodyObject = { username, password };
@@ -353,7 +354,8 @@ async function loginToSite(username, password, devId) {
 function validateSiteApiToken(token, devId) {
   return new Promise((resolve) => {
     const validationUrl =
-      process.env.SITE_VALIDATE_URL || "https://clone.ulap.biz/api/lib/brch";
+      process.env.SITE_VALIDATE_URL ||
+      "https://app.clone.ulap.biz/api/lib/brch";
     const validationMethod = (
       process.env.SITE_VALIDATE_METHOD || "GET"
     ).toUpperCase();
@@ -364,8 +366,8 @@ function validateSiteApiToken(token, devId) {
       "x-access-tokens": token,
       Accept: "application/json",
       "Content-Type": "application/json",
-      Referer: "https://clone.ulap.biz/app/reports/sc",
-      Origin: "https://clone.ulap.biz",
+      Referer: "https://app.clone.ulap.biz/app/reports/sc",
+      Origin: "https://app.clone.ulap.biz",
     };
 
     const effectiveDevId = devId || process.env.SITE_DEV_ID || "";

@@ -1,4 +1,3 @@
-
 export const AI_GEMINI_URL = "";
 
 function path(...segments) {
@@ -26,20 +25,25 @@ export const endpoints = {
   },
 };
 
-
 export function getAiGeminiUrl() {
   const fromConstant =
-    typeof AI_GEMINI_URL === "string" && AI_GEMINI_URL.trim() !== "" ? AI_GEMINI_URL.trim() : "";
+    typeof AI_GEMINI_URL === "string" && AI_GEMINI_URL.trim() !== ""
+      ? AI_GEMINI_URL.trim()
+      : "";
   if (fromConstant) return fromConstant;
   const fromEnv =
-    typeof process !== "undefined" && process.env?.REACT_APP_AI_GEMINI_URL != null
+    typeof process !== "undefined" &&
+    process.env?.REACT_APP_AI_GEMINI_URL != null
       ? String(process.env.REACT_APP_AI_GEMINI_URL).trim()
       : "";
   return fromEnv || null;
 }
 
 export function getGeminiApiKey() {
-  return (typeof process !== "undefined" && process.env?.REACT_APP_GEMINI_API_KEY) || "";
+  return (
+    (typeof process !== "undefined" && process.env?.REACT_APP_GEMINI_API_KEY) ||
+    ""
+  );
 }
 
 export function getLegacyUrls() {
@@ -49,10 +53,12 @@ export function getLegacyUrls() {
     typeof process !== "undefined" && process.env?.REACT_APP_CHAT_HISTORY_URL
       ? String(process.env.REACT_APP_CHAT_HISTORY_URL).trim()
       : "";
-  // Use relative path when no base URL so dev server proxy (e.g. to clone.ulap.biz) is used and CORS is avoided
+  // Use relative path when no base URL so dev server proxy (e.g. to app.clone.ulap.biz) is used and CORS is avoided
   const chatHistoryUrl =
     explicitChatHistory ||
-    (genaiBase ? genaiBase + path("genai", "chat-history") : path("genai", "chat-history"));
+    (genaiBase
+      ? genaiBase + path("genai", "chat-history")
+      : path("genai", "chat-history"));
   const flat = {
     login: base + path("api", "login"),
     logout: base + path("api", "logout"),

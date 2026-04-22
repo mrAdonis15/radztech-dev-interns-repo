@@ -1,100 +1,48 @@
 {
   "history": [
     {
-      "id": "84a5f882-e247-4328-8289-a6613af2ca30",
+      "id": "8b90aa41-8e23-4e44-929c-bb93021205c1",
       "sender": "me",
-      "text": "can you access the general ledger ?",
-      "time": "8:13 AM"
+      "text": "testing webscraper",
+      "time": "1:09 PM"
     },
     {
-      "id": "16a4da77-9dc3-4cad-9580-d81546ff1e00",
+      "id": "1ba6ab7e-56ab-4bd8-8b22-cbd21a254d79",
       "sender": "bot",
-      "text": "Yes, I can access the general ledger for Honda Ace City Corporation. Please provide me with",
-      "time": "8:13 AM",
-      "responseTimeMs": 16228
+      "text": "Sorry, Something went wrong. Please try again",
+      "time": "1:09 PM",
+      "responseTimeMs": 15411.39999999106
     },
     {
-      "id": "da187ab0-b77f-41fb-ad6e-354d8174bba4",
+      "id": "0f47dbf4-4d5c-4fac-be70-fab6883f7368",
       "sender": "me",
-      "text": "give me the balance of the general ledger",
-      "time": "8:18 AM"
+      "text": "hello",
+      "time": "1:21 PM"
     },
     {
-      "id": "a3beaca1-d461-4d67-86c7-7b760c73584b",
-      "sender": "bot",
-      "text": "Live General Ledger balance was not accessed. Please reconnect the logged-in business account and try again.",
-      "time": "8:18 AM",
-      "responseTimeMs": 1605.8999999985099
-    },
-    {
-      "id": "8dabc6d6-8486-4641-98f2-3d833663ce28",
-      "sender": "me",
-      "text": "can you access the general ledger",
-      "time": "8:20 AM"
-    },
-    {
-      "id": "128b1c66-b192-4e87-b9c1-4cd48c836bed",
-      "sender": "bot",
-      "text": "I can't access the live business data right now. Please reconnect the logged-in business account and try again.",
-      "time": "8:20 AM",
-      "responseTimeMs": 16006.80000000447
-    },
-    {
-      "id": "2a8481ed-4d73-46db-9d29-1028494275a6",
-      "sender": "me",
-      "text": "hi",
-      "time": "8:20 AM"
-    },
-    {
-      "id": "dcfc9105-7387-42fc-a786-306b978f3885",
+      "id": "a13e7aba-ec4e-4455-a852-4dcfff65e99e",
       "sender": "bot",
       "text": "Hello! I can help with balances, inventory, charts, and financial questions. What would you like to check?",
-      "time": "8:20 AM",
-      "responseTimeMs": 1234.5
+      "time": "1:21 PM",
+      "responseTimeMs": 1049.3999999910593
     },
     {
-      "id": "129f70e2-6009-4506-a654-a7da1f152ad5",
+      "id": "d71d3ad3-596f-4ecd-87ae-350a7be8915f",
       "sender": "me",
-      "text": "product beat white",
-      "time": "8:21 AM"
+      "text": "balanc",
+      "time": "1:21 PM"
     },
     {
-      "id": "13d002d0-abf9-468e-b4aa-e839a01d8db9",
+      "id": "91f433e5-0781-4bd9-b0ed-cde31c6d6a0c",
       "sender": "bot",
-      "text": "Product beat white refers to a product that is superior in quality, performance, or design to a",
-      "time": "8:21 AM",
-      "responseTimeMs": 13911.20000000298
+      "text": "Sorry, Something went wrong. Please try again",
+      "time": "1:21 PM",
+      "responseTimeMs": 14901.59999999404
     },
     {
-      "id": "d0f3a2e5-4cbf-496c-a447-69d4bbfa0705",
-      "sender": "me",
-      "text": "show it",
-      "time": "8:21 AM"
-    },
-    {
-      "id": "096e8a63-57f0-4bcf-a977-11d9bd32014b",
-      "sender": "bot",
-      "text": "Show it.",
-      "time": "8:21 AM",
-      "responseTimeMs": 4897.0999999940395
-    },
-    {
-      "id": "183e91cf-48b9-4a17-bae8-74dc4b06f5f0",
-      "sender": "me",
-      "text": "provide me beat products'",
-      "time": "8:22 AM"
-    },
-    {
-      "id": "9d05164b-1a3e-4f91-9009-887ee9ddaf88",
-      "sender": "bot",
-      "text": "I'm sorry, but I can't assist with that.",
-      "time": "8:22 AM",
-      "responseTimeMs": 12036
-    },
-    {
-      "user": "can you access the general ledger?\n[Current Business: Honda Ace City Corporation]",
-      "ai": "Yes, I can access the general ledger for Honda Ace City Corporation. Please provide me with the necessary information or access details",
-      "timestamp": 1776126897.7080379
+      "user": "balance\n[Current Business: Honda Ace City Corporation]",
+      "ai": "I can't access the live business data right now. Please reconnect the logged-in business account and try again.",
+      "timestamp": 1776836635.4218152
     }
   ],
   "context": {
