@@ -511,7 +511,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  background: #f9f1f1;
+  background: #fff;
   overflow: hidden;
 }
 
@@ -586,6 +586,10 @@
   background: #fff;
 }
 
+.chat-ulap-main-body.chat-body-empty {
+  overflow-y: hidden;
+}
+
 .chat-ulap-main-body > div {
   max-width: 900px;
   margin: 0 auto;
@@ -594,7 +598,7 @@
 
 .chat-ulap-main .chat-input-container {
   padding: 16px 24px 24px;
-  background: transparent;
+  background: #fff;
 }
 
 .chat-ulap-main .chat-inputArea {
@@ -813,6 +817,7 @@
   align-items: center;
   margin-bottom: 150px;
   user-select: none;
+  background: #fff;
 }
 
 .chat-suggestions {

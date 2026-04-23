@@ -119,6 +119,7 @@ class LoginToolbar extends Component {
     const pathname = this.props.pathname || "";
     const isBizContext =
       pathname.startsWith("/Chatbox") ||
+      pathname.startsWith("/chatbot") ||
       pathname.startsWith("/ChatboxGC") ||
       pathname.startsWith("/AGR") ||
       pathname.startsWith("/Evaluation");

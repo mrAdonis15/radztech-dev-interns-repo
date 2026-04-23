@@ -7,6 +7,12 @@ import CardActionArea from "@material-ui/core/CardActionArea";
 import ChatIcon from "@material-ui/icons/Chat";
 import AssessmentIcon from "@material-ui/icons/Toc";
 import StarIcon from "@material-ui/icons/Star";
+import MenuBookIcon from "@material-ui/icons/MenuBook";
+import TimelineIcon from "@material-ui/icons/Timeline";
+import ImageIcon from "@material-ui/icons/Image";
+import GridOnIcon from "@material-ui/icons/GridOn";
+import CodeIcon from "@material-ui/icons/Code";
+import StorageIcon from "@material-ui/icons/Storage";
 import LoginToolbar from "../Login/LoginToolbar";
 import "./ChooseApp.css";
 
@@ -34,6 +40,71 @@ export default function ChooseApp() {
     navigate("/Evaluation", { replace: true });
   };
 
+  const apps = [
+    {
+      label: "UlapAI",
+      desc: "AI assistant",
+      icon: ChatIcon,
+      onClick: goToChatbox,
+    },
+    {
+      label: "AGR",
+      desc: "Customer Aging Simulator",
+      icon: AssessmentIcon,
+      onClick: goToAGR,
+    },
+    {
+      label: "Evaluation",
+      desc: "Evaluation Rating",
+      icon: StarIcon,
+      onClick: goToStarRating,
+    },
+    {
+      label: "Bible Verse",
+      desc: "Daily Bible verse viewer",
+      icon: MenuBookIcon,
+      path: "/verses",
+    },
+    {
+      label: "Historical Graph",
+      desc: "Historical data charts",
+      icon: TimelineIcon,
+      path: "/HistoricalGraph",
+    },
+    {
+      label: "Image Compress",
+      desc: "Compress image files",
+      icon: ImageIcon,
+      path: "/ImageCompressor",
+    },
+    {
+      label: "React Sheet",
+      desc: "Spreadsheet editor",
+      icon: GridOnIcon,
+      path: "/sheet",
+    },
+    {
+      label: "SQL Formatter",
+      desc: "Format SQL queries",
+      icon: CodeIcon,
+      path: "/SqlFormatter",
+    },
+    {
+      label: "UI JSON",
+      desc: "JSON UI editor",
+      icon: StorageIcon,
+      path: "/KurtJSON",
+    },
+  ];
+
+  const handleOpenApp = (app) => {
+    if (app.onClick) {
+      app.onClick();
+      return;
+    }
+    navigate(app.path, { replace: true });
+  };
+
   if (!token) return <Navigate to="/login" replace />;
 
   return (
@@ -42,71 +113,36 @@ export default function ChooseApp() {
       <Box className="choose-app-root-content" style={{ paddingTop: 64 }}>
         <div className="choose-app-content-wrap">
           <Box className="choose-app-cards">
-            <Card className="choose-app-card" elevation={0}>
-              <CardActionArea
-                onClick={goToChatbox}
-                className="choose-app-card-action"
-              >
-                <Box className="choose-app-card-icon-container">
-                  <Box className="choose-app-card-icon-circle">
-                    <ChatIcon className="choose-app-card-icon" />
-                  </Box>
-                </Box>
-                <Box className="choose-app-card-details">
-                  <Typography
-                    variant="h6"
-                    component="h2"
-                    className="choose-app-card-label"
+            {apps.map((app) => {
+              const AppIcon = app.icon;
+
+              return (
+                <Card className="choose-app-card" elevation={0} key={app.label}>
+                  <CardActionArea
+                    onClick={() => handleOpenApp(app)}
+                    className="choose-app-card-action"
                   >
-                    UlapAI
-                  </Typography>
-                  <Typography variant="body2" className="choose-app-card-desc">
-                    AI assistant
-                  </Typography>
-                </Box>
-              </CardActionArea>
-            </Card>
-            <Card className="choose-app-card" elevation={0}>
-              <CardActionArea
-                onClick={goToAGR}
-                className="choose-app-card-action"
-              >
-                <Box className="choose-app-card-icon-container">
-                  <Box className="choose-app-card-icon-circle">
-                    <AssessmentIcon className="choose-app-card-icon" />
-                  </Box>
-                </Box>
-                <Box className="choose-app-card-details">
-                  <Typography
-                    variant="h6"
-                    component="h2"
-                    className="choose-app-card-label"
-                  >
-                    AGR
-                  </Typography>
-                  <Typography variant="body2" className="choose-app-card-desc">
-                    Customer Aging Simulator
-                  </Typography>
-                </Box>
-              </CardActionArea>
-            </Card>
-            <Card className="choose-app-card" elevation={0}>
-              <CardActionArea onClick={goToStarRating} className="choose-app-card-action">
-                <Box className="choose-app-card-icon-container">
-                  <Box className="choose-app-card-icon-circle">
-                    <StarIcon className="choose-app-card-icon" />
-                  </Box>
-                </Box>
-                <Box className="choose-app-card-details">
-                  <Typography variant="h6" component="h2" className="choose-app-card-label">
-                    Evaluation
-                  </Typography>
-                  <Typography variant="body2" className="choose-app-card-desc">
-                    Evaluation Rating
-                  </Typography>
-                </Box>
-              </CardActionArea>
-            </Card>
+                    <Box className="choose-app-card-icon-container">
+                      <Box className="choose-app-card-icon-circle">
+                        <AppIcon className="choose-app-card-icon" />
+                      </Box>
+                    </Box>
+                    <Box className="choose-app-card-details">
+                      <Typography
+                        variant="h6"
+                        component="h2"
+                        className="choose-app-card-label"
+                      >
+                        {app.label}
+                      </Typography>
+                      <Typography variant="body2" className="choose-app-card-desc">
+                        {app.desc}
+                      </Typography>
+                    </Box>
+                  </CardActionArea>
+                </Card>
+              );
+            })}
           </Box>
         </div>
       </Box>

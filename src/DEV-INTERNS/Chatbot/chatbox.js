@@ -709,7 +709,7 @@ export default function Chatbox({ defaultOpen = false }) {
                 <div
                   className={
                     isExpanded
-                      ? "chat-body chat-ulap-main-body"
+                      ? `chat-body chat-ulap-main-body${messages.length === 0 && !isLoading ? " chat-body-empty" : ""}`
                       : "chat-body chat-body-draggable"
                   }
                   ref={bodyRef}
