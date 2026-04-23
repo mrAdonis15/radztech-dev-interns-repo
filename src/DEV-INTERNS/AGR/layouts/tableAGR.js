@@ -25,6 +25,7 @@ import SuccessIcon from "@material-ui/icons/CheckCircle";
 import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
 import TableIcon from "@material-ui/icons/Toc";
 import SaveIcon from "@material-ui/icons/Save";
+import AddIcon from "@material-ui/icons/Add";
 
 const useStyles = makeStyles({
   table: {
@@ -485,6 +486,19 @@ export function TableAGR() {
   };
   const handleCellEditBlur = () => setEditingCell(null);
 
+  const handleAddSaveRow = () => {
+    const keys = buildColumnsFromRows(saveTableData)
+      .map((col) => col.key)
+      .filter((key) => key != null);
+    const nextRow = keys.reduce((row, key) => ({ ...row, [key]: "" }), {});
+    const nextIndex = saveTableData.length;
+
+    setSaveTableData((prev) => [...prev, nextRow]);
+    setSavePage(Math.floor(nextIndex / ROWS_PER_PAGE));
+    setEditingCell(keys.length ? { rowIndex: nextIndex, colKey: keys[0] } : null);
+    setSaveStatus(null);
+  };
+
   const handleSaveSubmit = async () => {
     const dataCoerced = coerceNumericStrings(JSON.parse(JSON.stringify(saveTableData)));
     const payload = {
@@ -680,6 +694,9 @@ export function TableAGR() {
             </Typography>
           )}
           <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
+            <IconButton color="primary" onClick={handleAddSaveRow} title="Add row" aria-label="Add row">
+              <AddIcon />
+            </IconButton>
             <IconButton color="primary" onClick={handleSaveSubmit} disabled={saving || saveTableData.length === 0} title={saving ? "Saving…" : "Save"}>
               {saving ? <CircularProgress size={24} color="inherit" /> : <SaveIcon />}
             </IconButton>
