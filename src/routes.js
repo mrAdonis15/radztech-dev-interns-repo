@@ -1,6 +1,6 @@
 // DEV-INTERNS routes
 import DefaultLayout from "./layouts/DefaultLayout";
-import ChatboxLayout from "./DEV-INTERNS/Chatbox/Layout";
+// import ChatboxLayout from "./DEV-INTERNS/Chatbox/Layout";
 import Login from "./Auth/Login/Login";
 import BizUI from "./Auth/selectBIZ";
 import ChooseApp from "./Auth/ChooseApp";
@@ -17,6 +17,8 @@ import ImageCompressor from "./DEV-INTERNS/ImageCompress/ImageCompressor";
 import SqlFormatter from "./DEV-INTERNS/SQL Formatter/SqlFormatter";
 import Timelogstest from "./DEV-INTERNS/uiJSON/Adam/components/timelogstest";
 import AGR from "./DEV-INTERNS/AGR";
+import ChatbotLayout from "./DEV-INTERNS/Chatbot/layout/layout";
+import Chatbot from "./DEV-INTERNS/Chatbot/chatbox";
 import RatePage from "./DEV-INTERNS/Evaluation/page/RatePage";
 import BibleVerse from "./DEV-INTERNS/BibleVerse/bible";
 import Sheets from "./DEV-INTERNS/react_sheet/sheet";
@@ -40,6 +42,8 @@ import PaymentComplete from "./BD-INTERNS/Product-Finder/PaymentComplete/Payment
 
 const ChatboxPage = () => <Chatbox defaultOpen />;
 
+const ChatbotPage = () => <Chatbot defaultOpen />;
+
 const routes = [
   {
     path: "/login",
@@ -53,10 +57,15 @@ const routes = [
     path: "/choose-app",
     element: ChooseApp,
   },
+  // {
+  //   path: "/Chatbox",
+  //   element: ChatboxLayout,
+  //   children: [{ index: true, element: ChatboxPage }],
+  // },
   {
-    path: "/Chatbox",
-    element: ChatboxLayout,
-    children: [{ index: true, element: ChatboxPage }],
+    path: "/chatbot",
+    element: ChatbotLayout,
+    children: [{ index: true, element: ChatbotPage }],
   },
   {
     path: "/",
@@ -114,7 +123,7 @@ const routes = [
         path: "/sheet",
         element: Sheets,
       },
-    
+
       {
         path: "/docs",
         element: Docs,
