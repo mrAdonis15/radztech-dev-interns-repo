@@ -488,7 +488,6 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     "& .MuiOutlinedInput-root": {
       minHeight: 68,
-      borderRadius: 4,
       backgroundColor: "#ffffff",
       "& fieldset": {
         borderColor: "#c7cdd4",
@@ -1414,12 +1413,10 @@ function RatePage() {
             classes={{ paper: classes.searchDialogPaper }}
           >
             <DialogContent className={classes.searchDialogContent}>
-              <Box className={classes.searchDialogHeader}>
                 <TextField
                   autoFocus
                   variant="outlined"
-                  label="Evaluator"
-                  placeholder="Evaluator"
+                  placeholder="Search Evaluator"
                   value={evaluatorDraft}
                   onChange={(event) => setEvaluatorDraft(event.target.value)}
                   className={classes.searchDialogInput}
@@ -1443,7 +1440,6 @@ function RatePage() {
                     ),
                   }}
                 />
-              </Box>
 
               <Box className={classes.searchList}>
                 {evaluatorsLoading ? (
@@ -1482,11 +1478,9 @@ function RatePage() {
             classes={{ paper: classes.searchDialogPaper }}
           >
             <DialogContent className={classes.searchDialogContent}>
-              <Box className={classes.searchDialogHeader}>
                 <TextField
                   autoFocus
                   variant="outlined"
-                  label={summary.itemLabelPlural}
                   placeholder={`Search ${summary.itemLabelPlural}`}
                   value={searchDraft}
                   onChange={(event) => setSearchDraft(event.target.value)}
@@ -1511,7 +1505,6 @@ function RatePage() {
                     ),
                   }}
                 />
-              </Box>
 
               <Box className={classes.searchList}>
                 {searchResults.length > 0 ? (
