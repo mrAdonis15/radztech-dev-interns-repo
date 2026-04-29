@@ -40,7 +40,7 @@ import PFReciept from "./BD-INTERNS/Product-Finder/Receipt/Receipt";
 import PFContactUs from "./BD-INTERNS/Product-Finder/ContactUs/ContactUs";
 import PaymentComplete from "./BD-INTERNS/Product-Finder/PaymentComplete/PaymentComplete";
 
-const ChatboxPage = () => <Chatbox defaultOpen />;
+//const ChatboxPage = () => <Chatbox defaultOpen />;
 
 const ChatbotPage = () => <Chatbot defaultOpen />;
 

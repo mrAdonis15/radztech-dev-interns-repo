@@ -1,41 +1,75 @@
-
 export const AI_GEMINI_URL = "";
-
-function path(...segments) {
-  return "/" + segments.filter(Boolean).join("/").replace(/\/+/g, "/");
-}
 
 export const endpoints = {
   auth: {
-    login: path("api", "login"),
-    logout: path("api", "logout"),
+    login: "/api/login",
+    logout: "/api/logout",
   },
+
   business: {
-    selectBiz: path("api", "select-biz"),
-    setBiz: path("api", "set-biz", ":ccode"),
-    businesses: path("api", "businesses"),
+    selectBiz: "/api/select-biz",
+    setBiz: "/api/set-biz/:ccode",
+    businesses: "/api/businesses",
   },
+
   gemini: {
-    chat: path("api", "ai", "gemini"),
-    chats: path("genai", "chat"),
-    chatHistory: path("genai", "chat-history"),
+    chat: "/api/ai/gemini",
+    chats: "/genai/chat",
+    chatHistory: "/genai/chat-history",
   },
+
   reports: {
-    gl: path("reports", "gl"),
-    glGraph: path("reports", "gl", "graph"),
+    gl: "/reports/gl",
+    glGraph: "/reports/gl/graph",
   },
 };
 
+function cleanPath(path) {
+  return String(path || "").startsWith("/") ? String(path) : `/${path}`;
+}
+
+function joinUrl(base, path) {
+  return `${String(base || "").replace(/\/+$/, "")}${cleanPath(path)}`;
+}
+
+export function buildUrl(module, endpointKey, ...params) {
+  const moduleEndpoints = endpoints[module];
+  if (!moduleEndpoints) {
+    throw new Error(`Unknown module: ${module}`);
+  }
+
+  const endpoint = moduleEndpoints[endpointKey];
+  if (!endpoint) {
+    throw new Error(`Unknown endpoint: ${module}.${endpointKey}`);
+  }
+
+  return cleanPath(typeof endpoint === "function" ? endpoint(...params) : endpoint);
+}
+
+export function buildGenaiUrl(endpointKey, ...params) {
+  const moduleEndpoints = endpoints.gemini;
+  if (!moduleEndpoints[endpointKey]) {
+    throw new Error(`Unknown GenAI endpoint: ${endpointKey}`);
+  }
+
+  return cleanPath(
+    typeof moduleEndpoints[endpointKey] === "function"
+      ? moduleEndpoints[endpointKey](...params)
+      : moduleEndpoints[endpointKey],
+  );
+}
 
 export function getAiGeminiUrl() {
   const fromConstant =
-    typeof AI_GEMINI_URL === "string" && AI_GEMINI_URL.trim() !== "" ? AI_GEMINI_URL.trim() : "";
-  if (fromConstant) return fromConstant;
-  const fromEnv =
-    typeof process !== "undefined" && process.env?.REACT_APP_AI_GEMINI_URL != null
-      ? String(process.env.REACT_APP_AI_GEMINI_URL).trim()
+    typeof AI_GEMINI_URL === "string" && AI_GEMINI_URL.trim() !== ""
+      ? AI_GEMINI_URL.trim()
       : "";
-  return fromEnv || null;
+
+  if (fromConstant) return fromConstant;
+
+  return typeof process !== "undefined" && process.env?.REACT_APP_AI_GEMINI_URL
+    ? String(process.env.REACT_APP_AI_GEMINI_URL).trim()
+    : null;
 }
 
 export function getGeminiApiKey() {
@@ -43,28 +77,24 @@ export function getGeminiApiKey() {
 }
 
 export function getLegacyUrls() {
-  const base = process.env.REACT_APP_API_BASE || "";
+  const base = (typeof process !== "undefined" && process.env?.REACT_APP_API_BASE) || "";
   const genaiBase = base.replace(/\/api\/?$/, "") || base;
   const explicitChatHistory =
     typeof process !== "undefined" && process.env?.REACT_APP_CHAT_HISTORY_URL
       ? String(process.env.REACT_APP_CHAT_HISTORY_URL).trim()
       : "";
-  // Use relative path when no base URL so dev server proxy (e.g. to clone.ulap.biz) is used and CORS is avoided
-  const chatHistoryUrl =
-    explicitChatHistory ||
-    (genaiBase ? genaiBase + path("genai", "chat-history") : path("genai", "chat-history"));
-  const flat = {
-    login: base + path("api", "login"),
-    logout: base + path("api", "logout"),
-    selectBiz: base + path("api", "select-biz"),
-    setBiz: base + path("api", "set-biz"),
-    businesses: base + path("api", "businesses"),
-    reportsGl: base + path("reports", "gl"),
-    reportsGlGraph: base + path("reports", "gl", "graph"),
-    genaiChat: genaiBase + path("genai", "chat"),
-    genaiChatHistory: chatHistoryUrl,
+
+  return {
+    login: joinUrl(base, endpoints.auth.login),
+    logout: joinUrl(base, endpoints.auth.logout),
+    selectBiz: joinUrl(base, endpoints.business.selectBiz),
+    setBiz: (ccode) => joinUrl(base, `/api/set-biz${ccode ? `/${ccode}` : ""}`),
+    businesses: joinUrl(base, endpoints.business.businesses),
+    reportsGl: joinUrl(base, endpoints.reports.gl),
+    reportsGlGraph: joinUrl(base, endpoints.reports.glGraph),
+    genaiChat: joinUrl(genaiBase, endpoints.gemini.chats),
+    genaiChatHistory: explicitChatHistory || joinUrl(genaiBase, endpoints.gemini.chatHistory),
   };
-  return flat;
 }
 
 export default endpoints;
