@@ -38,6 +38,7 @@ export function loadImage(file) {
  * @param {number} [options.quality=0.8] - JPEG quality 0-1
  * @param {number} [options.maxWidth] - Max width in px (keeps aspect)
  * @param {number} [options.maxHeight] - Max height in px (keeps aspect)
+ * @param {string} [options.outputFormat] - Output format: 'original', 'jpeg', 'png' (default: original)
  * @returns {Promise<{ blob: Blob, url: string, originalSize: number, compressedSize: number }>}
  */
 export async function compressImage(file, options = {}) {
@@ -45,6 +46,7 @@ export async function compressImage(file, options = {}) {
     quality = 0.8,
     maxWidth,
     maxHeight,
+    outputFormat = 'original',
   } = options;
 
   const img = await loadImage(file);
@@ -68,9 +70,22 @@ export async function compressImage(file, options = {}) {
   const ctx = canvas.getContext("2d");
   ctx.drawImage(img, 0, 0, width, height);
 
-  const isPng = file.type === PNG_MIME;
-  const mimeType = isPng ? PNG_MIME : JPEG_MIME;
-  const outputQuality = isPng ? Math.min(1, quality * 1.2) : quality;
+  // Determine output format
+  let mimeType;
+  let outputQuality;
+  
+  if (outputFormat === 'png') {
+    mimeType = PNG_MIME;
+    outputQuality = Math.min(1, quality * 1.2);
+  } else if (outputFormat === 'jpeg') {
+    mimeType = JPEG_MIME;
+    outputQuality = quality;
+  } else {
+    // Original format
+    const isPng = file.type === PNG_MIME;
+    mimeType = isPng ? PNG_MIME : JPEG_MIME;
+    outputQuality = isPng ? Math.min(1, quality * 1.2) : quality;
+  }
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
